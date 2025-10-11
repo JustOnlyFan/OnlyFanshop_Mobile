@@ -1,5 +1,7 @@
 package com.example.onlyfanshop.activity;
 
+import static com.example.onlyfanshop.ultils.BadgeUtils.updateCartBadge;
+
 import android.os.Bundle;
 import android.util.Log;
 
@@ -15,6 +17,7 @@ import com.example.onlyfanshop.ui.HomeFragment;
 import com.example.onlyfanshop.ui.MapFragment;
 import com.example.onlyfanshop.ui.ProfileFragment;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.ismaeldivita.chipnavigation.ChipNavigationBar;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -37,6 +40,9 @@ public class DashboardActivity extends AppCompatActivity {
         initFirebaseTest();
         initNavigation(savedInstanceState);
         initSearchActions();
+
+//        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+//        updateCartBadge(this, bottomNavigationView, userId);
     }
 
     private void initFirebaseTest() {
