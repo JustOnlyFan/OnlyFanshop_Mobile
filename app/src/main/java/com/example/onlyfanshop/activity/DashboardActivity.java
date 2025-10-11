@@ -1,8 +1,10 @@
 package com.example.onlyfanshop.activity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 
 import androidx.activity.EdgeToEdge;
@@ -19,6 +21,7 @@ import com.example.onlyfanshop.ui.HomeFragment;
 import com.example.onlyfanshop.ui.MapFragment;
 import com.example.onlyfanshop.ui.PlaceholderFragment;
 import com.example.onlyfanshop.ui.ProfileFragment;
+import com.example.onlyfanshop.utils.BadgeUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -31,7 +34,7 @@ public class DashboardActivity extends AppCompatActivity {
     private FrameLayout fragmentContainer;
     private View root;
     private int currentSelectedId = R.id.nav_home;
-
+    private BadgeUtils badgeUtils = new BadgeUtils();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +48,14 @@ public class DashboardActivity extends AppCompatActivity {
         applyEdgeToEdgeInsets();
         initFirebaseTest();
         initNavigation(savedInstanceState);
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNav);
+
+        SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        int userId = sharedPreferences.getInt("userId", -1);
+        if (userId != -1) {
+            badgeUtils.updateCartBadge(this, bottomNavigationView, userId);
+        }
+
     }
 
     private void applyEdgeToEdgeInsets() {
