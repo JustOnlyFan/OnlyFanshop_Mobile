@@ -1,6 +1,6 @@
 package com.example.onlyfanshop.ui.product;
 
-import static com.example.onlyfanshop.ultils.BadgeUtils.updateCartBadge;
+import com.example.onlyfanshop.utils.BadgeUtils;
 
 import android.content.Context;
 import android.content.Intent;
@@ -27,7 +27,7 @@ import com.example.onlyfanshop.model.PaymentDTO;
 import com.example.onlyfanshop.model.ProductDetailDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.ui.payment.PaymentWebViewActivity;
-import com.example.onlyfanshop.ultils.AppPreferences;
+import com.example.onlyfanshop.utils.AppPreferences;
 import com.example.onlyfanshop.ultils.NotificationHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;

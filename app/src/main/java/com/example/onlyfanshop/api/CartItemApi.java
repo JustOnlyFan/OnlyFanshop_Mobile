@@ -32,7 +32,7 @@ public interface CartItemApi {
     @POST("/cart/addToCart")
     Call<ApiResponse<Void>> addToCart(@Query("productID") int productId, @Query("username") String username);
 
-    @GET("/api/cart/{userId}")
+    @GET("/cart/{userId}")
     Call<ApiResponse<CartDTO>> getCart(@Path("userId") int userId);
 
 
