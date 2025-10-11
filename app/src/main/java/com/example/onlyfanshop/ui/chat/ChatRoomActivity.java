@@ -20,15 +20,25 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.model.chat.Message;
+import com.example.onlyfanshop.model.chat.MessageModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.json.JSONObject;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 
 public class ChatRoomActivity extends AppCompatActivity {
 
@@ -79,36 +89,132 @@ public class ChatRoomActivity extends AppCompatActivity {
 
         if (conversationId != null) {
             Log.d("ChatRoomActivity", "Connecting to Firebase with conversationId: " + conversationId);
-            messagesRef = FirebaseDatabase.getInstance()
-                    .getReference("chats")
-                    .child(conversationId)
-                    .child("messages");
+            
+            // Extract other user ID from conversationId
+            String[] parts = conversationId.split("_");
+            String otherUserId;
+            if (parts.length >= 3) {
+                // Format: admin_uid_bTbKMdnRVLbwedMngxVaHoRaaUL2
+                // otherUserId should be "admin" (parts[0]), not the user ID
+                otherUserId = parts[0]; // "admin"
+            } else if (parts.length == 2) {
+                // Format: admin_uid
+                otherUserId = parts[0]; // "admin"
+            } else {
+                otherUserId = parts[0];
+            }
+            
+            Log.d("ChatRoomActivity", "selfUserId: " + selfUserId + ", otherUserId: " + otherUserId);
+            
+            // Null checks
+            if (selfUserId == null || otherUserId == null) {
+                Log.e("ChatRoomActivity", "selfUserId or otherUserId is null");
+                return;
+            }
+            
+            // Load tin nhắn từ Firebase Realtime Database theo chuẩn mới
+            DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference("chats");
+            chatRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    try {
+                        messages.clear();
+                        for (DataSnapshot data : snapshot.getChildren()) {
+                            try {
+                                MessageModel messageModel = data.getValue(MessageModel.class);
+                                Log.d("ChatRoomActivity", "Processing message: " + data.getKey());
+                                Log.d("ChatRoomActivity", "  - senderId: " + (messageModel != null ? messageModel.getSenderId() : "null"));
+                                Log.d("ChatRoomActivity", "  - receiverId: " + (messageModel != null ? messageModel.getReceiverId() : "null"));
+                                Log.d("ChatRoomActivity", "  - message: " + (messageModel != null ? messageModel.getMessage() : "null"));
+                                
+                                if (messageModel != null && 
+                                    messageModel.getSenderId() != null && 
+                                    messageModel.getReceiverId() != null &&
+                                    !isSampleMessage(messageModel.getMessage())) {
+                                    
+                                    // Check if message belongs to this conversation
+                                    boolean isMessageForThisConversation = false;
+                                    
+                                    Log.d("ChatRoomActivity", "Checking message: " + data.getKey());
+                                    Log.d("ChatRoomActivity", "  - selfUserId: " + selfUserId);
+                                    Log.d("ChatRoomActivity", "  - otherUserId: " + otherUserId);
+                                    Log.d("ChatRoomActivity", "  - messageSenderId: " + messageModel.getSenderId());
+                                    Log.d("ChatRoomActivity", "  - messageReceiverId: " + messageModel.getReceiverId());
+                                    
+                                    // Case 1: User sends to admin
+                                    if (messageModel.getSenderId().equals(selfUserId) && messageModel.getReceiverId().equals(otherUserId)) {
+                                        isMessageForThisConversation = true;
+                                        Log.d("ChatRoomActivity", "  - Case 1: User sends to admin - MATCH");
+                                    }
+                                    // Case 2: Admin sends to user
+                                    else if (messageModel.getSenderId().equals(otherUserId) && messageModel.getReceiverId().equals(selfUserId)) {
+                                        isMessageForThisConversation = true;
+                                        Log.d("ChatRoomActivity", "  - Case 2: Admin sends to user - MATCH");
+                                    }
+                                    // Case 3: Admin view - show messages between admin and specific user
+                                    else if (selfUserId.equals("admin_uid") && 
+                                             (messageModel.getSenderId().equals("admin") || messageModel.getReceiverId().equals("admin"))) {
+                                        isMessageForThisConversation = true;
+                                        Log.d("ChatRoomActivity", "  - Case 3: Admin view - MATCH");
+                                    }
+                                    else {
+                                        Log.d("ChatRoomActivity", "  - No case matches - SKIP");
+                                    }
+                                    
+                                    if (isMessageForThisConversation) {
+                                        Log.d("ChatRoomActivity", "Message matches conversation - adding to list");
+                                        Log.d("ChatRoomActivity", "  - selfUserId: " + selfUserId);
+                                        Log.d("ChatRoomActivity", "  - otherUserId: " + otherUserId);
+                                        Log.d("ChatRoomActivity", "  - messageSenderId: " + messageModel.getSenderId());
+                                        Log.d("ChatRoomActivity", "  - messageReceiverId: " + messageModel.getReceiverId());
+                                    
+                                        // Convert MessageModel to Message for compatibility
+                                        String messageText = messageModel.getMessage() != null ? messageModel.getMessage() : "";
+                                        String senderName;
+                                        
+                                        if (messageModel.getSenderId().equals(selfUserId)) {
+                                            // Tin nhắn từ user hiện tại
+                                            senderName = getUsernameFromToken();
+                                        } else {
+                                            // Tin nhắn từ user khác - lấy username thật từ database
+                                            senderName = getRealUsernameFromSenderId(messageModel.getSenderId());
+                                        }
+                                        
+                                        Message message = new Message(
+                                            data.getKey(),
+                                            conversationId,
+                                            messageModel.getSenderId(),
+                                            senderName,
+                                            messageText,
+                                            messageModel.getTimestamp()
+                                        );
+                                        messages.add(message);
+                                    } else {
+                                        Log.d("ChatRoomActivity", "Message does not match conversation - skipping");
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.e("ChatRoomActivity", "Error processing message: " + e.getMessage());
+                            }
+                        }
+                        adapter.notifyDataSetChanged();
+                        if (!messages.isEmpty()) {
+                            recyclerView.scrollToPosition(messages.size() - 1);
+                        }
+                        Log.d("ChatRoomActivity", "Loaded " + messages.size() + " messages from Firebase");
+                    } catch (Exception e) {
+                        Log.e("ChatRoomActivity", "Error in onDataChange: " + e.getMessage());
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("ChatRoomActivity", "Failed to load messages: " + error.getMessage());
+                }
+            });
 
             // Ensure conversation exists in conversations collection
             ensureConversationExists();
-
-            messagesRef.addChildEventListener(new ChildEventListener() {
-                @Override public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChildName) {
-                    Log.d("ChatRoomActivity", "New message received: " + snapshot.getKey());
-                    Message m = snapshot.getValue(Message.class);
-                    if (m != null) {
-                        messages.add(m);
-                        adapter.notifyItemInserted(messages.size() - 1);
-                        recyclerView.scrollToPosition(messages.size() - 1);
-                        Log.d("ChatRoomActivity", "Message added to UI: " + m.getText());
-                    }
-                }
-                @Override public void onChildChanged(@NonNull DataSnapshot snapshot, String previousChildName) {
-                    Log.d("ChatRoomActivity", "Message updated: " + snapshot.getKey());
-                }
-                @Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-                    Log.d("ChatRoomActivity", "Message removed: " + snapshot.getKey());
-                }
-                @Override public void onChildMoved(@NonNull DataSnapshot snapshot, String previousChildName) {}
-                @Override public void onCancelled(@NonNull DatabaseError error) {
-                    Log.e("ChatRoomActivity", "Firebase listener cancelled: " + error.getMessage());
-                }
-            });
         } else {
             Log.w("ChatRoomActivity", "No conversationId provided, cannot load messages");
         }
@@ -124,8 +230,8 @@ public class ChatRoomActivity extends AppCompatActivity {
         }
         
         String uid = selfUserId;
-        if (conversationId == null || messagesRef == null) {
-            Log.e("ChatRoomActivity", "Cannot send message: conversationId or messagesRef is null");
+        if (conversationId == null) {
+            Log.e("ChatRoomActivity", "Cannot send message: conversationId is null");
             return;
         }
         
@@ -133,21 +239,33 @@ public class ChatRoomActivity extends AppCompatActivity {
         String realUsername = getUsernameFromToken();
         Log.d("ChatRoomActivity", "Sending message: " + text + " from user: " + uid + " with username: " + realUsername);
         
-        String messageId = messagesRef.push().getKey();
+        // Extract receiver ID from conversationId
+        String[] parts = conversationId.split("_");
+        String receiverId = parts.length > 0 ? parts[0] : "admin_uid";
+        
+        // Lưu tin nhắn vào Firebase Realtime Database theo chuẩn mới
+        DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference("chats");
+        String messageId = chatRef.push().getKey();
         long now = System.currentTimeMillis();
-        Message message = new Message(messageId, conversationId, uid, realUsername, text, now);
+        
+        MessageModel messageModel = new MessageModel(
+                uid,
+                receiverId,
+                text,
+                now
+        );
         
         if (messageId != null) {
-            messagesRef.child(messageId).setValue(message)
+            chatRef.child(messageId).setValue(messageModel)
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("ChatRoomActivity", "Message sent successfully: " + messageId);
+                    Log.d("ChatRoomActivity", "Message saved to Firebase successfully: " + messageId);
+                    // Sau khi lưu thành công, gửi thông báo FCM
+                    sendNotification(receiverId, realUsername, text);
                     // Update conversation with full data
                     updateConversationData(text, now);
-                    // Sync message to MySQL database
-                    syncMessageToDatabase(message);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("ChatRoomActivity", "Failed to send message: " + e.getMessage());
+                    Log.e("ChatRoomActivity", "Failed to save message: " + e.getMessage());
                 });
         } else {
             Log.e("ChatRoomActivity", "Failed to generate message ID");
@@ -196,6 +314,88 @@ public class ChatRoomActivity extends AppCompatActivity {
             return "User";
         }
     }
+    
+    private String getRealUsernameFromSenderId(String senderId) {
+        try {
+            // Lấy username thật từ Firebase Database
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(senderId);
+            userRef.child("username").get().addOnSuccessListener(snapshot -> {
+                String username = snapshot.getValue(String.class);
+                if (username != null && !username.isEmpty()) {
+                    Log.d("ChatRoomActivity", "Real username for " + senderId + ": " + username);
+                } else {
+                    Log.w("ChatRoomActivity", "No username found for " + senderId);
+                }
+            }).addOnFailureListener(e -> {
+                Log.e("ChatRoomActivity", "Failed to get username for " + senderId + ": " + e.getMessage());
+            });
+            
+            // Trả về tên tạm thời, sẽ được cập nhật khi có dữ liệu từ Firebase
+            return "Customer";
+            
+        } catch (Exception e) {
+            Log.e("ChatRoomActivity", "Error getting real username: " + e.getMessage());
+            return "Customer";
+        }
+    }
+    
+    private String getRealCustomerName(String customerId) {
+        try {
+            // Nếu customerId là "uid" (generic), sử dụng tên từ JWT token
+            if (customerId == null || customerId.equals("uid") || customerId.equals("admin_uid")) {
+                String username = getUsernameFromToken();
+                Log.d("ChatRoomActivity", "Using JWT username for customer: " + username);
+                return username;
+            }
+            
+            // Nếu customerId là Firebase UID thật, lấy từ database
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(customerId);
+            userRef.child("username").get().addOnSuccessListener(snapshot -> {
+                String username = snapshot.getValue(String.class);
+                if (username != null && !username.isEmpty()) {
+                    Log.d("ChatRoomActivity", "Real customer name for " + customerId + ": " + username);
+                } else {
+                    Log.w("ChatRoomActivity", "No username found for customer " + customerId);
+                }
+            }).addOnFailureListener(e -> {
+                Log.e("ChatRoomActivity", "Failed to get customer username for " + customerId + ": " + e.getMessage());
+            });
+            
+            // Trả về tên tạm thời, sẽ được cập nhật khi có dữ liệu từ Firebase
+            return "Customer " + customerId;
+            
+        } catch (Exception e) {
+            Log.e("ChatRoomActivity", "Error getting real customer name: " + e.getMessage());
+            return "Customer " + customerId;
+        }
+    }
+    
+    private boolean isSampleMessage(String message) {
+        if (message == null || message.isEmpty()) {
+            return true;
+        }
+        
+        // Chỉ lọc tin nhắn thực sự là mẫu, không lọc tin nhắn thật
+        // Không lọc "xin chao vì đây có thể là tin nhắn thật
+        String[] sampleMessages = {
+            "test",
+            "sample", 
+            "demo",
+            "uh huh",
+            "ji",
+            "jl"
+        };
+        
+        String lowerMessage = message.toLowerCase().trim();
+        for (String sample : sampleMessages) {
+            if (lowerMessage.equals(sample.toLowerCase())) {
+                Log.d("ChatRoomActivity", "Filtering out sample message: " + message);
+                return true;
+            }
+        }
+        
+        return false;
+    }
 
     private void updateConversationData(String lastMessage, long timestamp) {
         if (conversationId == null) return;
@@ -207,9 +407,9 @@ public class ChatRoomActivity extends AppCompatActivity {
         String customerId = parts.length > 1 ? parts[1] : selfUserId;
         String adminId = parts.length > 0 ? parts[0] : "admin_uid";
         
-        // Get customer name from JWT token
-        String customerName = getUsernameFromToken();
-        Log.d("ChatRoomActivity", "Final customer name from JWT: " + customerName);
+        // Get customer name - should be the actual customer's name, not admin's name
+        String customerName = getRealCustomerName(customerId);
+        Log.d("ChatRoomActivity", "Final customer name: " + customerName);
         
         // Create full conversation object
         com.example.onlyfanshop.model.chat.Conversation conv = new com.example.onlyfanshop.model.chat.Conversation(
@@ -248,28 +448,71 @@ public class ChatRoomActivity extends AppCompatActivity {
             String[] parts = conversationId.split("_");
             String receiverId = parts.length > 0 ? parts[0] : "admin_uid";
             
-            // Call backend API to sync message
-            syncMessageToBackend(message.getSenderId(), receiverId, message.getText(), token);
+            // TODO: Implement backend API call to sync message
+            // POST /api/chat/sync-message
+            // Headers: Authorization: Bearer {token}
+            // Body: { senderId, receiverId, message }
+            Log.d("ChatRoomActivity", "Backend sync not implemented yet");
+            Log.d("ChatRoomActivity", "  - senderId: " + message.getSenderId());
+            Log.d("ChatRoomActivity", "  - receiverId: " + receiverId);
+            Log.d("ChatRoomActivity", "  - message: " + message.getText());
             
         } catch (Exception e) {
             Log.e("ChatRoomActivity", "Error syncing message to database: " + e.getMessage());
         }
     }
     
-    private void syncMessageToBackend(String senderId, String receiverId, String message, String token) {
-        // TODO: Implement Retrofit API call
-        // POST /api/chat/sync-message
-        // Headers: Authorization: Bearer {token}
-        // Body: { senderId, receiverId, message }
-        
-        Log.d("ChatRoomActivity", "Calling backend API to sync message:");
-        Log.d("ChatRoomActivity", "  - senderId: " + senderId);
-        Log.d("ChatRoomActivity", "  - receiverId: " + receiverId);
-        Log.d("ChatRoomActivity", "  - message: " + message);
-        Log.d("ChatRoomActivity", "  - token: " + token.substring(0, Math.min(20, token.length())) + "...");
-        
-        // For now, just log the API call
-        // In production, implement actual Retrofit call here
+    private void sendNotification(String receiverId, String senderName, String messageText) {
+        try {
+            // Lấy FCM token của người nhận từ database
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(receiverId);
+            userRef.child("fcmToken").get().addOnSuccessListener(snapshot -> {
+                String receiverToken = snapshot.getValue(String.class);
+                if (receiverToken != null && !receiverToken.isEmpty()) {
+                    sendFCMNotification(receiverToken, senderName, messageText);
+                } else {
+                    Log.w("ChatRoomActivity", "No FCM token found for receiver: " + receiverId);
+                }
+            }).addOnFailureListener(e -> {
+                Log.e("ChatRoomActivity", "Failed to get FCM token: " + e.getMessage());
+            });
+        } catch (Exception e) {
+            Log.e("ChatRoomActivity", "Error sending notification: " + e.getMessage());
+        }
+    }
+    
+    private void sendFCMNotification(String receiverToken, String senderName, String messageText) {
+        try {
+            JSONObject notification = new JSONObject();
+            notification.put("to", receiverToken);
+
+            JSONObject data = new JSONObject();
+            data.put("title", senderName);
+            data.put("body", messageText);
+
+            notification.put("notification", data);
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                "https://fcm.googleapis.com/fcm/send", 
+                notification,
+                response -> Log.d("FCM", "Notification sent successfully"),
+                error -> Log.e("FCM", "Error sending notification: " + error.getMessage())
+            ) {
+                @Override
+                public Map<String, String> getHeaders() {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Authorization", "key=YOUR_SERVER_KEY"); // Thay YOUR_SERVER_KEY bằng key thực
+                    headers.put("Content-Type", "application/json");
+                    return headers;
+                }
+            };
+            
+            RequestQueue queue = Volley.newRequestQueue(this);
+            queue.add(request);
+            
+        } catch (Exception e) {
+            Log.e("ChatRoomActivity", "Error creating FCM request: " + e.getMessage());
+        }
     }
 
     private void ensureConversationExists() {
@@ -287,9 +530,9 @@ public class ChatRoomActivity extends AppCompatActivity {
                 String customerId = parts.length > 1 ? parts[1] : selfUserId;
                 String adminId = parts.length > 0 ? parts[0] : "admin_uid";
                 
-                // Get customer name from JWT token
-                String customerName = getUsernameFromToken();
-                Log.d("ChatRoomActivity", "Final customer name from JWT: " + customerName);
+                // Get customer name - should be the actual customer's name, not admin's name
+                String customerName = getRealCustomerName(customerId);
+                Log.d("ChatRoomActivity", "Final customer name: " + customerName);
                 
                 com.example.onlyfanshop.model.chat.Conversation conv = new com.example.onlyfanshop.model.chat.Conversation(
                         conversationId,

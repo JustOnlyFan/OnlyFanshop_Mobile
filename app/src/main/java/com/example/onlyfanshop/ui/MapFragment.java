@@ -6,12 +6,10 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ListView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,9 +17,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.ViewModel.MapViewModel;
+import com.example.onlyfanshop.adapter.AttractionAdapter;
 import com.example.onlyfanshop.map.config.KeyStorage;
 import com.example.onlyfanshop.map.config.MapConfig;
 import com.example.onlyfanshop.map.core.interfaces.MapProvider;
@@ -29,6 +30,8 @@ import com.example.onlyfanshop.map.impl.map.OsmMapProvider;
 import com.example.onlyfanshop.map.models.GeocodeResult;
 import com.example.onlyfanshop.map.models.PlaceSuggestion;
 import com.example.onlyfanshop.map.models.RouteResult;
+import com.example.onlyfanshop.model.Attraction;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +42,16 @@ public class MapFragment extends Fragment {
     private MapProvider mapProvider;
 
     private EditText etSearch;
-    private ImageButton btnSearch, btnToggleKeyPanel;
-    private ListView lvSuggestions;
+    private ImageView btnClearSearch;
+    private TextView tvLocation;
+    private RecyclerView rvSuggestions, rvAttractions;
     private TextView tvRouteInfo;
-    private Button btnClearRoute, btnApplyKeys;
-    private View apiKeyPanel;
-    private EditText etOpenCageKey, etGeoapifyKey, etLocationIqKey, etOrsKey, etGraphHopperKey;
+    private LinearLayout routePanel;
+    private FloatingActionButton fabLocation;
 
     private final List<PlaceSuggestion> currentSuggestions = new ArrayList<>();
-    private ArrayAdapter<String> suggestionsAdapter;
+    private final List<Attraction> attractions = new ArrayList<>();
+    private AttractionAdapter attractionAdapter;
     private double[] routeStart = null;
 
     @Nullable
@@ -60,23 +64,19 @@ public class MapFragment extends Fragment {
         vm = new ViewModelProvider(this).get(MapViewModel.class);
 
         etSearch = v.findViewById(R.id.etSearch);
-        btnSearch = v.findViewById(R.id.btnSearch);
-        lvSuggestions = v.findViewById(R.id.lvSuggestions);
+        btnClearSearch = v.findViewById(R.id.btnClearSearch);
+        tvLocation = v.findViewById(R.id.tvLocation);
+        rvSuggestions = v.findViewById(R.id.rvSuggestions);
+        rvAttractions = v.findViewById(R.id.rvAttractions);
         tvRouteInfo = v.findViewById(R.id.tvRouteInfo);
-        btnClearRoute = v.findViewById(R.id.btnClearRoute);
-        btnToggleKeyPanel = v.findViewById(R.id.btnToggleKeyPanel);
-        apiKeyPanel = v.findViewById(R.id.apiKeyPanel);
-        etOpenCageKey = v.findViewById(R.id.etOpenCageKey);
-        etGeoapifyKey = v.findViewById(R.id.etGeoapifyKey);
-        etLocationIqKey = v.findViewById(R.id.etLocationIqKey);
-        etOrsKey = v.findViewById(R.id.etOrsKey);
-        etGraphHopperKey = v.findViewById(R.id.etGraphHopperKey);
-        btnApplyKeys = v.findViewById(R.id.btnApplyKeys);
+        routePanel = v.findViewById(R.id.routePanel);
+        fabLocation = v.findViewById(R.id.fabLocation);
 
         // Load key đã lưu
         KeyStorage.loadIntoConfig(requireContext());
 
         initMap(v);
+        initAttractions();
         bindViewModel();
         bindEvents();
     }
@@ -88,7 +88,7 @@ public class MapFragment extends Fragment {
         container.addView(mapView);
         mapProvider.moveCamera(10.762622, 106.660172, 12);
 
-        mapProvider.setOnMapClickListener((lat, lng) -> lvSuggestions.setVisibility(View.GONE));
+        mapProvider.setOnMapClickListener((lat, lng) -> rvSuggestions.setVisibility(View.GONE));
         mapProvider.setOnMapLongClickListener((lat, lng) -> {
             if (routeStart == null){
                 routeStart = new double[]{lat, lng};
@@ -100,6 +100,60 @@ public class MapFragment extends Fragment {
                 routeStart = null;
             }
         });
+    }
+
+    private void initAttractions() {
+        // Initialize attractions with sample data
+        attractions.clear();
+        attractions.add(new Attraction(
+            "1", 
+            "Miniatur Wunderland", 
+            "Tiny trains travel through a world of wonder.",
+            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
+            53.5456, 9.9936, 
+            "Kehrwieder 2, 20457 Hamburg, Germany"
+        ));
+        attractions.add(new Attraction(
+            "2", 
+            "Dungeon Hamburg", 
+            "Dive in history",
+            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
+            53.5456, 9.9936, 
+            "Kehrwieder 2, 20457 Hamburg, Germany"
+        ));
+        attractions.add(new Attraction(
+            "3", 
+            "Elbphilharmonie", 
+            "Architectural masterpiece by the water",
+            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
+            53.5456, 9.9936, 
+            "Platz der Deutschen Einheit 1, 20457 Hamburg, Germany"
+        ));
+
+        // Setup attractions RecyclerView
+        attractionAdapter = new AttractionAdapter(attractions, new AttractionAdapter.OnAttractionClickListener() {
+            @Override
+            public void onAttractionClick(Attraction attraction) {
+                // Move map to attraction location
+                mapProvider.moveCamera(attraction.getLatitude(), attraction.getLongitude(), 15);
+                mapProvider.addMarker("attraction", attraction.getLatitude(), attraction.getLongitude(), 
+                    attraction.getTitle(), attraction.getDescription());
+            }
+
+            @Override
+            public void onDirectionsClick(Attraction attraction) {
+                // Start route to attraction
+                if (routeStart != null) {
+                    vm.route(routeStart[0], routeStart[1], attraction.getLatitude(), attraction.getLongitude(), 
+                        MapConfig.ROUTE_MAX_ALTERNATIVES);
+                } else {
+                    Toast.makeText(getContext(), "Please select a starting point first", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        rvAttractions.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        rvAttractions.setAdapter(attractionAdapter);
     }
 
     private void bindViewModel(){
@@ -117,19 +171,8 @@ public class MapFragment extends Fragment {
             if (suggestions == null) return;
             currentSuggestions.clear();
             currentSuggestions.addAll(suggestions);
-            List<String> labels = new ArrayList<>();
-            for (PlaceSuggestion p : suggestions) {
-                labels.add(p.primaryText + (p.secondaryText != null ? " - " + p.secondaryText : ""));
-            }
-            if (suggestionsAdapter == null){
-                suggestionsAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, labels);
-                lvSuggestions.setAdapter(suggestionsAdapter);
-            } else {
-                suggestionsAdapter.clear();
-                suggestionsAdapter.addAll(labels);
-                suggestionsAdapter.notifyDataSetChanged();
-            }
-            lvSuggestions.setVisibility(View.VISIBLE);
+            // TODO: Setup suggestions RecyclerView adapter
+            rvSuggestions.setVisibility(View.VISIBLE);
         });
 
         vm.getRouteResults().observe(getViewLifecycleOwner(), routes -> {
@@ -138,6 +181,7 @@ public class MapFragment extends Fragment {
             mapProvider.addPolyline("route_main", main.path, 0xFF0066FF, 8f);
             tvRouteInfo.setText(String.format("Dist: %.1f km | Time: %.1f min",
                     main.distanceMeters / 1000.0, main.durationSeconds / 60.0));
+            routePanel.setVisibility(View.VISIBLE);
         });
 
         vm.getError().observe(getViewLifecycleOwner(), err -> {
@@ -146,44 +190,38 @@ public class MapFragment extends Fragment {
     }
 
     private void bindEvents(){
-        btnSearch.setOnClickListener(v -> vm.search(etSearch.getText().toString()));
-
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s,int start,int count,int after){}
             @Override public void onTextChanged(CharSequence s,int start,int before,int count){
-                if (s.length() > 2) vm.autoComplete(s.toString());
-                else lvSuggestions.setVisibility(View.GONE);
+                if (s.length() > 2) {
+                    vm.autoComplete(s.toString());
+                    btnClearSearch.setVisibility(View.VISIBLE);
+                } else {
+                    rvSuggestions.setVisibility(View.GONE);
+                    btnClearSearch.setVisibility(View.GONE);
+                }
             }
             @Override public void afterTextChanged(Editable s){}
         });
 
-        lvSuggestions.setOnItemClickListener((parent, view, position, id) -> {
-            PlaceSuggestion ps = currentSuggestions.get(position);
-            lvSuggestions.setVisibility(View.GONE);
-            mapProvider.addMarker("search", ps.lat, ps.lng, ps.primaryText, ps.secondaryText);
-            mapProvider.moveCamera(ps.lat, ps.lng, 15);
+        btnClearSearch.setOnClickListener(v -> {
+            etSearch.setText("");
+            rvSuggestions.setVisibility(View.GONE);
+            btnClearSearch.setVisibility(View.GONE);
         });
 
-        btnClearRoute.setOnClickListener(v -> {
+        fabLocation.setOnClickListener(v -> {
+            // TODO: Get current location and move map
+            Toast.makeText(getContext(), "Getting your location...", Toast.LENGTH_SHORT).show();
+        });
+
+        // Route panel clear button
+        routePanel.findViewById(R.id.btnClearRoute).setOnClickListener(v -> {
             mapProvider.clearPolyline("route_main");
             mapProvider.removeMarker("start");
             mapProvider.removeMarker("end");
-            tvRouteInfo.setText("Chưa có route");
-        });
-
-        btnToggleKeyPanel.setOnClickListener(v -> {
-            apiKeyPanel.setVisibility(apiKeyPanel.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-        });
-
-        btnApplyKeys.setOnClickListener(v -> {
-            KeyStorage.save(requireContext(),
-                    etOpenCageKey.getText().toString(),
-                    etGeoapifyKey.getText().toString(),
-                    etLocationIqKey.getText().toString(),
-                    etOrsKey.getText().toString(),
-                    etGraphHopperKey.getText().toString());
-            KeyStorage.loadIntoConfig(requireContext());
-            Toast.makeText(getContext(), "Đã lưu keys (khởi tạo MapServiceFacade mới ở lần dùng tiếp).", Toast.LENGTH_SHORT).show();
+            tvRouteInfo.setText("No route selected");
+            routePanel.setVisibility(View.GONE);
         });
     }
 
