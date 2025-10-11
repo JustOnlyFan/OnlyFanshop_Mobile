@@ -2,47 +2,33 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/mapRoot"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
 
+    <!-- Map Container -->
     <FrameLayout
         android:id="@+id/mapContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent" />
 
-        <LinearLayout
-            android:id="@+id/routePanel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|start"
-            android:layout_margin="12dp"
-            android:background="#AA000000"
-            android:orientation="vertical"
-            android:padding="8dp">
-
-            <TextView
-                android:id="@+id/tvRouteInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Chưa có route"
-                android:textColor="#FFFFFF" />
-
-            <Button
-                android:id="@+id/btnClearRoute"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Xoá route" />
-        </LinearLayout>
-    </FrameLayout>
-
+    <!-- Modern Search Bar -->
     <LinearLayout
         android:id="@+id/searchBar"
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        android:padding="8dp"
-        android:background="#CCFFFFFF"
-        android:elevation="6dp">
+        android:layout_margin="16dp"
+        android:padding="16dp"
+        android:background="@drawable/search_bar_background"
+        android:elevation="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_search"
+            android:layout_marginEnd="12dp"
+            android:tint="#666666" />
 
         <EditText
             android:id="@+id/etSearch"
@@ -50,93 +36,97 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:hint="Tìm địa điểm..."/>
+            android:hint="Attractions"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:textColorHint="#999999"
+            android:background="@android:color/transparent"
+            android:padding="0dp" />
 
-        <ImageButton
-            android:id="@+id/btnSearch"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Search"
-            android:src="@android:drawable/ic_menu_search"/>
+        <TextView
+            android:id="@+id/tvLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hamburg, Germany"
+            android:textSize="12sp"
+            android:textColor="#999999"
+            android:layout_marginStart="8dp" />
+
+        <ImageView
+            android:id="@+id/btnClearSearch"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_close"
+            android:layout_marginStart="12dp"
+            android:tint="#666666"
+            android:visibility="gone" />
     </LinearLayout>
 
-    <ListView
-        android:id="@+id/lvSuggestions"
+    <!-- Search Suggestions -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSuggestions"
         android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:layout_marginTop="70dp"
-        android:background="#FFFFFFFF"
-        android:visibility="gone"/>
-
-    <ScrollView
-        android:id="@+id/apiKeyPanel"
-        android:layout_width="260dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|top"
-        android:layout_margin="8dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginHorizontal="16dp"
+        android:background="@drawable/suggestions_background"
         android:visibility="gone"
-        android:background="#EEFFFFFF">
+        android:elevation="8dp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="8dp">
-
-            <TextView
-                android:text="API KEYS"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <EditText
-                android:id="@+id/etOpenCageKey"
-                android:hint="OpenCage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-            <EditText
-                android:id="@+id/etGeoapifyKey"
-                android:hint="Geoapify"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-            <EditText
-                android:id="@+id/etLocationIqKey"
-                android:hint="LocationIQ"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-            <EditText
-                android:id="@+id/etOrsKey"
-                android:hint="ORS"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-            <EditText
-                android:id="@+id/etGraphHopperKey"
-                android:hint="GraphHopper"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-            <Button
-                android:id="@+id/btnApplyKeys"
-                android:text="Áp dụng"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-        </LinearLayout>
-    </ScrollView>
-
-    <ImageButton
-        android:id="@+id/btnToggleKeyPanel"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_margin="12dp"
+    <!-- Location Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:background="@android:color/transparent"
-        android:src="@android:drawable/ic_menu_manage"
-        android:contentDescription="Keys"/>
+        android:layout_margin="16dp"
+        android:layout_marginBottom="200dp"
+        android:src="@drawable/ic_my_location"
+        android:backgroundTint="#FFFFFF"
+        android:tint="#333333"
+        android:elevation="8dp" />
+
+    <!-- Attractions Carousel -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAttractions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:clipToPadding="false"
+        android:orientation="horizontal" />
+
+    <!-- Route Info Panel (Hidden by default) -->
+    <LinearLayout
+        android:id="@+id/routePanel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_margin="16dp"
+        android:background="@drawable/route_panel_background"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone"
+        android:elevation="8dp">
+
+        <TextView
+            android:id="@+id/tvRouteInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No route selected"
+            android:textColor="#333333"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnClearRoute"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear Route"
+            android:textSize="12sp"
+            android:layout_marginTop="8dp"
+            style="@style/Widget.Material3.Button.TextButton" />
+    </LinearLayout>
 
 </FrameLayout>

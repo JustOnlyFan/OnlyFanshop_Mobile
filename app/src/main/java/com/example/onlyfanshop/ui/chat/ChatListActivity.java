@@ -88,8 +88,20 @@ public class ChatListActivity extends AppCompatActivity {
                               ", CustomerName: " + c.getCustomerName() + 
                               ", LastMessage: " + c.getLastMessage());
                         
-                        // If customer name is null or "Customer", try to get real name
-                        if (c.getCustomerName() == null || c.getCustomerName().equals("Customer")) {
+                        // Filter out invalid conversations
+                        if (c.getId() == null || c.getId().isEmpty()) {
+                            Log.d("ChatListActivity", "Skipping conversation with null ID");
+                            return;
+                        }
+                        
+                        // Filter out sample conversations
+                        if (isSampleConversation(c)) {
+                            Log.d("ChatListActivity", "Skipping sample conversation: " + c.getLastMessage());
+                            return;
+                        }
+                        
+                        // If customer name is null or "Customer Name", try to get real name
+                        if (c.getCustomerName() == null || c.getCustomerName().equals("Customer Name") || c.getCustomerName().equals("Customer")) {
                             // Try to get customer name from Firebase user data
                             String customerId = c.getCustomerId();
                             if (customerId != null && !customerId.equals("admin_uid")) {
@@ -123,6 +135,24 @@ public class ChatListActivity extends AppCompatActivity {
         });
     }
 
+    private boolean isSampleConversation(Conversation c) {
+        if (c == null || c.getLastMessage() == null) {
+            return true;
+        }
+        
+        // Chỉ lọc conversation có ID null hoặc customer name null
+        if (c.getId() == null || c.getId().isEmpty()) {
+            return true;
+        }
+        
+        if (c.getCustomerName() == null || c.getCustomerName().isEmpty()) {
+            return true;
+        }
+        
+        // Không lọc tin nhắn "xin chao" vì đây có thể là tin nhắn thật
+        return false;
+    }
+    
     private void ensureConversationExistsWithAdmin() {
         if (currentUserId == null) {
             Log.w("ChatListActivity", "Cannot ensure admin conversation: currentUserId is null");
