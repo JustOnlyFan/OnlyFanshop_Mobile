@@ -48,25 +48,19 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void applyEdgeToEdgeInsets() {
-        // Chỉ áp dụng inset đáy cho chính bottomNav
         ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
             Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), sys.bottom);
-            // Khi bottomNav đổi kích thước (do inset), cập nhật padding cho container
             v.post(this::adjustContainerBottomPadding);
             return insets;
         });
-
-        // Khi bottomNav đo xong/chỉnh layout, cập nhật lại container
         bottomNav.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, orr, ob) -> adjustContainerBottomPadding());
-
-        // Yêu cầu áp dụng insets
         ViewCompat.requestApplyInsets(root);
     }
 
     private void adjustContainerBottomPadding() {
         if (fragmentContainer == null || bottomNav == null) return;
-        int offset = bottomNav.getHeight(); // ĐÃ bao gồm sys.bottom vì ta setPadding cho bottomNav
+        int offset = bottomNav.getHeight();
         fragmentContainer.setPadding(
                 fragmentContainer.getPaddingLeft(),
                 fragmentContainer.getPaddingTop(),
@@ -107,7 +101,7 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         bottomNav.setOnItemReselectedListener(item -> {
-            // Optional: xử lý reselect (scroll to top, refresh...)
+            // Optional
         });
     }
 
@@ -167,6 +161,11 @@ public class DashboardActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        // Ưu tiên pop back stack (ví dụ từ EditProfileFragment quay về ProfileFragment)
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
+            return;
+        }
         if (currentSelectedId != R.id.nav_home) {
             bottomNav.setSelectedItemId(R.id.nav_home);
             currentSelectedId = R.id.nav_home;

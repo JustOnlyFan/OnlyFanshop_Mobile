@@ -32,6 +32,8 @@ public class ProfileFragment extends Fragment {
 
     private TextView tvProfileName, tvProfileEmail;
 
+    private User currentUser;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -43,6 +45,13 @@ public class ProfileFragment extends Fragment {
         fetchUser();
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Khi quay lại từ EditProfileFragment, tự refresh user
+        fetchUser();
     }
 
     private void initViews(View view) {
@@ -60,7 +69,20 @@ public class ProfileFragment extends Fragment {
     }
 
     private void setupClickListeners() {
-        btnEditProfile.setOnClickListener(v -> Toast.makeText(requireContext(), "Edit Profile clicked", Toast.LENGTH_SHORT).show());
+        btnEditProfile.setOnClickListener(v -> {
+            // Điều hướng sang EditProfileFragment và giữ nguyên bottom nav (vì replace trong container)
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .setCustomAnimations(
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out,
+                            android.R.anim.fade_in,
+                            android.R.anim.fade_out
+                    )
+                    .replace(R.id.mainFragmentContainer, new EditProfileFragment(), "EDIT_PROFILE")
+                    .addToBackStack("EDIT_PROFILE")
+                    .commit();
+        });
         btnMyStores.setOnClickListener(v -> Toast.makeText(requireContext(), "My Stores clicked", Toast.LENGTH_SHORT).show());
         btnSupport.setOnClickListener(v -> Toast.makeText(requireContext(), "Support clicked", Toast.LENGTH_SHORT).show());
         btnChat.setOnClickListener(v -> startActivity(new android.content.Intent(requireContext(), com.example.onlyfanshop.ui.chat.ChatListActivity.class)));
@@ -84,7 +106,8 @@ public class ProfileFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     UserResponse body = response.body();
                     if (body.getStatusCode() == 200 && body.getData() != null) {
-                        bindUser(body.getData());
+                        currentUser = body.getData();
+                        bindUser(currentUser);
                     } else {
                         Toast.makeText(requireContext(), body.getMessage(), Toast.LENGTH_SHORT).show();
                     }
@@ -110,18 +133,15 @@ public class ProfileFragment extends Fragment {
     }
 
     private void showLogoutDialog() {
-        new MaterialAlertDialogBuilder(requireContext())
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Logout")
                 .setMessage("Are you sure you want to logout?")
                 .setPositiveButton("Logout", (dialog, which) -> {
-                    // Xóa token trong SharedPreferences để AuthInterceptor không gửi nữa
                     android.content.SharedPreferences prefs = requireContext().getApplicationContext()
                             .getSharedPreferences("MyAppPrefs", android.content.Context.MODE_PRIVATE);
                     prefs.edit().remove("jwt_token").apply();
                     com.example.onlyfanshop.api.ApiClient.clearAuthToken();
-
                     Toast.makeText(requireContext(), "Logged out", Toast.LENGTH_SHORT).show();
-                    // TODO: Điều hướng về Login
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
