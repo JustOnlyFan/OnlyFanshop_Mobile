@@ -107,9 +107,16 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(v, savedInstanceState);
 
+
         // Welcome
         tvUserName = v.findViewById(R.id.tvUserName);
-
+        tvUserName.setOnClickListener(view -> {
+            if ("Sign in".equals(tvUserName.getText().toString())) {
+                Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.login.LoginActivity.class);
+                startActivity(intent);
+                requireActivity().finish(); // Nếu muốn khi đăng nhập xong không quay lại Home cũ
+            }
+        });
         // Banner
         viewPagerBanner = v.findViewById(R.id.viewPagerBanner);
         progressBarBanner = v.findViewById(R.id.progressBarBanner);
@@ -374,6 +381,11 @@ public class HomeFragment extends Fragment {
 
     // ---------------- Welcome username ----------------
     private void fetchUserName() {
+        String token = ApiClient.getToken(requireContext());
+        if (token == null || token.trim().isEmpty()) {
+            tvUserName.setText("Sign in");
+            return;
+        }
         ProfileApi profileApi = ApiClient.getPrivateClient(requireContext()).create(ProfileApi.class);
         profileApi.getUser().enqueue(new Callback<UserResponse>() {
             @Override

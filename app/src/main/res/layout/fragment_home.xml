@@ -51,7 +51,9 @@
                     android:text="Name"
                     android:textColor="@color/black"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true"/>
             </LinearLayout>
 
             <ImageView

@@ -1,6 +1,8 @@
 package com.example.onlyfanshop.ui;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,10 +17,13 @@ import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
 import com.example.onlyfanshop.R;
+import com.example.onlyfanshop.activity.ChangePasswordActivity;
+import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
 import com.example.onlyfanshop.model.response.UserResponse;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -29,7 +34,9 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
-    private View btnMyStores, btnSupport, btnChat, btnPinCode, btnLogout;
+    private View btnSupport, btnChat, btnResetPassword, btnLogout;
+
+//    private View btnMyStores;
     private SwitchCompat switchPushNotif, switchFaceId;
 
     private TextView tvProfileName, tvProfileEmail;
@@ -39,13 +46,19 @@ public class ProfileFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_profile, container, false);
+        String token = ApiClient.getToken(requireContext());
+        if (token == null || token.trim().isEmpty()) {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.mainFragmentContainer, new PleaseSignInFragment(), "PLEASE_SIGN_IN")
+                    .commit();
+            return new View(requireContext()); // Trả về view rỗng, tránh null pointer
+        }
 
+        View view = inflater.inflate(R.layout.fragment_profile, container, false);
         initViews(view);
         setupClickListeners();
-
         fetchUser();
-
         return view;
     }
 
@@ -58,10 +71,10 @@ public class ProfileFragment extends Fragment {
 
     private void initViews(View view) {
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
-        btnMyStores = view.findViewById(R.id.btnMyStores);
+//        btnMyStores = view.findViewById(R.id.btnMyStores);
         btnSupport = view.findViewById(R.id.btnSupport);
         btnChat = view.findViewById(R.id.btnChat);
-        btnPinCode = view.findViewById(R.id.btnPinCode);
+        btnResetPassword = view.findViewById(R.id.btnResetPassword);
         btnLogout = view.findViewById(R.id.btnLogout);
         switchPushNotif = view.findViewById(R.id.switchPushNotif);
         switchFaceId = view.findViewById(R.id.switchFaceId);
@@ -85,13 +98,15 @@ public class ProfileFragment extends Fragment {
                     .addToBackStack("EDIT_PROFILE")
                     .commit();
         });
-        btnMyStores.setOnClickListener(v -> Toast.makeText(requireContext(), "My Stores clicked", Toast.LENGTH_SHORT).show());
+//        btnMyStores.setOnClickListener(v -> Toast.makeText(requireContext(), "My Stores clicked", Toast.LENGTH_SHORT).show());
         btnSupport.setOnClickListener(v -> Toast.makeText(requireContext(), "Support clicked", Toast.LENGTH_SHORT).show());
 
         // Thay link phần chat: dùng cùng logic với MainActivity (mở ChatRoom cho CUSTOMER, ChatList cho ADMIN/khác)
         btnChat.setOnClickListener(v -> openChatEntry());
 
-        btnPinCode.setOnClickListener(v -> Toast.makeText(requireContext(), "PIN Code clicked", Toast.LENGTH_SHORT).show());
+        btnResetPassword.setOnClickListener(v -> {
+            startActivity(new Intent(requireContext(), ChangePasswordActivity.class));
+        });
         btnLogout.setOnClickListener(v -> showLogoutDialog());
 
         switchPushNotif.setOnCheckedChangeListener((buttonView, isChecked) ->
@@ -185,15 +200,28 @@ public class ProfileFragment extends Fragment {
     }
 
     private void showLogoutDialog() {
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Logout")
                 .setMessage("Are you sure you want to logout?")
                 .setPositiveButton("Logout", (dialog, which) -> {
-                    android.content.SharedPreferences prefs = requireContext().getApplicationContext()
-                            .getSharedPreferences("MyAppPrefs", android.content.Context.MODE_PRIVATE);
-                    prefs.edit().remove("jwt_token").apply();
-                    com.example.onlyfanshop.api.ApiClient.clearAuthToken();
+                    SharedPreferences prefs = requireContext().getApplicationContext()
+                            .getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                    prefs.edit().remove("jwt_token").remove("userId").remove("username").apply();
+                    ApiClient.clearAuthToken();
                     Toast.makeText(requireContext(), "Logged out", Toast.LENGTH_SHORT).show();
+
+                    if (requireActivity() instanceof DashboardActivity) {
+                        DashboardActivity dashboard = (DashboardActivity) requireActivity();
+                        // Xóa badge giỏ hàng
+                        dashboard.updateCartBadgeNow();
+                        // Chuyển về Home
+                        BottomNavigationView bottomNav = dashboard.findViewById(R.id.bottomNav);
+                        if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_home);
+                        dashboard.getSupportFragmentManager()
+                                .beginTransaction()
+                                .replace(R.id.mainFragmentContainer, new HomeFragment(), "HOME_FRAGMENT")
+                                .commit();
+                    }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

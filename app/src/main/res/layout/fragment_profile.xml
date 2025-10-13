@@ -95,44 +95,44 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- My Stores -->
-                <LinearLayout
-                    android:id="@+id/btnMyStores"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="16dp"
-                    android:background="?attr/selectableItemBackground">
+<!--                &lt;!&ndash; My Stores &ndash;&gt;-->
+<!--                <LinearLayout-->
+<!--                    android:id="@+id/btnMyStores"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="56dp"-->
+<!--                    android:orientation="horizontal"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:paddingHorizontal="16dp"-->
+<!--                    android:background="?attr/selectableItemBackground">-->
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/img"
-                        app:tint="#333"/>
+<!--                    <ImageView-->
+<!--                        android:layout_width="24dp"-->
+<!--                        android:layout_height="24dp"-->
+<!--                        android:src="@drawable/img"-->
+<!--                        app:tint="#333"/>-->
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="My cart"
-                        android:textSize="15sp"
-                        android:textColor="@color/black"
-                        android:layout_marginStart="12dp"/>
+<!--                    <TextView-->
+<!--                        android:layout_width="0dp"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_weight="1"-->
+<!--                        android:text="My cart"-->
+<!--                        android:textSize="15sp"-->
+<!--                        android:textColor="@color/black"-->
+<!--                        android:layout_marginStart="12dp"/>-->
 
-                    <TextView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:text="2"
-                        android:textSize="12sp"
-                        android:textColor="@color/white"/>
+<!--                    <TextView-->
+<!--                        android:layout_width="24dp"-->
+<!--                        android:layout_height="24dp"-->
+<!--                        android:text="2"-->
+<!--                        android:textSize="12sp"-->
+<!--                        android:textColor="@color/white"/>-->
 
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/right_arrow"
-                        app:tint="#999"/>
-                </LinearLayout>
+<!--                    <ImageView-->
+<!--                        android:layout_width="20dp"-->
+<!--                        android:layout_height="20dp"-->
+<!--                        android:src="@drawable/right_arrow"-->
+<!--                        app:tint="#999"/>-->
+<!--                </LinearLayout>-->
 
                 <View
                     android:layout_width="match_parent"
@@ -312,7 +312,7 @@
 
                 <!-- PIN Code -->
                 <LinearLayout
-                    android:id="@+id/btnPinCode"
+                    android:id="@+id/btnResetPassword"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:orientation="horizontal"
@@ -330,7 +330,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="PIN Code"
+                        android:text="Reset Password"
                         android:textSize="15sp"
                         android:textColor="@color/black"
                         android:layout_marginStart="12dp"/>
