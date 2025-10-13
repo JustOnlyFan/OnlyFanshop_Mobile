@@ -23,6 +23,7 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.api.PaymentApi;
 import com.example.onlyfanshop.api.ProductApi;
+import com.example.onlyfanshop.utils.AppEvents; // THÊM: import AppEvents
 import com.example.onlyfanshop.model.PaymentDTO;
 import com.example.onlyfanshop.model.ProductDetailDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
@@ -52,7 +53,6 @@ public class ProductDetailActivity extends AppCompatActivity {
         intent.putExtra(EXTRA_PRODUCT_ID, productId);
         return intent;
     }
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -134,15 +134,26 @@ public class ProductDetailActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
+                    // Cập nhật count local (tuỳ bạn có muốn giữ lại hay không)
                     int currentCount = AppPreferences.getCartCount(ProductDetailActivity.this);
                     AppPreferences.setCartCount(ProductDetailActivity.this, currentCount + 1);
-                    int cartCount = AppPreferences.getCartCount( ProductDetailActivity.this);
+
+                    int cartCount = AppPreferences.getCartCount(ProductDetailActivity.this);
                     NotificationHelper.showNotification(
                             ProductDetailActivity.this,
                             "Giỏ hàng",
                             "Bạn đang có " + cartCount + " sản phẩm trong giỏ hàng!"
                     );
+
                     Toast.makeText(ProductDetailActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
+
+                    // THÊM: phát sự kiện để DashboardActivity cập nhật badge ngay
+                    AppEvents.get().notifyCartUpdated();
+
+                    // Nếu ProductDetailActivity đang nằm trong DashboardActivity (ở nền),
+                    // sự kiện trên sẽ được nhận khi DashboardActivity active trở lại.
+                    // Nếu ProductDetailActivity thực sự là màn con của DashboardActivity
+                    // và bạn muốn cập nhật tức thời khi quay lại, phần observe trong DashboardActivity đã xử lý.
                 } else {
                     Toast.makeText(ProductDetailActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
                 }
