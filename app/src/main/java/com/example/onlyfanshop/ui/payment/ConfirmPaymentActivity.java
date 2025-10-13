@@ -48,44 +48,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         binding.rclViewCart.setAdapter(cartAdapter);
         binding.btnCancle.setOnClickListener(v -> finish());
         SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        sharedPreferences.edit().putString("chosenAddress", "").apply();
         binding.radioAddress.setOnCheckedChangeListener((group, checkedID) -> {
             if (checkedID == binding.radioBtnDfAd.getId()) {
-                String address = sharedPreferences.getString("address", "");
-                String token = sharedPreferences.getString("jwt_token", "");
-                binding.edtOtherAddress.setVisibility(View.GONE);
-                if (!address.isEmpty()) {
-                    binding.textViewDfAd.setVisibility(View.VISIBLE);
-                    binding.textViewDfAd.setText(address);
-                    binding.edtDefaultAddress.setVisibility(View.GONE);
-                } else {
-                    binding.edtDefaultAddress.setVisibility(View.VISIBLE);
-                    binding.edtDefaultAddress.setHint("Bạn chưa có địa chỉ, vui lòng nhập địa chỉ....");
-                    binding.edtDefaultAddress.setOnFocusChangeListener((v, hasFocus) -> {
-                        if (!hasFocus) { // rời khỏi ô nhập
-                            String address_1 = binding.edtDefaultAddress.getText().toString().trim();
-                            if (!address_1.isEmpty()) {
-                                changeAddress(address_1, token);
-                                sharedPreferences.edit().putString("address", address_1).apply();
-                            }
-                            Log.d("TAG", "Giá trị khi rời khỏi ô: " + address_1);
-                        }
-                    });
-                }
+                chooseDfAddress(sharedPreferences);
             } else if (checkedID == binding.radioBtnOtherAd.getId()) {
-                // Khi chọn "Text nhập được"
-                binding.textViewDfAd.setVisibility(View.GONE);
-                binding.edtDefaultAddress.setVisibility(View.GONE);
-                binding.edtOtherAddress.setVisibility(View.VISIBLE);
-                binding.edtOtherAddress.setHint("Vui lòng nhập địa chỉ....");
-                binding.edtOtherAddress.setOnFocusChangeListener((v, hasFocus) -> {
-                    if (!hasFocus) { // rời khỏi ô nhập
-                        String address_2 = binding.edtOtherAddress.getText().toString().trim();
-                        if (!address_2.isEmpty()) {
-                            sharedPreferences.edit().putString("otherAddress", address_2).apply();
-                        }
-                        Log.d("TAG", "Giá trị khi rời khỏi ô: " + address_2);
-                    }
-                });
+                chooseOtherAddress(sharedPreferences);
             }
         });
     }
@@ -109,4 +77,46 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void chooseDfAddress(SharedPreferences sharedPreferences){
+        String address = sharedPreferences.getString("address", "");
+        String token = sharedPreferences.getString("jwt_token", "");
+        binding.edtOtherAddress.setVisibility(View.GONE);
+        if (!address.isEmpty()) {
+            binding.textViewDfAd.setVisibility(View.VISIBLE);
+            binding.textViewDfAd.setText(address);
+            sharedPreferences.edit().putString("chosenAddress", address).apply();
+            binding.edtDefaultAddress.setVisibility(View.GONE);
+        } else {
+            binding.edtDefaultAddress.setVisibility(View.VISIBLE);
+            binding.edtDefaultAddress.setHint("Bạn chưa có địa chỉ, vui lòng nhập địa chỉ....");
+            binding.edtDefaultAddress.setOnFocusChangeListener((v, hasFocus) -> {
+                if (!hasFocus) { // rời khỏi ô nhập
+                    String address_1 = binding.edtDefaultAddress.getText().toString().trim();
+                    if (!address_1.isEmpty()) {
+                        changeAddress(address_1, token);
+                        sharedPreferences.edit().putString("chosenAddress", address_1).apply();
+                    }
+                    Log.d("TAG", "Giá trị khi rời khỏi ô: " + address_1);
+                }
+            });
+        }
+    }
+
+    private void chooseOtherAddress(SharedPreferences sharedPreferences){
+        binding.textViewDfAd.setVisibility(View.GONE);
+        binding.edtDefaultAddress.setVisibility(View.GONE);
+        binding.edtOtherAddress.setVisibility(View.VISIBLE);
+        binding.edtOtherAddress.setHint("Vui lòng nhập địa chỉ....");
+        binding.edtOtherAddress.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) { // rời khỏi ô nhập
+                String address_2 = binding.edtOtherAddress.getText().toString().trim();
+                if (!address_2.isEmpty()) {
+                    sharedPreferences.edit().putString("chosenAddress", address_2).apply();
+                }
+                Log.d("TAG", "Giá trị khi rời khỏi ô: " + address_2);
+            }
+        });
+    }
+
 }
