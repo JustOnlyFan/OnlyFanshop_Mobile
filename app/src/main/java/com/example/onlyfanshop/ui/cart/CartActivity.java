@@ -8,22 +8,15 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.adapter.CartAdapter;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.databinding.ActivityCartBinding;
 import com.example.onlyfanshop.model.CartItemDTO;
-import com.example.onlyfanshop.model.ProductDetailDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.ui.payment.ConfirmPaymentActivity;
-import com.example.onlyfanshop.ui.product.ProductDetailActivity;
 
 import java.io.Serializable;
 import java.util.ArrayList;

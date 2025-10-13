@@ -1,5 +1,6 @@
 package com.example.onlyfanshop.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,7 @@ import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
 import com.example.onlyfanshop.model.response.UserResponse;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.auth.FirebaseAuth;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -85,7 +87,10 @@ public class ProfileFragment extends Fragment {
         });
         btnMyStores.setOnClickListener(v -> Toast.makeText(requireContext(), "My Stores clicked", Toast.LENGTH_SHORT).show());
         btnSupport.setOnClickListener(v -> Toast.makeText(requireContext(), "Support clicked", Toast.LENGTH_SHORT).show());
-        btnChat.setOnClickListener(v -> startActivity(new android.content.Intent(requireContext(), com.example.onlyfanshop.ui.chat.ChatListActivity.class)));
+
+        // Thay link phần chat: dùng cùng logic với MainActivity (mở ChatRoom cho CUSTOMER, ChatList cho ADMIN/khác)
+        btnChat.setOnClickListener(v -> openChatEntry());
+
         btnPinCode.setOnClickListener(v -> Toast.makeText(requireContext(), "PIN Code clicked", Toast.LENGTH_SHORT).show());
         btnLogout.setOnClickListener(v -> showLogoutDialog());
 
@@ -94,6 +99,53 @@ public class ProfileFragment extends Fragment {
 
         switchFaceId.setOnCheckedChangeListener((buttonView, isChecked) ->
                 Toast.makeText(requireContext(), "Face ID: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
+    }
+
+    // Mở chat theo cùng logic với MainActivity.btnOpenTestChat
+    private void openChatEntry() {
+        // Cố gắng đọc role từ currentUser (đã fetch từ API)
+        String role = null;
+        Integer userId = null;
+        if (currentUser != null) {
+            try {
+                role = currentUser.getRole(); // yêu cầu model User có getRole()
+            } catch (Exception ignored) {}
+            try {
+                userId = currentUser.getUserID(); // yêu cầu model User có getUserID()
+            } catch (Exception ignored) {}
+        }
+
+        if ("CUSTOMER".equals(role)) {
+            // Khách: mở ChatRoomActivity để chat với admin, giống MainActivity
+            String customerId = FirebaseAuth.getInstance().getUid();
+            if (customerId == null) {
+                if (userId != null) {
+                    customerId = "customer_" + userId;
+                } else if (currentUser != null && currentUser.getUsername() != null) {
+                    customerId = "customer_" + currentUser.getUsername();
+                } else {
+                    customerId = "customer_" + System.currentTimeMillis();
+                }
+            }
+            // Lưu ý: thay "admin_uid" bằng UID admin thật của bạn (có thể lưu trong strings.xml)
+            String adminId = "admin_uid";
+            String conversationId = customerId.compareTo(adminId) < 0
+                    ? customerId + "_" + adminId
+                    : adminId + "_" + customerId;
+
+            Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.chat.ChatRoomActivity.class);
+            intent.putExtra("conversationId", conversationId);
+            intent.putExtra("customerName", "Admin");
+            startActivity(intent);
+        } else if ("ADMIN".equals(role)) {
+            // Admin: mở danh sách hội thoại
+            Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.chat.ChatListActivity.class);
+            startActivity(intent);
+        } else {
+            // Không rõ role: fallback mở danh sách
+            Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.chat.ChatListActivity.class);
+            startActivity(intent);
+        }
     }
 
     private void fetchUser() {

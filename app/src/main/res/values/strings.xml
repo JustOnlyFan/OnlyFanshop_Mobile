@@ -25,7 +25,7 @@
     <string name="search">Search</string>
 
     <!-- New strings -->
-    <string name="map">Map</string>
+    <string name="shop">Shop</string>
     <string name="favorites">Favorites</string>
     <string name="profile">Profile</string>
 </resources>

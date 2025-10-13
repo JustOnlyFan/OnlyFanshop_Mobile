@@ -9,13 +9,13 @@
         android:icon="@drawable/ic_search"
         android:title="@string/category" />
     <item
+        android:id="@+id/nav_shop"
+        android:icon="@drawable/ic_home"
+        android:title="@string/shop" />
+    <item
         android:id="@+id/nav_car"
         android:icon="@drawable/shopping_cart_outline_svgrepo_com"
         android:title="@string/cart" />
-    <item
-        android:id="@+id/nav_map"
-        android:icon="@drawable/history_icon_black"
-        android:title="@string/map" />
     <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_profile"
