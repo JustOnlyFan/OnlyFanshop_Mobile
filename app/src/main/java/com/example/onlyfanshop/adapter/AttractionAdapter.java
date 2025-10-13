@@ -16,76 +16,71 @@ import com.example.onlyfanshop.model.Attraction;
 
 import java.util.List;
 
-public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.AttractionViewHolder> {
-
-    private List<Attraction> attractions;
-    private OnAttractionClickListener listener;
+public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.VH> {
 
     public interface OnAttractionClickListener {
         void onAttractionClick(Attraction attraction);
         void onDirectionsClick(Attraction attraction);
     }
 
-    public AttractionAdapter(List<Attraction> attractions, OnAttractionClickListener listener) {
-        this.attractions = attractions;
+    private final List<Attraction> items;
+    private final OnAttractionClickListener listener;
+
+    public AttractionAdapter(@NonNull List<Attraction> items,
+                             @NonNull OnAttractionClickListener listener) {
+        this.items = items;
         this.listener = listener;
     }
 
     @NonNull
     @Override
-    public AttractionViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
+    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_attraction, parent, false);
-        return new AttractionViewHolder(view);
+        return new VH(v);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull AttractionViewHolder holder, int position) {
-        Attraction attraction = attractions.get(position);
-        
-        holder.tvTitle.setText(attraction.getTitle());
-        holder.tvDescription.setText(attraction.getDescription());
-        
-        // Load image with Glide
-        if (attraction.getImageUrl() != null && !attraction.getImageUrl().isEmpty()) {
-            Glide.with(holder.itemView.getContext())
-                    .load(attraction.getImageUrl())
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_foreground)
-                    .into(holder.imgAttraction);
-        }
+    public void onBindViewHolder(@NonNull VH h, int position) {
+        Attraction a = items.get(position);
+        h.tvTitle.setText(a.getTitle());
+        h.tvDescription.setText(a.getDescription());
 
-        // Set click listeners
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onAttractionClick(attraction);
-            }
+        // Load ảnh cửa hàng
+        Glide.with(h.imgAttraction)
+                .load(a.getImageUrl())
+                .placeholder(R.drawable.ic_launcher_foreground)
+                .error(R.drawable.ic_launcher_foreground)
+                .centerCrop()
+                .into(h.imgAttraction);
+
+        h.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onAttractionClick(a);
         });
 
-        holder.btnDirections.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onDirectionsClick(attraction);
-            }
+        h.btnDirections.setOnClickListener(v -> {
+            if (listener != null) listener.onDirectionsClick(a);
         });
     }
 
     @Override
     public int getItemCount() {
-        return attractions != null ? attractions.size() : 0;
+        return items != null ? items.size() : 0;
     }
 
-    public void updateAttractions(List<Attraction> newAttractions) {
-        this.attractions = newAttractions;
-        notifyDataSetChanged();
+    // Hỗ trợ CarouselController (nếu bạn dùng phiên bản gọi adapter.getItemAt)
+    public Attraction getItemAt(int position) {
+        if (position < 0 || position >= getItemCount()) return null;
+        return items.get(position);
     }
 
-    static class AttractionViewHolder extends RecyclerView.ViewHolder {
+    static class VH extends RecyclerView.ViewHolder {
         ImageView imgAttraction;
         TextView tvTitle;
         TextView tvDescription;
         Button btnDirections;
 
-        public AttractionViewHolder(@NonNull View itemView) {
+        VH(@NonNull View itemView) {
             super(itemView);
             imgAttraction = itemView.findViewById(R.id.imgAttraction);
             tvTitle = itemView.findViewById(R.id.tvTitle);
@@ -94,4 +89,3 @@ public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.At
         }
     }
 }
-

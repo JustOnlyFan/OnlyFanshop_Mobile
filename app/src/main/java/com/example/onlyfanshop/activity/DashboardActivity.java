@@ -127,11 +127,11 @@ public class DashboardActivity extends AppCompatActivity {
             fragment = new CategoryFragment();
             tag = "SEARCH";
         } else if (id == R.id.nav_car) {
+            fragment = PlaceholderFragment.newInstance("Cart", "🚧");
+            tag = "CART";
+        } else if (id == R.id.nav_map) {
             fragment = new MapFragment();
-            tag = "FAVORITES";
-        } else if (id == R.id.nav_his) {
-            fragment = PlaceholderFragment.newInstance("History", "🚧");
-            tag = "HISTORY";
+            tag = "MAP";
         } else if (id == R.id.nav_profile) {
             fragment = new ProfileFragment();
             tag = "PROFILE";

@@ -30,13 +30,23 @@ import com.example.onlyfanshop.map.impl.map.OsmMapProvider;
 import com.example.onlyfanshop.map.models.GeocodeResult;
 import com.example.onlyfanshop.map.models.PlaceSuggestion;
 import com.example.onlyfanshop.map.models.RouteResult;
+import com.example.onlyfanshop.map.shop.Shop;
+import com.example.onlyfanshop.map.shop.ShopDetailBottomSheet;
+import com.example.onlyfanshop.map.shop.ShopMarkerManager;
+import com.example.onlyfanshop.map.shop.ShopRepository;
+import com.example.onlyfanshop.map.shop.ShopUiMapper;
 import com.example.onlyfanshop.model.Attraction;
+import com.example.onlyfanshop.map.shop.AttractionCarouselController;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MapFragment extends Fragment {
+
+    private static final double DEFAULT_LAT_VN = 15.9266657;   // Trung tâm VN tương đối
+    private static final double DEFAULT_LNG_VN = 107.9650855;
+    private static final float DEFAULT_ZOOM_VN = 5.5f;         // Thấy toàn quốc
 
     private MapViewModel vm;
     private MapProvider mapProvider;
@@ -50,7 +60,14 @@ public class MapFragment extends Fragment {
     private FloatingActionButton fabLocation;
 
     private final List<PlaceSuggestion> currentSuggestions = new ArrayList<>();
-    private final List<Attraction> attractions = new ArrayList<>();
+
+    // New: Repository + MarkerManager + CarouselController
+    private ShopRepository shopRepository;
+    private ShopMarkerManager markerManager;
+    private AttractionCarouselController carouselController;
+
+    private List<Shop> shops = new ArrayList<>();
+    private List<Attraction> attractions = new ArrayList<>();
     private AttractionAdapter attractionAdapter;
     private double[] routeStart = null;
 
@@ -72,11 +89,12 @@ public class MapFragment extends Fragment {
         routePanel = v.findViewById(R.id.routePanel);
         fabLocation = v.findViewById(R.id.fabLocation);
 
-        // Load key đã lưu
+        tvLocation.setText("Việt Nam");
         KeyStorage.loadIntoConfig(requireContext());
 
         initMap(v);
-        initAttractions();
+        initData();
+        initCarousel();
         bindViewModel();
         bindEvents();
     }
@@ -86,7 +104,11 @@ public class MapFragment extends Fragment {
         FrameLayout container = root.findViewById(R.id.mapContainer);
         View mapView = mapProvider.createMapView(requireContext());
         container.addView(mapView);
-        mapProvider.moveCamera(10.762622, 106.660172, 12);
+
+        markerManager = new ShopMarkerManager(mapProvider);
+
+        // Camera mặc định Việt Nam
+        mapProvider.moveCamera(DEFAULT_LAT_VN, DEFAULT_LNG_VN, DEFAULT_ZOOM_VN);
 
         mapProvider.setOnMapClickListener((lat, lng) -> rvSuggestions.setVisibility(View.GONE));
         mapProvider.setOnMapLongClickListener((lat, lng) -> {
@@ -100,60 +122,52 @@ public class MapFragment extends Fragment {
                 routeStart = null;
             }
         });
+
+        // Nếu MapProvider có onMarkerClick:
+        // mapProvider.setOnMarkerClickListener(id -> {
+        //     Shop s = markerManager.getShopForMarker(id);
+        //     if (s != null) showShopDetail(s);
+        // });
     }
 
-    private void initAttractions() {
-        // Initialize attractions with sample data
-        attractions.clear();
-        attractions.add(new Attraction(
-            "1", 
-            "Miniatur Wunderland", 
-            "Tiny trains travel through a world of wonder.",
-            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-            53.5456, 9.9936, 
-            "Kehrwieder 2, 20457 Hamburg, Germany"
-        ));
-        attractions.add(new Attraction(
-            "2", 
-            "Dungeon Hamburg", 
-            "Dive in history",
-            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-            53.5456, 9.9936, 
-            "Kehrwieder 2, 20457 Hamburg, Germany"
-        ));
-        attractions.add(new Attraction(
-            "3", 
-            "Elbphilharmonie", 
-            "Architectural masterpiece by the water",
-            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-            53.5456, 9.9936, 
-            "Platz der Deutschen Einheit 1, 20457 Hamburg, Germany"
-        ));
+    private void initData() {
+        shopRepository = ShopRepository.getInstance();
+        shops = shopRepository.getAllShops();
+        attractions = ShopUiMapper.toAttractions(shops);
+    }
 
-        // Setup attractions RecyclerView
+    private void initCarousel() {
         attractionAdapter = new AttractionAdapter(attractions, new AttractionAdapter.OnAttractionClickListener() {
             @Override
-            public void onAttractionClick(Attraction attraction) {
-                // Move map to attraction location
-                mapProvider.moveCamera(attraction.getLatitude(), attraction.getLongitude(), 15);
-                mapProvider.addMarker("attraction", attraction.getLatitude(), attraction.getLongitude(), 
-                    attraction.getTitle(), attraction.getDescription());
+            public void onAttractionClick(Attraction a) {
+                Shop s = shopRepository.findById(a.getId());
+                if (s != null) {
+                    showShopDetail(s);
+                }
             }
 
             @Override
-            public void onDirectionsClick(Attraction attraction) {
-                // Start route to attraction
+            public void onDirectionsClick(Attraction a) {
                 if (routeStart != null) {
-                    vm.route(routeStart[0], routeStart[1], attraction.getLatitude(), attraction.getLongitude(), 
-                        MapConfig.ROUTE_MAX_ALTERNATIVES);
+                    vm.route(routeStart[0], routeStart[1], a.getLatitude(), a.getLongitude(), MapConfig.ROUTE_MAX_ALTERNATIVES);
                 } else {
-                    Toast.makeText(getContext(), "Please select a starting point first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Vui lòng chọn điểm bắt đầu trước", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
-        rvAttractions.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-        rvAttractions.setAdapter(attractionAdapter);
+        LinearLayoutManager lm = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        carouselController = new AttractionCarouselController(rvAttractions, lm, attractionAdapter);
+        carouselController.attach(attractions, (a, pos) -> {
+            // Tự động trỏ map đến item đang hiển thị ở giữa carousel
+            Shop s = shopRepository.findById(a.getId());
+            if (s != null) focusShop(s);
+        });
+    }
+
+    private void focusShop(Shop s) {
+        mapProvider.moveCamera(s.getLatitude(), s.getLongitude(), 15f);
+        markerManager.showSelectedMarker(s);
     }
 
     private void bindViewModel(){
@@ -171,7 +185,7 @@ public class MapFragment extends Fragment {
             if (suggestions == null) return;
             currentSuggestions.clear();
             currentSuggestions.addAll(suggestions);
-            // TODO: Setup suggestions RecyclerView adapter
+            // TODO: adapter cho gợi ý
             rvSuggestions.setVisibility(View.VISIBLE);
         });
 
@@ -212,10 +226,9 @@ public class MapFragment extends Fragment {
 
         fabLocation.setOnClickListener(v -> {
             // TODO: Get current location and move map
-            Toast.makeText(getContext(), "Getting your location...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Đang lấy vị trí của bạn...", Toast.LENGTH_SHORT).show();
         });
 
-        // Route panel clear button
         routePanel.findViewById(R.id.btnClearRoute).setOnClickListener(v -> {
             mapProvider.clearPolyline("route_main");
             mapProvider.removeMarker("start");
@@ -223,6 +236,11 @@ public class MapFragment extends Fragment {
             tvRouteInfo.setText("No route selected");
             routePanel.setVisibility(View.GONE);
         });
+    }
+
+    private void showShopDetail(Shop shop) {
+        ShopDetailBottomSheet.newInstance(shop)
+                .show(getParentFragmentManager(), "shop_detail");
     }
 
     @Override public void onResume(){ super.onResume(); mapProvider.onResume(); }
