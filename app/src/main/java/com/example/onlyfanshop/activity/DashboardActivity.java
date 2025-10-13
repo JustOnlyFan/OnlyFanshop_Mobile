@@ -67,6 +67,9 @@ public class DashboardActivity extends AppCompatActivity {
             int userId = sharedPreferences.getInt("userId", -1);
             if (userId != -1 && bottomNav != null) {
                 badgeUtils.updateCartBadge(this, bottomNav, userId);
+            } else if (bottomNav != null) {
+                // Nếu userId không tồn tại, xóa badge
+                badgeUtils.clearCartBadge(bottomNav);
             }
         } catch (Exception e) {
             Log.e(TAG, "❌ Failed to update cart badge", e);

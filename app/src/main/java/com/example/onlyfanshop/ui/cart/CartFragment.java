@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.adapter.CartAdapter;
 import com.example.onlyfanshop.api.ApiClient;
@@ -56,6 +57,16 @@ public class CartFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        // Kiểm tra token đăng nhập
+        String token = com.example.onlyfanshop.api.ApiClient.getToken(requireContext());
+        if (token == null || token.trim().isEmpty()) {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.mainFragmentContainer, new com.example.onlyfanshop.ui.PleaseSignInFragment(), "PLEASE_SIGN_IN")
+                    .commit();
+            return; // Dừng xử lý tiếp
+        }
 
         if (getArguments() != null) {
             USERNAME = getArguments().getString("username");

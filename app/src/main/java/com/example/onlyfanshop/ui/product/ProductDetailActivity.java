@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
@@ -32,6 +33,7 @@ import com.example.onlyfanshop.utils.AppPreferences;
 import com.example.onlyfanshop.ultils.NotificationHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -125,16 +127,35 @@ public class ProductDetailActivity extends AppCompatActivity {
         });
     }
 
-    private void addTocart(int productID){
+    private void addTocart(int productID) {
         SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         String username = sharedPreferences.getString("username", "");
+        String token = sharedPreferences.getString("jwt_token", "");
+
+        if (username == null || username.trim().isEmpty() || token == null || token.trim().isEmpty()) {
+            // Tạo dialog giống PleaseSignInFragment, nền trắng
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                    .setTitle("Please sign in")
+                    .setMessage("You need to sign in to continue.")
+                    .setPositiveButton("Sign In", (dialog, which) -> {
+                        Intent intent = new Intent(this, com.example.onlyfanshop.ui.login.LoginActivity.class);
+                        startActivity(intent);
+                        finish(); // Nếu muốn đóng màn hình hiện tại sau khi sang LoginActivity
+                    })
+                    .setNegativeButton("Cancel", null);
+
+            AlertDialog dialog = builder.create();
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.white); // Nền trắng
+            dialog.show();
+            return;
+        }
+
         CartItemApi cartItemApi = ApiClient.getPrivateClient(this).create(CartItemApi.class);
-        cartItemApi.addToCart(productID, username).enqueue(new Callback<>() {
+        cartItemApi.addToCart(productID, username).enqueue(new Callback<ApiResponse<Void>>() {
 
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // Cập nhật count local (tuỳ bạn có muốn giữ lại hay không)
                     int currentCount = AppPreferences.getCartCount(ProductDetailActivity.this);
                     AppPreferences.setCartCount(ProductDetailActivity.this, currentCount + 1);
 
@@ -147,13 +168,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
                     Toast.makeText(ProductDetailActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
 
-                    // THÊM: phát sự kiện để DashboardActivity cập nhật badge ngay
                     AppEvents.get().notifyCartUpdated();
-
-                    // Nếu ProductDetailActivity đang nằm trong DashboardActivity (ở nền),
-                    // sự kiện trên sẽ được nhận khi DashboardActivity active trở lại.
-                    // Nếu ProductDetailActivity thực sự là màn con của DashboardActivity
-                    // và bạn muốn cập nhật tức thời khi quay lại, phần observe trong DashboardActivity đã xử lý.
                 } else {
                     Toast.makeText(ProductDetailActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
                 }

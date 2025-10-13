@@ -55,4 +55,9 @@ public class BadgeUtils {
             e.printStackTrace();
         }
     }
+
+    // Xóa badge khi người dùng logout
+    public void clearCartBadge(BottomNavigationView bottomNav) {
+        bottomNav.removeBadge(R.id.nav_car); // hoặc id cart của bạn
+    }
 }

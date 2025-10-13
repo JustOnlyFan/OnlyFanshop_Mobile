@@ -1,6 +1,7 @@
 package com.example.onlyfanshop.api;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
@@ -46,6 +47,11 @@ public final class ApiClient {
         if (baseUrl == null || baseUrl.trim().isEmpty()) return;
         BASE_URL = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
         reset();
+    }
+
+    public static String getToken(Context context) {
+        SharedPreferences prefs = context.getApplicationContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        return prefs.getString("jwt_token", null);
     }
 
     public static void setAuthToken(@Nullable String token) {
