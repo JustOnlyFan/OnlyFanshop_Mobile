@@ -1,5 +1,6 @@
 package com.example.onlyfanshop.ui.payment;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,11 +17,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.adapter.CartAdapter;
 import com.example.onlyfanshop.api.ApiClient;
+import com.example.onlyfanshop.api.PaymentApi;
 import com.example.onlyfanshop.api.UserApi;
 import com.example.onlyfanshop.databinding.ActivityCartBinding;
 import com.example.onlyfanshop.databinding.ActivityConfirmPaymentBinding;
 import com.example.onlyfanshop.model.CartItemDTO;
+import com.example.onlyfanshop.model.PaymentDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
+import com.example.onlyfanshop.ui.product.ProductDetailActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,8 +60,13 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
                 chooseOtherAddress(sharedPreferences);
             }
         });
+        String checkAddress = sharedPreferences.getString("chosenAddress","");
+//        if(checkAddress.isEmpty()){
+//            binding.checkoutBtn.setEnabled(false);
+//        }else binding.checkoutBtn.setEnabled(true);
+        binding.checkoutBtn.setOnClickListener(v -> {testPayment(totalPrice, sharedPreferences);
+        });
     }
-
     private void changeAddress(String address, String token) {
 
         UserApi userApi = ApiClient.getPrivateClient(this).create(UserApi.class);
@@ -118,5 +127,51 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             }
         });
     }
+    private void testPayment(Double totalPrice, SharedPreferences sharedPreferences) {
 
+//        String priceString = textBottomPrice.getText().toString().replace("$", "");
+//        double amount;
+//        try {
+//            amount = Double.parseDouble(priceString);
+//        } catch (NumberFormatException e) {
+//            Toast.makeText(this, "Invalid product price", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+        String address = sharedPreferences.getString("chosenAddress","");
+
+        String bankCode = "NCB";
+//        Log.d("Payment", "Creating payment with amount: " + amount + " and bankCode: " + bankCode);
+////        showLoading(true);
+
+        PaymentApi api = ApiClient.getPrivateClient(this).create(PaymentApi.class);
+        api.createPayment(totalPrice, bankCode, address).enqueue(new Callback<ApiResponse<PaymentDTO>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<PaymentDTO>> call, Response<ApiResponse<PaymentDTO>> response) {
+//                showLoading(false);
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    String paymentUrl = response.body().getData().getPaymentUrl();
+                    Log.d("Payment", "Payment URL: " + paymentUrl);
+                    Toast.makeText(ConfirmPaymentActivity.this, "Redirecting to payment...", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(ConfirmPaymentActivity.this, PaymentWebViewActivity.class);
+                    intent.putExtra(PaymentWebViewActivity.EXTRA_URL, paymentUrl);
+                    startActivity(intent);
+                } else {
+                    Log.e("Payment", "API call failed with response code: " + response.code());
+                    Toast.makeText(ConfirmPaymentActivity.this, "Failed to create payment.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<PaymentDTO>> call, Throwable t) {
+//                showLoading(false);
+                Log.e("Payment", "Network error: " + t.getMessage(), t);
+                Toast.makeText(ConfirmPaymentActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+//    private void showLoading(boolean show) {
+//        if (progressBar != null) {
+//            progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+//        }
+//    }
 }

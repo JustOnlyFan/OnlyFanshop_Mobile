@@ -10,6 +10,7 @@ public interface PaymentApi {
     @GET("payment/vn-pay")
     Call<ApiResponse<PaymentDTO>> createPayment(
             @Query("amount") double amount,
-            @Query("bankCode") String bankCode
+            @Query("bankCode") String bankCode,
+            @Query("address") String address
     );
 }

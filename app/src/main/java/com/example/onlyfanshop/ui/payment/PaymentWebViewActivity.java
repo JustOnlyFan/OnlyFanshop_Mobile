@@ -42,9 +42,21 @@ public class PaymentWebViewActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                android.util.Log.d("VNPay", "Redirecting to: " + url);
-                view.loadUrl(url);
-                return true;
+                if (url.contains("onlyfanshop.app/payment-result")) {
+                    if (url.contains("status=success")) {
+                        Intent intent = new Intent(PaymentWebViewActivity.this, PaymentResultActivity.class);
+                        intent.putExtra(PaymentResultActivity.EXTRA_RESULT, "success");
+                        startActivity(intent);
+                        finish();
+                    } else if (url.contains("status=fail")) {
+                        Intent intent = new Intent(PaymentWebViewActivity.this, PaymentResultActivity.class);
+                        intent.putExtra(PaymentResultActivity.EXTRA_RESULT, "fail");
+                        startActivity(intent);
+                        finish();
+                    }
+                    return true; // Ngăn WebView mở trang ngoài
+                }
+                return false; // Cho phép các URL khác load bình thường
             }
 
             @Override
@@ -60,23 +72,11 @@ public class PaymentWebViewActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 android.util.Log.d("VNPay", "Page finished: " + url);
 
-                if (url.contains("vnp_ResponseCode=00")) {
-                    Intent intent = new Intent(PaymentWebViewActivity.this, PaymentResultActivity.class);
-                    intent.putExtra(PaymentResultActivity.EXTRA_RESULT, "success");
-                    startActivity(intent);
-                    finish();
-                } else if (url.contains("vnp_ResponseCode")) {
-                    Intent intent = new Intent(PaymentWebViewActivity.this, PaymentResultActivity.class);
-                    intent.putExtra(PaymentResultActivity.EXTRA_RESULT, "failed");
-                    startActivity(intent);
-                    finish();
-                }
             }
 
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 android.util.Log.e("VNPay", "Error loading page: " + description);
-                Toast.makeText(PaymentWebViewActivity.this, "Lỗi: " + description, Toast.LENGTH_SHORT).show();
             }
 
             @Override
