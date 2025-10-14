@@ -101,7 +101,7 @@ public class ProfileFragment extends Fragment {
 //        btnMyStores.setOnClickListener(v -> Toast.makeText(requireContext(), "My Stores clicked", Toast.LENGTH_SHORT).show());
         btnSupport.setOnClickListener(v -> Toast.makeText(requireContext(), "Support clicked", Toast.LENGTH_SHORT).show());
 
-        // Thay link phần chat: dùng cùng logic với MainActivity (mở ChatRoom cho CUSTOMER, ChatList cho ADMIN/khác)
+        // Chỉ hiển thị nút chat cho customer, ẩn cho admin
         btnChat.setOnClickListener(v -> openChatEntry());
 
         btnResetPassword.setOnClickListener(v -> {
@@ -116,7 +116,7 @@ public class ProfileFragment extends Fragment {
                 Toast.makeText(requireContext(), "Face ID: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
     }
 
-    // Mở chat theo cùng logic với MainActivity.btnOpenTestChat
+    // Mở chat - chỉ dành cho customer để chat với admin
     private void openChatEntry() {
         // Cố gắng đọc role từ currentUser (đã fetch từ API)
         String role = null;
@@ -131,7 +131,7 @@ public class ProfileFragment extends Fragment {
         }
 
         if ("CUSTOMER".equals(role)) {
-            // Khách: mở ChatRoomActivity để chat với admin, giống MainActivity
+            // Khách: mở ChatRoomActivity để chat với admin
             String customerId = FirebaseAuth.getInstance().getUid();
             if (customerId == null) {
                 if (userId != null) {
@@ -152,14 +152,9 @@ public class ProfileFragment extends Fragment {
             intent.putExtra("conversationId", conversationId);
             intent.putExtra("customerName", "Admin");
             startActivity(intent);
-        } else if ("ADMIN".equals(role)) {
-            // Admin: mở danh sách hội thoại
-            Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.chat.ChatListActivity.class);
-            startActivity(intent);
         } else {
-            // Không rõ role: fallback mở danh sách
-            Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.chat.ChatListActivity.class);
-            startActivity(intent);
+            // Admin hoặc role khác: không hiển thị nút chat trong profile
+            Toast.makeText(requireContext(), "Chat feature is only available for customers", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -197,6 +192,13 @@ public class ProfileFragment extends Fragment {
     private void bindUser(User user) {
         tvProfileName.setText(user.getUsername() != null ? user.getUsername() : "Guest");
         tvProfileEmail.setText(user.getEmail() != null ? user.getEmail() : "");
+        
+        // Ẩn nút chat cho admin
+        if (user.getRole() != null && "ADMIN".equals(user.getRole())) {
+            btnChat.setVisibility(View.GONE);
+        } else {
+            btnChat.setVisibility(View.VISIBLE);
+        }
     }
 
     private void showLogoutDialog() {
@@ -214,13 +216,19 @@ public class ProfileFragment extends Fragment {
                         DashboardActivity dashboard = (DashboardActivity) requireActivity();
                         // Xóa badge giỏ hàng
                         dashboard.updateCartBadgeNow();
-                        // Chuyển về Home
+                        // Chuyển về HomeFragment
                         BottomNavigationView bottomNav = dashboard.findViewById(R.id.bottomNav);
                         if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_home);
                         dashboard.getSupportFragmentManager()
                                 .beginTransaction()
                                 .replace(R.id.mainFragmentContainer, new HomeFragment(), "HOME_FRAGMENT")
                                 .commit();
+                    } else {
+                        // Nếu không phải DashboardActivity, chuyển về DashboardActivity
+                        Intent intent = new Intent(requireContext(), DashboardActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        requireActivity().finish();
                     }
                 })
                 .setNegativeButton("Cancel", null)

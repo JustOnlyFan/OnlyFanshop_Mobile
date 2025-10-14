@@ -3,16 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Facebook package visibility for Android API 30+ -->
-    <queries>
-        <package android:name="com.facebook.katana" />
-        <package android:name="com.facebook.orca" />
-    </queries>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name=".OnlyFanshopApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
@@ -62,7 +56,7 @@
             android:exported="false" />
         <activity
             android:name=".ui.login.LoginActivity"
-            android:exported="false">
+            android:exported="true">
         </activity>
         <activity
             android:name=".activity.DashboardActivity"
@@ -91,12 +85,15 @@
             android:exported="false" />
         <activity
             android:name=".ui.product.ProductDetailActivity"
-            android:exported="false" /> <!-- Facebook Login Activity -->
+            android:exported="false" />
         <activity
             android:name=".ui.chat.ChatListActivity"
             android:exported="false" />
         <activity
             android:name=".ui.chat.ChatRoomActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.chat.AdminChatRoomActivity"
             android:exported="false" />
         <activity
             android:name=".ui.chat.TestChatActivity"
@@ -105,12 +102,6 @@
             android:name=".ui.chat.ChatActivity"
             android:exported="false" />
 
-        <meta-data
-            android:name="com.facebook.sdk.ApplicationId"
-            android:value="@string/facebook_app_id" />
-        <meta-data
-            android:name="com.facebook.sdk.ClientToken"
-            android:value="@string/facebook_client_token" />
     </application>
 
 </manifest>
