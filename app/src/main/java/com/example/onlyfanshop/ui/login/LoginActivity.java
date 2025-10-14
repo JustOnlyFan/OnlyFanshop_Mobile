@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.R;
+import com.example.onlyfanshop.activity.AdminActivity;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.UserApi;
 import com.example.onlyfanshop.model.response.ApiResponse;
@@ -43,8 +44,11 @@ import com.google.android.gms.tasks.Task;
 // removed Facebook SDK imports
 
 import okhttp3.ResponseBody;
+
 import android.util.Base64;
+
 import java.nio.charset.StandardCharsets;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -82,7 +86,7 @@ public class LoginActivity extends AppCompatActivity {
         logoFan = findViewById(R.id.logoFan);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
         tvSignUp = findViewById(R.id.tvSignUp);
-        
+
         tvForgotPassword.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, ForgotActivity.class);
             startActivity(intent);
@@ -93,7 +97,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         btnLoginGoogle.setOnClickListener(v -> signInWithGoogle());
-        
+
         TextWatcher watcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -125,7 +129,7 @@ public class LoginActivity extends AppCompatActivity {
     private void login() {
         String username = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
-        Log.d("LoginActivityLog", "login() called"+username+password);
+        Log.d("LoginActivityLog", "login() called" + username + password);
         if (username.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập username và password", Toast.LENGTH_SHORT).show();
             return;
@@ -141,7 +145,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (apiResponse == null && response.errorBody() != null) {
                     apiResponse = parseErrorBody(response.errorBody(), UserDTO.class);
                 }
-                Log.d("LoginActivityLog", "onResponse() called"+apiResponse.getMessage().toString());
+                Log.d("LoginActivityLog", "onResponse() called" + apiResponse.getMessage().toString());
                 if (apiResponse != null) {
                     if (apiResponse.getStatusCode() == 200) {
                         UserDTO user = apiResponse.getData();
@@ -158,11 +162,19 @@ public class LoginActivity extends AppCompatActivity {
                         sharedPreferences.edit().putString("authProvider", user.getAuthProvider()).apply();
                         sharedPreferences.edit().putInt("userId", user.getUserID()).apply();
                         sharedPreferences.edit().putString("address", user.getAddress()).apply();
-
-                        Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
-                        intent.putExtra("user", user);
-                        startActivity(intent);
-                        Toast.makeText(LoginActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
+                        Log.d("role", user.getRole());
+                        if (user.getRole().equals("ADMIN")) {
+                            Log.d("role", "qua trang admin");
+                            Intent intent = new Intent(LoginActivity.this, AdminActivity.class);
+                            intent.putExtra("user", user);
+                            startActivity(intent);
+                            Toast.makeText(LoginActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
+                            intent.putExtra("user", user);
+                            startActivity(intent);
+                            Toast.makeText(LoginActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
+                        }
                     } else {
                         Toast.makeText(LoginActivity.this, apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
                     }
@@ -204,36 +216,36 @@ public class LoginActivity extends AppCompatActivity {
 
     private void initializeGoogleSignInLauncher() {
         googleSignInLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                Log.d("GoogleSignIn", "Google Sign-In result: " + result.getResultCode());
-                if (result.getResultCode() == RESULT_OK) {
-                    Intent data = result.getData();
-                    if (data != null) {
-                        Log.d("GoogleSignIn", "Processing Google Sign-In result");
-                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                        try {
-                            GoogleSignInAccount account = task.getResult(ApiException.class);
-                            if (account != null) {
-                                Log.d("GoogleSignIn", "Google sign in successful");
-                                firebaseAuthWithGoogle(account.getIdToken());
-                            } else {
-                                Log.e("GoogleSignIn", "Google account is null");
-                                Toast.makeText(this, "Google sign in failed: Account is null", Toast.LENGTH_SHORT).show();
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    Log.d("GoogleSignIn", "Google Sign-In result: " + result.getResultCode());
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            Log.d("GoogleSignIn", "Processing Google Sign-In result");
+                            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                            try {
+                                GoogleSignInAccount account = task.getResult(ApiException.class);
+                                if (account != null) {
+                                    Log.d("GoogleSignIn", "Google sign in successful");
+                                    firebaseAuthWithGoogle(account.getIdToken());
+                                } else {
+                                    Log.e("GoogleSignIn", "Google account is null");
+                                    Toast.makeText(this, "Google sign in failed: Account is null", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (ApiException e) {
+                                Log.e("GoogleSignIn", "Google sign in failed: " + e.getMessage() + " (Code: " + e.getStatusCode() + ")");
+                                Toast.makeText(this, "Google sign in failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
-                        } catch (ApiException e) {
-                            Log.e("GoogleSignIn", "Google sign in failed: " + e.getMessage() + " (Code: " + e.getStatusCode() + ")");
-                            Toast.makeText(this, "Google sign in failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.e("GoogleSignIn", "Google Sign-In data is null");
+                            Toast.makeText(this, "Google Sign-In data is null", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Log.e("GoogleSignIn", "Google Sign-In data is null");
-                        Toast.makeText(this, "Google Sign-In data is null", Toast.LENGTH_SHORT).show();
+                        Log.d("GoogleSignIn", "Google sign in cancelled by user");
+                        Toast.makeText(this, "Google sign in cancelled", Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Log.d("GoogleSignIn", "Google sign in cancelled by user");
-                    Toast.makeText(this, "Google sign in cancelled", Toast.LENGTH_SHORT).show();
                 }
-            }
         );
     }
 
@@ -270,35 +282,35 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(this, "Google authentication failed: Invalid token", Toast.LENGTH_SHORT).show();
             return;
         }
-        
+
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)
-            .addOnCompleteListener(this, task -> {
-                if (task.isSuccessful()) {
-                    Log.d("GoogleAuth", "Firebase authentication with Google successful");
-                    FirebaseUser user = mAuth.getCurrentUser();
-                    Log.d("GoogleAuth", "About to call handleSuccessfulLogin");
-                    if (pendingLinkCredential != null && user != null) {
-                        user.linkWithCredential(pendingLinkCredential)
-                                .addOnCompleteListener(this, linkTask -> {
-                                    if (linkTask.isSuccessful()) {
-                                        Log.d("GoogleAuth", "Linked pending credential to existing account");
-                                        pendingLinkCredential = null;
-                                        handleSuccessfulLogin(user);
-                                    } else {
-                                        String err = linkTask.getException() != null ? linkTask.getException().getMessage() : "Unknown";
-                                        Log.e("GoogleAuth", "Linking failed: " + err);
-                                        Toast.makeText(LoginActivity.this, "Liên kết tài khoản thất bại: " + err, Toast.LENGTH_LONG).show();
-                                    }
-                                });
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("GoogleAuth", "Firebase authentication with Google successful");
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        Log.d("GoogleAuth", "About to call handleSuccessfulLogin");
+                        if (pendingLinkCredential != null && user != null) {
+                            user.linkWithCredential(pendingLinkCredential)
+                                    .addOnCompleteListener(this, linkTask -> {
+                                        if (linkTask.isSuccessful()) {
+                                            Log.d("GoogleAuth", "Linked pending credential to existing account");
+                                            pendingLinkCredential = null;
+                                            handleSuccessfulLogin(user);
+                                        } else {
+                                            String err = linkTask.getException() != null ? linkTask.getException().getMessage() : "Unknown";
+                                            Log.e("GoogleAuth", "Linking failed: " + err);
+                                            Toast.makeText(LoginActivity.this, "Liên kết tài khoản thất bại: " + err, Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                        } else {
+                            handleSuccessfulLogin(user);
+                        }
                     } else {
-                        handleSuccessfulLogin(user);
+                        Log.e("GoogleAuth", "Firebase authentication with Google failed: " + task.getException().getMessage());
+                        Toast.makeText(LoginActivity.this, "Google authentication failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                } else {
-                    Log.e("GoogleAuth", "Firebase authentication with Google failed: " + task.getException().getMessage());
-                    Toast.makeText(LoginActivity.this, "Google authentication failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+                });
     }
 
     // removed handleFacebookAccessToken
@@ -319,20 +331,21 @@ public class LoginActivity extends AppCompatActivity {
                     String firebaseIdToken = result != null ? result.getToken() : null;
                     Log.d("GoogleAuth", "Firebase ID Token: " + firebaseIdToken);
                 }).addOnFailureListener(e -> Log.e("GoogleAuth", "Failed to get Firebase ID token: " + e.getMessage()));
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
             callGoogleLoginApi(user.getEmail(), user.getDisplayName());
         } else {
             Log.e("GoogleAuth", "FirebaseUser is null in handleSuccessfulLogin");
         }
     }
-    
+
     // Call Google login API to save user data to backend
     private void callGoogleLoginApi(String email, String username) {
         Log.d("GoogleAuth", "Calling Google login API for: " + email);
         Log.d("GoogleAuth", "Username: " + username);
         Log.d("GoogleAuth", "Email: " + email);
-        
+
         UserApi.GoogleLoginRequest request = new UserApi.GoogleLoginRequest(email, username);
 
         // Build a Base64URL token to keep header ASCII-safe
@@ -344,18 +357,19 @@ public class LoginActivity extends AppCompatActivity {
         try {
             String decoded = new String(android.util.Base64.decode(customToken, android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP));
             Log.d("GoogleAuth", "X-Custom-Token decoded: " + decoded);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         userApi.googleLogin(request, customToken).enqueue(new Callback<ApiResponse<UserDTO>>() {
             @Override
             public void onResponse(Call<ApiResponse<UserDTO>> call, Response<ApiResponse<UserDTO>> response) {
                 Log.d("GoogleAuth", "Response code: " + response.code());
-                
+
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<UserDTO> apiResponse = response.body();
                     Log.d("GoogleAuth", "API Response status: " + apiResponse.getStatusCode());
                     Log.d("GoogleAuth", "API Response message: " + apiResponse.getMessage());
-                    
+
                     if (apiResponse.getStatusCode() == 200) {
                         Log.d("GoogleAuth", "Google login API successful");
                         UserDTO userDTO = apiResponse.getData();
@@ -366,13 +380,13 @@ public class LoginActivity extends AppCompatActivity {
                             prefs.edit().putString("jwt_token", token).apply();
                             Log.d("GoogleAuth", "Saved JWT token from Google login");
                         }
-                        
+
                         // Log user information from backend
                         Log.d("GoogleAuth", "Backend User - Username: " + userDTO.getUsername());
                         Log.d("GoogleAuth", "Backend User - Email: " + userDTO.getEmail());
                         Log.d("GoogleAuth", "Backend User - Role: " + userDTO.getRole());
                         Log.d("GoogleAuth", "Backend User - AuthProvider: " + userDTO.getAuthProvider());
-                        
+
                         Toast.makeText(LoginActivity.this, "Welcome " + userDTO.getUsername(), Toast.LENGTH_SHORT).show();
 
                         Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
@@ -392,7 +406,8 @@ public class LoginActivity extends AppCompatActivity {
                     try {
                         String err = response.errorBody() != null ? response.errorBody().string() : "<no body>";
                         Log.e("GoogleAuth", "Error body: " + err);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                     String errorMessage = "Không thể kết nối đến server";
                     if (response.code() == 400) {
                         // Email conflict - hiển thị Toast
@@ -409,7 +424,7 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 }
             }
-            
+
             @Override
             public void onFailure(Call<ApiResponse<UserDTO>> call, Throwable t) {
                 Log.e("GoogleAuth", "Google login API call failed: " + t.getMessage());
