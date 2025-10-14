@@ -216,13 +216,19 @@ public class ProfileFragment extends Fragment {
                         DashboardActivity dashboard = (DashboardActivity) requireActivity();
                         // Xóa badge giỏ hàng
                         dashboard.updateCartBadgeNow();
-                        // Chuyển về Home
+                        // Chuyển về HomeFragment
                         BottomNavigationView bottomNav = dashboard.findViewById(R.id.bottomNav);
                         if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_home);
                         dashboard.getSupportFragmentManager()
                                 .beginTransaction()
                                 .replace(R.id.mainFragmentContainer, new HomeFragment(), "HOME_FRAGMENT")
                                 .commit();
+                    } else {
+                        // Nếu không phải DashboardActivity, chuyển về DashboardActivity
+                        Intent intent = new Intent(requireContext(), DashboardActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        requireActivity().finish();
                     }
                 })
                 .setNegativeButton("Cancel", null)

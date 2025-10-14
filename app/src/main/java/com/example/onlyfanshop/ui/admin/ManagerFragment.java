@@ -1,6 +1,7 @@
 package com.example.onlyfanshop.ui.admin;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -9,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.ui.product.ProductManagementActivity;
@@ -65,24 +67,35 @@ public class ManagerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_manager, container, false);
+
+        // LẤY USERNAME TỪ SHARED PREFERENCES
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", android.content.Context.MODE_PRIVATE);
+        String username = prefs.getString("username", null);
+
+        // TÌM VÀ SET USERNAME CHO tvUserName
+        TextView tvUserName = view.findViewById(R.id.tvUserName);
+        if (username != null) {
+            tvUserName.setText(username);
+        } else {
+            tvUserName.setText("Name"); // hoặc hiển thị mặc định
+        }
+
+        // Các nút quản lý như cũ
         btnUserManagement = view.findViewById(R.id.btnUserManagement);
         btnProductManagement = view.findViewById(R.id.btnProductManagement);
         btnChatManagement = view.findViewById(R.id.btnChatManagement);
 
-        // 👉 Khi nhấn Product Management thì mở ProductManagementActivity
         btnProductManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), ProductManagementActivity.class);
             startActivity(intent);
         });
 
-        // 👉 Khi nhấn Chat Management thì mở ChatListActivity để quản lý chat
         btnChatManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), com.example.onlyfanshop.ui.chat.ChatListActivity.class);
             startActivity(intent);
         });
-        
+
         return view;
     }
 }
