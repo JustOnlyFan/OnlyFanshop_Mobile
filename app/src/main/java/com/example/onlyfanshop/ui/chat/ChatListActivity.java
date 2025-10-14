@@ -47,7 +47,7 @@ public class ChatListActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ConversationAdapter(conversations, c -> {
             Log.d("ChatListActivity", "Opening conversation: " + c.getId() + " with " + c.getCustomerName());
-            Intent i = new Intent(this, ChatRoomActivity.class);
+            Intent i = new Intent(this, AdminChatRoomActivity.class);
             i.putExtra("conversationId", c.getId());
             i.putExtra("customerName", c.getCustomerName());
             startActivity(i);

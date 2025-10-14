@@ -51,6 +51,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     private MessagesAdapter adapter;
     private DatabaseReference messagesRef;
     private String selfUserId;
+    private boolean isAdminView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,39 +73,38 @@ public class ChatRoomActivity extends AppCompatActivity {
             Log.w("ChatRoomActivity", "No customer name provided in intent");
         }
 
-        selfUserId = FirebaseAuth.getInstance().getUid();
-        if (selfUserId == null) {
-            // For admin users who don't have Firebase UID, use admin_uid
+        isAdminView = getIntent().getBooleanExtra("isAdminView", false);
+        if (isAdminView) {
             selfUserId = "admin_uid";
-            Log.d("ChatRoomActivity", "No Firebase UID, using admin_uid as selfUserId");
+            Log.d("ChatRoomActivity", "AdminChatRoomActivity mode: selfUserId=admin_uid");
         } else {
-            Log.d("ChatRoomActivity", "Firebase UID: " + selfUserId);
+            selfUserId = FirebaseAuth.getInstance().getUid();
+            if (selfUserId == null) {
+                // Fallback for non-signed firebase user
+                selfUserId = "uid";
+                Log.d("ChatRoomActivity", "No Firebase UID, using fallback 'uid' as selfUserId");
+            } else {
+                Log.d("ChatRoomActivity", "Firebase UID: " + selfUserId);
+            }
         }
+
+        // Normalize conversationId to the canonical format "{adminUid}_{customerUid}"
+        conversationId = normalizeConversationId(conversationId);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new MessagesAdapter(messages, selfUserId);
+        adapter = new MessagesAdapter(messages, selfUserId, isAdminView);
         recyclerView.setAdapter(adapter);
 
         if (conversationId != null) {
             Log.d("ChatRoomActivity", "Connecting to Firebase with conversationId: " + conversationId);
             
-            // Extract other user ID from conversationId
-            String[] parts = conversationId.split("_");
-            String otherUserId;
-            if (parts.length >= 3) {
-                // Format: admin_uid_bTbKMdnRVLbwedMngxVaHoRaaUL2
-                // otherUserId should be "admin" (parts[0]), not the user ID
-                otherUserId = parts[0]; // "admin"
-            } else if (parts.length == 2) {
-                // Format: admin_uid
-                otherUserId = parts[0]; // "admin"
-            } else {
-                otherUserId = parts[0];
-            }
-            
-            Log.d("ChatRoomActivity", "selfUserId: " + selfUserId + ", otherUserId: " + otherUserId);
+            // Extract admin/customer from normalized conversationId
+            String[] parts = conversationId != null ? conversationId.split("_") : new String[0];
+            String adminUid = parts.length >= 1 ? parts[0] : "admin_uid";
+            String customerUid = parts.length >= 2 ? parts[1] : selfUserId;
+            Log.d("ChatRoomActivity", "selfUserId: " + selfUserId + ", adminUid: " + adminUid + ", customerUid: " + customerUid);
             
             // Null checks
             if (selfUserId == null || otherUserId == null) {
@@ -210,9 +210,11 @@ public class ChatRoomActivity extends AppCompatActivity {
         String realUsername = getUsernameFromToken();
         Log.d("ChatRoomActivity", "Sending message: " + text + " from user: " + uid + " with username: " + realUsername);
         
-        // Extract receiver ID from conversationId
-        String[] parts = conversationId.split("_");
-        String receiverId = parts.length > 0 ? parts[0] : "admin_uid";
+        // Extract receiver ID from normalized conversationId
+        String[] parts = conversationId != null ? conversationId.split("_") : new String[0];
+        String adminUid = parts.length >= 1 ? parts[0] : "admin_uid";
+        String customerUid = parts.length >= 2 ? parts[1] : selfUserId;
+        String receiverId = isAdminView ? customerUid : adminUid;
         
         // Lưu tin nhắn vào Firebase Realtime Database theo conversationId cụ thể
         DatabaseReference conversationMessagesRef = FirebaseDatabase.getInstance()
@@ -377,10 +379,10 @@ public class ChatRoomActivity extends AppCompatActivity {
         
         Log.d("ChatRoomActivity", "Updating conversation data: " + conversationId);
         
-        // Extract customer and admin IDs from conversationId
-        String[] parts = conversationId.split("_");
-        String customerId = parts.length > 1 ? parts[1] : selfUserId;
-        String adminId = parts.length > 0 ? parts[0] : "admin_uid";
+        // Extract customer and admin IDs from normalized conversationId
+        String[] parts = conversationId != null ? conversationId.split("_") : new String[0];
+        String adminId = parts.length >= 1 ? parts[0] : "admin_uid";
+        String customerId = parts.length >= 2 ? parts[1] : selfUserId;
         
         // Get customer name - should be the actual customer's name, not admin's name
         String customerName = getRealCustomerName(customerId);
@@ -495,10 +497,10 @@ public class ChatRoomActivity extends AppCompatActivity {
         convRef.get().addOnSuccessListener(snapshot -> {
             if (!snapshot.exists()) {
                 Log.d("ChatRoomActivity", "Creating conversation: " + conversationId);
-                // Extract customer and admin IDs from conversationId
-                String[] parts = conversationId.split("_");
-                String customerId = parts.length > 1 ? parts[1] : selfUserId;
-                String adminId = parts.length > 0 ? parts[0] : "admin_uid";
+                // Extract customer and admin IDs from normalized conversationId
+                String[] parts = conversationId != null ? conversationId.split("_") : new String[0];
+                String adminId = parts.length >= 1 ? parts[0] : "admin_uid";
+                String customerId = parts.length >= 2 ? parts[1] : selfUserId;
                 
                 // Get customer name - should be the actual customer's name, not admin's name
                 String customerName = getRealCustomerName(customerId);
@@ -536,11 +538,46 @@ public class ChatRoomActivity extends AppCompatActivity {
         });
     }
 
+    private String normalizeConversationId(String original) {
+        try {
+            if (original == null || original.trim().isEmpty()) return original;
+            String adminConst = getString(R.string.admin_uid) != null ? getString(R.string.admin_uid) : "admin_uid";
+            String[] parts = original.split("_");
+            String foundAdmin = null;
+            String foundCustomer = null;
+            for (String p : parts) {
+                if (p == null || p.isEmpty()) continue;
+                if (p.equals(adminConst)) {
+                    foundAdmin = p;
+                } else {
+                    foundCustomer = p;
+                }
+            }
+            if (foundAdmin == null) {
+                // If admin part is missing, assume first token is admin
+                foundAdmin = parts[0];
+            }
+            if (foundCustomer == null) {
+                // Fallback to self user if missing
+                foundCustomer = selfUserId != null ? selfUserId : "customer_unknown";
+            }
+            String normalized = foundAdmin + "_" + foundCustomer;
+            if (!normalized.equals(original)) {
+                Log.d("ChatRoomActivity", "Normalized conversationId from '" + original + "' to '" + normalized + "'");
+            }
+            return normalized;
+        } catch (Exception e) {
+            Log.e("ChatRoomActivity", "Error normalizing conversationId: " + e.getMessage());
+            return original;
+        }
+    }
+
     private static class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.VH> {
         private final List<Message> data;
         private final String selfUserId;
+        private final boolean isAdminView;
         private final java.util.Map<String, String> reactions = new java.util.HashMap<>();
-        MessagesAdapter(List<Message> data, String selfUserId) { this.data = data; this.selfUserId = selfUserId; }
+        MessagesAdapter(List<Message> data, String selfUserId, boolean isAdminView) { this.data = data; this.selfUserId = selfUserId; this.isAdminView = isAdminView; }
         @NonNull @Override public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
             return new VH(v);
@@ -548,8 +585,15 @@ public class ChatRoomActivity extends AppCompatActivity {
         @Override public void onBindViewHolder(@NonNull VH h, int position) {
             Message m = data.get(position);
             
-            // Determine if message is from current user
-            boolean isMine = m.getSenderId() != null && m.getSenderId().equals(selfUserId);
+            // Determine who sent the message and align accordingly
+            boolean isMine;
+            if (isAdminView) {
+                // In admin view, admin messages should be on the right
+                isMine = "admin_uid".equals(m.getSenderId());
+            } else {
+                // In customer view, messages from the logged-in firebase user go right
+                isMine = m.getSenderId() != null && m.getSenderId().equals(selfUserId);
+            }
             
             Log.d("MessagesAdapter", "=== MESSAGE DEBUG ===");
             Log.d("MessagesAdapter", "Position: " + position);
@@ -559,16 +603,7 @@ public class ChatRoomActivity extends AppCompatActivity {
             Log.d("MessagesAdapter", "Message: '" + m.getText() + "'");
             Log.d("MessagesAdapter", "SenderName: '" + m.getSenderName() + "'");
             
-            // Force debug: if this is admin view and message is from customer, it should be incoming
-            if (selfUserId != null && selfUserId.equals("admin_uid")) {
-                if (m.getSenderId() != null && !m.getSenderId().equals("admin_uid")) {
-                    Log.d("MessagesAdapter", "ADMIN VIEW: Customer message detected, forcing incoming");
-                    isMine = false; // Force to incoming for customer messages
-                } else if (m.getSenderId() != null && m.getSenderId().equals("admin_uid")) {
-                    Log.d("MessagesAdapter", "ADMIN VIEW: Admin message detected, forcing outgoing");
-                    isMine = true; // Force to outgoing for admin messages
-                }
-            }
+            // No additional forcing needed; alignment is decided by isAdminView + senderId
             
             Log.d("MessagesAdapter", "Final isMine: " + isMine);
             Log.d("MessagesAdapter", "=== END DEBUG ===");
