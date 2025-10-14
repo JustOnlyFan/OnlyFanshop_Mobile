@@ -19,7 +19,7 @@ import com.example.onlyfanshop.ui.product.ProductManagementActivity;
  * create an instance of this fragment.
  */
 public class ManagerFragment extends Fragment {
-    private LinearLayout btnUserManagement, btnProductManagement;
+    private LinearLayout btnUserManagement, btnProductManagement, btnChatManagement;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -69,12 +69,20 @@ public class ManagerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_manager, container, false);
         btnUserManagement = view.findViewById(R.id.btnUserManagement);
         btnProductManagement = view.findViewById(R.id.btnProductManagement);
+        btnChatManagement = view.findViewById(R.id.btnChatManagement);
 
         // 👉 Khi nhấn Product Management thì mở ProductManagementActivity
         btnProductManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), ProductManagementActivity.class);
             startActivity(intent);
         });
+
+        // 👉 Khi nhấn Chat Management thì mở ChatListActivity để quản lý chat
+        btnChatManagement.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), com.example.onlyfanshop.ui.chat.ChatListActivity.class);
+            startActivity(intent);
+        });
+        
         return view;
     }
 }

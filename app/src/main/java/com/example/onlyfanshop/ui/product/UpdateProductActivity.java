@@ -50,13 +50,13 @@ public class UpdateProductActivity extends AppCompatActivity {
         btnChooseImage = findViewById(R.id.btnChooseImage);
         btnUpdate = findViewById(R.id.btnSubmitProduct);
 
-        // Nhận dữ liệu từ Intent
-        Intent intent = getIntent();
-        if (intent != null && intent.hasExtra("productToEdit")) {
-            ProductDTO product = (ProductDTO) intent.getSerializableExtra("productToEdit");
-            populateFields(product);
-        }
-
-        btnUpdate.setOnClickListener(v -> updateProduct());
+//        // Nhận dữ liệu từ Intent
+//        Intent intent = getIntent();
+//        if (intent != null && intent.hasExtra("productToEdit")) {
+//            ProductDTO product = (ProductDTO) intent.getSerializableExtra("productToEdit");
+//            populateFields(product);
+//        }
+//
+//        btnUpdate.setOnClickListener(v -> updateProduct());
     }
 }

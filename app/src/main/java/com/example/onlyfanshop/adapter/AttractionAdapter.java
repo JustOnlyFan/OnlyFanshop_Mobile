@@ -89,3 +89,5 @@ public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.VH
         }
     }
 }
+
+
