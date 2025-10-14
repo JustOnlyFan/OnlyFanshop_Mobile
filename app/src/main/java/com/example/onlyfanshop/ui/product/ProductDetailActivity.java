@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
@@ -23,6 +24,7 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.api.PaymentApi;
 import com.example.onlyfanshop.api.ProductApi;
+import com.example.onlyfanshop.utils.AppEvents; // THÊM: import AppEvents
 import com.example.onlyfanshop.model.PaymentDTO;
 import com.example.onlyfanshop.model.ProductDetailDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
@@ -31,6 +33,7 @@ import com.example.onlyfanshop.utils.AppPreferences;
 import com.example.onlyfanshop.ultils.NotificationHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -52,7 +55,6 @@ public class ProductDetailActivity extends AppCompatActivity {
         intent.putExtra(EXTRA_PRODUCT_ID, productId);
         return intent;
     }
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -125,24 +127,48 @@ public class ProductDetailActivity extends AppCompatActivity {
         });
     }
 
-    private void addTocart(int productID){
+    private void addTocart(int productID) {
         SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         String username = sharedPreferences.getString("username", "");
+        String token = sharedPreferences.getString("jwt_token", "");
+
+        if (username == null || username.trim().isEmpty() || token == null || token.trim().isEmpty()) {
+            // Tạo dialog giống PleaseSignInFragment, nền trắng
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                    .setTitle("Please sign in")
+                    .setMessage("You need to sign in to continue.")
+                    .setPositiveButton("Sign In", (dialog, which) -> {
+                        Intent intent = new Intent(this, com.example.onlyfanshop.ui.login.LoginActivity.class);
+                        startActivity(intent);
+                        finish(); // Nếu muốn đóng màn hình hiện tại sau khi sang LoginActivity
+                    })
+                    .setNegativeButton("Cancel", null);
+
+            AlertDialog dialog = builder.create();
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.white); // Nền trắng
+            dialog.show();
+            return;
+        }
+
         CartItemApi cartItemApi = ApiClient.getPrivateClient(this).create(CartItemApi.class);
-        cartItemApi.addToCart(productID, username).enqueue(new Callback<>() {
+        cartItemApi.addToCart(productID, username).enqueue(new Callback<ApiResponse<Void>>() {
 
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     int currentCount = AppPreferences.getCartCount(ProductDetailActivity.this);
                     AppPreferences.setCartCount(ProductDetailActivity.this, currentCount + 1);
-                    int cartCount = AppPreferences.getCartCount( ProductDetailActivity.this);
+
+                    int cartCount = AppPreferences.getCartCount(ProductDetailActivity.this);
                     NotificationHelper.showNotification(
                             ProductDetailActivity.this,
                             "Giỏ hàng",
                             "Bạn đang có " + cartCount + " sản phẩm trong giỏ hàng!"
                     );
+
                     Toast.makeText(ProductDetailActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
+
+                    AppEvents.get().notifyCartUpdated();
                 } else {
                     Toast.makeText(ProductDetailActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
                 }

@@ -17,7 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.onlyfanshop.MainActivity;
+import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.activity.AdminActivity;
 import com.example.onlyfanshop.api.ApiClient;
@@ -170,7 +170,7 @@ public class LoginActivity extends AppCompatActivity {
                             startActivity(intent);
                             Toast.makeText(LoginActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
                         } else {
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
                             intent.putExtra("user", user);
                             startActivity(intent);
                             Toast.makeText(LoginActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
@@ -389,7 +389,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         Toast.makeText(LoginActivity.this, "Welcome " + userDTO.getUsername(), Toast.LENGTH_SHORT).show();
 
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
                         intent.putExtra("user", userDTO);
                         startActivity(intent);
                         finish();

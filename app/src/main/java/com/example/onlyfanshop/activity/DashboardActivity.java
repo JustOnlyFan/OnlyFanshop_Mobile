@@ -4,7 +4,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 
 import androidx.activity.EdgeToEdge;
@@ -14,13 +13,15 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer; // optional nếu dùng anonymous class ở Cách 2
 
 import com.example.onlyfanshop.R;
+import com.example.onlyfanshop.utils.AppEvents; // ĐẢM BẢO import đúng class AppEvents bạn đã tạo
 import com.example.onlyfanshop.ui.CategoryFragment;
 import com.example.onlyfanshop.ui.HomeFragment;
 import com.example.onlyfanshop.ui.MapFragment;
-import com.example.onlyfanshop.ui.PlaceholderFragment;
 import com.example.onlyfanshop.ui.ProfileFragment;
+import com.example.onlyfanshop.ui.cart.CartFragment;
 import com.example.onlyfanshop.utils.BadgeUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.FirebaseDatabase;
@@ -34,7 +35,8 @@ public class DashboardActivity extends AppCompatActivity {
     private FrameLayout fragmentContainer;
     private View root;
     private int currentSelectedId = R.id.nav_home;
-    private BadgeUtils badgeUtils = new BadgeUtils();
+    private final BadgeUtils badgeUtils = new BadgeUtils();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,14 +50,30 @@ public class DashboardActivity extends AppCompatActivity {
         applyEdgeToEdgeInsets();
         initFirebaseTest();
         initNavigation(savedInstanceState);
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNav);
 
-        SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
-        int userId = sharedPreferences.getInt("userId", -1);
-        if (userId != -1) {
-            badgeUtils.updateCartBadge(this, bottomNavigationView, userId);
+        // Đặt observe BÊN TRONG phương thức onCreate
+        AppEvents.get().cartUpdated().observe(this, ts -> {
+            updateCartBadgeNow();
+        });
+
+        // Cập nhật badge lần đầu
+        updateCartBadgeNow();
+    }
+
+    // Cho phép Fragment/Activity khác gọi cập nhật badge
+    public void updateCartBadgeNow() {
+        try {
+            SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+            int userId = sharedPreferences.getInt("userId", -1);
+            if (userId != -1 && bottomNav != null) {
+                badgeUtils.updateCartBadge(this, bottomNav, userId);
+            } else if (bottomNav != null) {
+                // Nếu userId không tồn tại, xóa badge
+                badgeUtils.clearCartBadge(bottomNav);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Failed to update cart badge", e);
         }
-
     }
 
     private void applyEdgeToEdgeInsets() {
@@ -116,6 +134,15 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
+    private String getUsernameForNav() {
+        String username = getIntent().getStringExtra("username");
+        if (username == null) {
+            SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+            username = prefs.getString("username", null);
+        }
+        return username;
+    }
+
     private void loadFragmentById(int id) {
         Fragment fragment;
         String tag;
@@ -127,11 +154,12 @@ public class DashboardActivity extends AppCompatActivity {
             fragment = new CategoryFragment();
             tag = "SEARCH";
         } else if (id == R.id.nav_car) {
+            String username = getUsernameForNav();
+            fragment = CartFragment.newInstance(username);
+            tag = "CART";
+        } else if (id == R.id.nav_shop) {
             fragment = new MapFragment();
-            tag = "FAVORITES";
-        } else if (id == R.id.nav_his) {
-            fragment = PlaceholderFragment.newInstance("History", "🚧");
-            tag = "HISTORY";
+            tag = "MAP";
         } else if (id == R.id.nav_profile) {
             fragment = new ProfileFragment();
             tag = "PROFILE";
@@ -172,7 +200,6 @@ public class DashboardActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // Ưu tiên pop back stack (ví dụ từ EditProfileFragment quay về ProfileFragment)
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             getSupportFragmentManager().popBackStack();
             return;

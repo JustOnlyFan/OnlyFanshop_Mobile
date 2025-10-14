@@ -1,6 +1,8 @@
 package com.example.onlyfanshop.api;
 
+import com.example.onlyfanshop.model.Request.ChangePasswordRequest;
 import com.example.onlyfanshop.model.Request.UpdateUserRequest;
+import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.UserResponse;
 
 import retrofit2.Call;
@@ -14,4 +16,7 @@ public interface ProfileApi {
 
     @PUT("users/updateUser")
     Call<UserResponse> updateUser(@Body UpdateUserRequest request);
+
+    @PUT("users/changePassword")
+    Call<ApiResponse> changePassword(@Body ChangePasswordRequest request);
 }
