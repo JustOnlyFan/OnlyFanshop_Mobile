@@ -35,8 +35,6 @@ public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
     private View btnSupport, btnChat, btnResetPassword, btnLogout;
-
-//    private View btnMyStores;
     private SwitchCompat switchPushNotif, switchFaceId;
 
     private TextView tvProfileName, tvProfileEmail;
@@ -58,7 +56,20 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         initViews(view);
         setupClickListeners();
+
+        // 1. HIỂN THỊ NGAY TỪ SHARED PREFERENCES ĐỂ TRÁNH TRỄ
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        String username = prefs.getString("username", "Guest");
+        String email = prefs.getString("email", "");
+        String role = prefs.getString("role", "");
+        tvProfileName.setText(username);
+        tvProfileEmail.setText(email);
+        if ("ADMIN".equals(role)) btnChat.setVisibility(View.GONE);
+        else btnChat.setVisibility(View.VISIBLE);
+
+        // 2. GỌI API ĐỂ CẬP NHẬT THÔNG TIN MỚI NHẤT
         fetchUser();
+
         return view;
     }
 
@@ -71,7 +82,6 @@ public class ProfileFragment extends Fragment {
 
     private void initViews(View view) {
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
-//        btnMyStores = view.findViewById(R.id.btnMyStores);
         btnSupport = view.findViewById(R.id.btnSupport);
         btnChat = view.findViewById(R.id.btnChat);
         btnResetPassword = view.findViewById(R.id.btnResetPassword);
@@ -85,7 +95,6 @@ public class ProfileFragment extends Fragment {
 
     private void setupClickListeners() {
         btnEditProfile.setOnClickListener(v -> {
-            // Điều hướng sang EditProfileFragment và giữ nguyên bottom nav (vì replace trong container)
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
                     .setCustomAnimations(
@@ -98,15 +107,9 @@ public class ProfileFragment extends Fragment {
                     .addToBackStack("EDIT_PROFILE")
                     .commit();
         });
-//        btnMyStores.setOnClickListener(v -> Toast.makeText(requireContext(), "My Stores clicked", Toast.LENGTH_SHORT).show());
         btnSupport.setOnClickListener(v -> Toast.makeText(requireContext(), "Support clicked", Toast.LENGTH_SHORT).show());
-
-        // Chỉ hiển thị nút chat cho customer, ẩn cho admin
         btnChat.setOnClickListener(v -> openChatEntry());
-
-        btnResetPassword.setOnClickListener(v -> {
-            startActivity(new Intent(requireContext(), ChangePasswordActivity.class));
-        });
+        btnResetPassword.setOnClickListener(v -> startActivity(new Intent(requireContext(), ChangePasswordActivity.class)));
         btnLogout.setOnClickListener(v -> showLogoutDialog());
 
         switchPushNotif.setOnCheckedChangeListener((buttonView, isChecked) ->
@@ -116,33 +119,21 @@ public class ProfileFragment extends Fragment {
                 Toast.makeText(requireContext(), "Face ID: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
     }
 
-    // Mở chat - chỉ dành cho customer để chat với admin
     private void openChatEntry() {
-        // Cố gắng đọc role từ currentUser (đã fetch từ API)
         String role = null;
         Integer userId = null;
         if (currentUser != null) {
-            try {
-                role = currentUser.getRole(); // yêu cầu model User có getRole()
-            } catch (Exception ignored) {}
-            try {
-                userId = currentUser.getUserID(); // yêu cầu model User có getUserID()
-            } catch (Exception ignored) {}
+            try { role = currentUser.getRole(); } catch (Exception ignored) {}
+            try { userId = currentUser.getUserID(); } catch (Exception ignored) {}
         }
 
         if ("CUSTOMER".equals(role)) {
-            // Khách: mở ChatRoomActivity để chat với admin
             String customerId = FirebaseAuth.getInstance().getUid();
             if (customerId == null) {
-                if (userId != null) {
-                    customerId = "customer_" + userId;
-                } else if (currentUser != null && currentUser.getUsername() != null) {
-                    customerId = "customer_" + currentUser.getUsername();
-                } else {
-                    customerId = "customer_" + System.currentTimeMillis();
-                }
+                if (userId != null) customerId = "customer_" + userId;
+                else if (currentUser != null && currentUser.getUsername() != null) customerId = "customer_" + currentUser.getUsername();
+                else customerId = "customer_" + System.currentTimeMillis();
             }
-            // Lưu ý: thay "admin_uid" bằng UID admin thật của bạn (có thể lưu trong strings.xml)
             String adminId = "admin_uid";
             String conversationId = customerId.compareTo(adminId) < 0
                     ? customerId + "_" + adminId
@@ -153,11 +144,11 @@ public class ProfileFragment extends Fragment {
             intent.putExtra("customerName", "Admin");
             startActivity(intent);
         } else {
-            // Admin hoặc role khác: không hiển thị nút chat trong profile
             Toast.makeText(requireContext(), "Chat feature is only available for customers", Toast.LENGTH_SHORT).show();
         }
     }
 
+    // GỌI API VÀ LƯU VÀO SHARED PREFERENCES ĐỂ LẦN SAU LOAD NHANH
     private void fetchUser() {
         ProfileApi api = ApiClient.getPrivateClient(requireContext()).create(ProfileApi.class);
         api.getUser().enqueue(new Callback<UserResponse>() {
@@ -170,6 +161,14 @@ public class ProfileFragment extends Fragment {
                     if (body.getStatusCode() == 200 && body.getData() != null) {
                         currentUser = body.getData();
                         bindUser(currentUser);
+
+                        // CẬP NHẬT SHARED PREFERENCES CHO LẦN SAU
+                        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                        prefs.edit()
+                                .putString("username", currentUser.getUsername())
+                                .putString("email", currentUser.getEmail())
+                                .putString("role", currentUser.getRole())
+                                .apply();
                     } else {
                         Toast.makeText(requireContext(), body.getMessage(), Toast.LENGTH_SHORT).show();
                     }
@@ -192,8 +191,6 @@ public class ProfileFragment extends Fragment {
     private void bindUser(User user) {
         tvProfileName.setText(user.getUsername() != null ? user.getUsername() : "Guest");
         tvProfileEmail.setText(user.getEmail() != null ? user.getEmail() : "");
-        
-        // Ẩn nút chat cho admin
         if (user.getRole() != null && "ADMIN".equals(user.getRole())) {
             btnChat.setVisibility(View.GONE);
         } else {
@@ -208,15 +205,13 @@ public class ProfileFragment extends Fragment {
                 .setPositiveButton("Logout", (dialog, which) -> {
                     SharedPreferences prefs = requireContext().getApplicationContext()
                             .getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-                    prefs.edit().remove("jwt_token").remove("userId").remove("username").apply();
+                    prefs.edit().remove("jwt_token").remove("userId").remove("username").remove("email").remove("role").apply();
                     ApiClient.clearAuthToken();
                     Toast.makeText(requireContext(), "Logged out", Toast.LENGTH_SHORT).show();
 
                     if (requireActivity() instanceof DashboardActivity) {
                         DashboardActivity dashboard = (DashboardActivity) requireActivity();
-                        // Xóa badge giỏ hàng
                         dashboard.updateCartBadgeNow();
-                        // Chuyển về HomeFragment
                         BottomNavigationView bottomNav = dashboard.findViewById(R.id.bottomNav);
                         if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_home);
                         dashboard.getSupportFragmentManager()
@@ -224,7 +219,6 @@ public class ProfileFragment extends Fragment {
                                 .replace(R.id.mainFragmentContainer, new HomeFragment(), "HOME_FRAGMENT")
                                 .commit();
                     } else {
-                        // Nếu không phải DashboardActivity, chuyển về DashboardActivity
                         Intent intent = new Intent(requireContext(), DashboardActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
