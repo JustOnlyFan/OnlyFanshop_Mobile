@@ -107,7 +107,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     }
 
     // Chuẩn hóa URL ảnh: nếu tương đối -> thêm host
-    private String resolveImageUrl(String raw) {
+    public static String resolveImageUrl(String raw) {
         if (raw == null || raw.trim().isEmpty()) return null;
         String u = raw.trim();
 
@@ -125,7 +125,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     }
 
     // Tạo GlideUrl kèm Authorization header từ SharedPreferences
-    private GlideUrl asGlideUrlWithAuth(Context ctx, String url) {
+    public static GlideUrl asGlideUrlWithAuth(Context ctx, String url) {
         SharedPreferences prefs = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         String token = prefs.getString("jwt_token", null);
         LazyHeaders.Builder headers = new LazyHeaders.Builder();
