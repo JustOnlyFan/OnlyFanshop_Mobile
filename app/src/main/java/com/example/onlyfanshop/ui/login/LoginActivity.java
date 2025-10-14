@@ -54,7 +54,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
-
     private UserApi userApi;
     private EditText etUsername, etPassword;
     private Button btnLogin, btnLoginGoogle;
