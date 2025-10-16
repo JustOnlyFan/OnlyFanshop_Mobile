@@ -9,6 +9,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,6 +58,7 @@ public class LoginActivity extends AppCompatActivity {
     private UserApi userApi;
     private EditText etUsername, etPassword;
     private Button btnLogin, btnLoginGoogle;
+    private LinearLayout btnBackMain; // dùng LinearLayout làm container cho icon + text
     private ImageView logoFan;
     private TextView tvForgotPassword, tvSignUp;
     private final Gson gson = new Gson();
@@ -82,9 +84,18 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.edtPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnLoginGoogle = findViewById(R.id.btnLoginGoogle);
+        btnBackMain = findViewById(R.id.btnBackMain);
         logoFan = findViewById(R.id.logoFan);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
         tvSignUp = findViewById(R.id.tvSignUp);
+
+        // Set up back button to return to MainActivity
+        btnBackMain.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            // optional: clear the login activity from back stack
+            startActivity(intent);
+            finish();
+        });
 
         tvForgotPassword.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, ForgotActivity.class);
