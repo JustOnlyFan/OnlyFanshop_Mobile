@@ -1,180 +1,224 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
     android:background="@android:color/white">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="24dp"
+    <!-- FrameLayout làm container để overlay nút Back mà không ảnh hưởng layout chính -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        
-        <!-- Main content area -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
 
-        <!-- Logo section with larger size and positioned near top -->
+        <!-- Nội dung chính (giữ nguyên cấu trúc cũ) -->
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="20dp">
-            
-            <ImageView
-                android:id="@+id/logoFan"
-                android:layout_width="320dp"
-                android:layout_height="320dp"
-                android:src="@drawable/logo_qu_t"
-                android:contentDescription="@string/app_name"
-                android:scaleType="centerInside"/>
-
-        </LinearLayout>
-
-        <TextView
+            android:padding="24dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Login to your account"
-            android:textStyle="bold"
-            android:textColor="#111111"
-            android:textSize="28sp"
-            android:lineSpacingExtra="4dp"/>
+            android:layout_height="match_parent">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="16dp"
-            app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp"
-            app:boxStrokeColor="#E0E0E0"
-            app:boxStrokeWidth="2dp"
-            app:hintTextColor="#666666"
-            app:startIconDrawable="@drawable/ic_email"
-            app:startIconTint="#666666">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edtUsername"
+            <!-- Main content area -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="Email"
-                android:inputType="textEmailAddress"
-                android:textSize="16sp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"/>
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:endIconMode="password_toggle"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="16dp"
-            app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp"
-            app:boxStrokeColor="#E0E0E0"
-            app:boxStrokeWidth="2dp"
-            app:hintTextColor="#666666"
-            app:startIconDrawable="@drawable/ic_lock"
-            app:startIconTint="#666666">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edtPassword"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="Password"
-                android:inputType="textPassword"
-                android:textSize="16sp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"/>
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <CheckBox
-                android:id="@+id/cbRemember"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                android:text="Remember me"/>
+                android:orientation="vertical"
+                android:gravity="center">
 
-            <TextView
-                android:id="@+id/tvForgotPassword"
+                <!-- Logo section -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="20dp">
+
+                    <ImageView
+                        android:id="@+id/logoFan"
+                        android:layout_width="320dp"
+                        android:layout_height="320dp"
+                        android:src="@drawable/logo_qu_t"
+                        android:contentDescription="@string/app_name"
+                        android:scaleType="centerInside"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Login to your account"
+                    android:textStyle="bold"
+                    android:textColor="#111111"
+                    android:textSize="28sp"
+                    android:lineSpacingExtra="4dp"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    app:boxBackgroundMode="outline"
+                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxStrokeColor="#E0E0E0"
+                    app:boxStrokeWidth="2dp"
+                    app:hintTextColor="#666666"
+                    app:startIconDrawable="@drawable/ic_email"
+                    app:startIconTint="#666666">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtUsername"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:hint="Email"
+                        android:inputType="textEmailAddress"
+                        android:textSize="16sp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:endIconMode="password_toggle"
+                    app:boxBackgroundMode="outline"
+                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxStrokeColor="#E0E0E0"
+                    app:boxStrokeWidth="2dp"
+                    app:hintTextColor="#666666"
+                    app:startIconDrawable="@drawable/ic_lock"
+                    app:startIconTint="#666666">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:hint="Password"
+                        android:inputType="textPassword"
+                        android:textSize="16sp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <CheckBox
+                        android:id="@+id/cbRemember"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Remember me"/>
+
+                    <TextView
+                        android:id="@+id/tvForgotPassword"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Forgot the password?"
+                        android:textColor="#1E88E5"/>
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLogin"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="Sign in"
+                    android:textAllCaps="false"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="24dp"
+                    app:cornerRadius="16dp"
+                    app:backgroundTint="#1E88E5"
+                    app:rippleColor="#1976D2"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLoginGoogle"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="16dp"
+                    android:text="Continue with Google"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:icon="@drawable/ic_google"
+                    app:iconGravity="textStart"
+                    app:iconSize="20dp"
+                    app:cornerRadius="16dp"
+                    app:strokeColor="#E0E0E0"
+                    app:strokeWidth="2dp"
+                    app:rippleColor="#F5F5F5"/>
+
+            </LinearLayout>
+
+            <!-- Sign up section at bottom -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Forgot the password?"
-                android:textColor="#1E88E5"/>
-        </LinearLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLogin"
-            style="@style/Widget.Material3.Button"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Sign in"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginTop="24dp"
-            app:cornerRadius="16dp"
-            app:backgroundTint="#1E88E5"
-            app:rippleColor="#1976D2"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLoginGoogle"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="16dp"
-            android:text="Continue with Google"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:icon="@drawable/ic_google"
-            app:iconGravity="textStart"
-            app:iconSize="20dp"
-            app:cornerRadius="16dp"
-            app:strokeColor="#E0E0E0"
-            app:strokeWidth="2dp"
-            app:rippleColor="#F5F5F5"/>
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Don't have an account? "/>
+                <TextView
+                    android:id="@+id/tvSignUp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sign up"
+                    android:textColor="#1E88E5"/>
+            </LinearLayout>
 
         </LinearLayout>
-        
-        <!-- Sign up section at bottom -->
+
+        <!-- Back control overlay: chứa icon (bên trái) và chữ "Back" (bên phải).
+             Đặt nổi (overlay) nên không đẩy layout chính xuống. -->
         <LinearLayout
+            android:id="@+id/btnBackMain"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Don't have an account? "/>
-            <TextView
-                android:id="@+id/tvSignUp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sign up"
-                android:textColor="#1E88E5"/>
-        </LinearLayout>
+            android:orientation="horizontal"
+            android:layout_gravity="top|start"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical">
 
-    </LinearLayout>
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_back"
+                app:tint="#1E88E5"
+                android:contentDescription="Back icon"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Back"
+                android:textColor="#1E88E5"
+                android:textSize="20sp"
+                android:layout_marginStart="8dp"
+                android:textAllCaps="false"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+    </FrameLayout>
 </ScrollView>

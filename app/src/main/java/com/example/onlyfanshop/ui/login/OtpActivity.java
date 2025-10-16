@@ -45,7 +45,16 @@ public class OtpActivity extends AppCompatActivity {
         btnVerifyOtp = findViewById(R.id.btnVerifyOtp);
         btnResendOtp = findViewById(R.id.btnResendOtp);
         btnBack = findViewById(R.id.btnBack);
-        btnBack.setOnClickListener(v -> finish());
+
+        // Khi bấm nút Back ở màn OTP sẽ chuyển về LoginActivity (không chỉ finish)
+        btnBack.setOnClickListener(v -> {
+            Intent intent = new Intent(OtpActivity.this, LoginActivity.class);
+            // Nếu LoginActivity đã tồn tại trên back stack, reuse nó; nếu không, tạo mới.
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
+
         tvOtpEmail.setText(email);
         btnResendOtp.setOnClickListener(v -> {
             Call<ApiResponse<Void>> call = userApi.sendOtp(email);
