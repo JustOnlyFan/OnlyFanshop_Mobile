@@ -35,5 +35,8 @@ public interface CartItemApi {
     @GET("/cart/{userId}")
     Call<ApiResponse<CartDTO>> getCart(@Path("userId") int userId);
 
+    @POST("/cart/clear")
+    Call<ApiResponse<Void>> clearCart(@Query("username") String username);
+
 
 }

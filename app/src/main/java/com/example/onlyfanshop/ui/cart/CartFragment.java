@@ -91,6 +91,7 @@ public class CartFragment extends Fragment {
         getCartItems(USERNAME);
 
         binding.checkoutBtn.setOnClickListener(v -> confirmCheckout());
+        binding.clearAllBtn.setOnClickListener(v -> clear(USERNAME));
     }
 
     private void confirmCheckout() {
@@ -98,6 +99,26 @@ public class CartFragment extends Fragment {
         intent.putExtra("totalPrice", totalPrice);
         intent.putExtra("cartItems", (Serializable) cartItems);
         startActivity(intent);
+    }
+    private void clear(String username){
+        CartItemApi api = ApiClient.getPrivateClient(requireContext()).create(CartItemApi.class);
+        api.clearCart(username).enqueue(new Callback<ApiResponse<Void>>() {
+
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if(response.isSuccessful()){
+                    getCartItems(USERNAME);
+                    Toast.makeText(requireContext(), "Xóa toàn bộ thành công", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Xóa thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable throwable) {
+                Toast.makeText(requireContext(), "Lỗi kết nối: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void getCartItems(String username) {
@@ -118,9 +139,11 @@ public class CartFragment extends Fragment {
                         if (cartAdapter.getItemCount() == 0) {
                             binding.textEmpty.setVisibility(View.VISIBLE);
                             binding.checkoutBtn.setVisibility(View.GONE);
+                            binding.clearAllBtn.setVisibility(View.GONE);
                         } else {
                             binding.textEmpty.setVisibility(View.GONE);
                             binding.checkoutBtn.setVisibility(View.VISIBLE);
+                            binding.clearAllBtn.setVisibility(View.VISIBLE);
                         }
 
                         for (CartItemDTO item : cartItems) {
