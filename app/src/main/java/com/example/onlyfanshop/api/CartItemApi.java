@@ -1,12 +1,14 @@
 package com.example.onlyfanshop.api;
 
 import com.example.onlyfanshop.model.CartItemDTO;
+import com.example.onlyfanshop.model.Request.AddToCartRequest;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.CartDTO;
 
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
@@ -30,7 +32,7 @@ public interface CartItemApi {
     );
 
     @POST("/cart/addToCart")
-    Call<ApiResponse<Void>> addToCart(@Query("productID") int productId, @Query("username") String username);
+    Call<ApiResponse<Void>> addToCart(@Body AddToCartRequest request);
 
     @GET("/cart/{userId}")
     Call<ApiResponse<CartDTO>> getCart(@Path("userId") int userId);

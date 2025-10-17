@@ -1,5 +1,7 @@
 package com.example.onlyfanshop.ui.product;
 
+import com.example.onlyfanshop.databinding.ActivityProductDetailBinding;
+import com.example.onlyfanshop.model.Request.AddToCartRequest;
 import com.example.onlyfanshop.utils.BadgeUtils;
 
 import android.content.Context;
@@ -44,8 +46,9 @@ public class ProductDetailActivity extends AppCompatActivity {
     public static final String EXTRA_PRODUCT_ID = "product_id";
 
     private ImageView imageProduct;
-    private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, textSpecs;
+    private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, textSpecs, numberItem, addQuantity, minusQuantity;
     private MaterialButton btnAddToCart;
+    private Integer quantity = 1;
     private ProgressBar progressBar;
     private boolean isFavorite = false;
 
@@ -71,13 +74,28 @@ public class ProductDetailActivity extends AppCompatActivity {
         textBrief = findViewById(R.id.textBrief);
         textFull = findViewById(R.id.textFull);
         textSpecs = findViewById(R.id.textSpecs);
+        numberItem = findViewById(R.id.numberItem);
+        addQuantity = findViewById(R.id.addQuantity);
+        minusQuantity = findViewById(R.id.minusQuantity);
         btnAddToCart = findViewById(R.id.btnAddToCart);
         progressBar = findViewById(R.id.progressBar);
 
+        numberItem.setText(quantity.toString());
+
+
         findViewById(R.id.btnFavorite).setOnClickListener(v -> toggleFavorite());
+        addQuantity.setOnClickListener(v -> {
+            quantity++;
+            numberItem.setText(quantity.toString());
+        });
+        minusQuantity.setOnClickListener(v -> {
+            if (quantity > 1) {
+                quantity--;
+                numberItem.setText(quantity.toString());}
+        });
 
         int id = getIntent().getIntExtra(EXTRA_PRODUCT_ID, -1);
-        btnAddToCart.setOnClickListener(v -> addTocart(id));
+        btnAddToCart.setOnClickListener(v -> addTocart(id, quantity));
         if (id > 0) {
             fetchDetail(id);
         } else {
@@ -88,10 +106,11 @@ public class ProductDetailActivity extends AppCompatActivity {
 
 
 
-    private void addTocart(int productID) {
+    private void addTocart(int productID, int quantiy) {
         SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         String username = sharedPreferences.getString("username", "");
         String token = sharedPreferences.getString("jwt_token", "");
+
 
         if (username == null || username.trim().isEmpty() || token == null || token.trim().isEmpty()) {
             // Tạo dialog giống PleaseSignInFragment, nền trắng
@@ -110,9 +129,9 @@ public class ProductDetailActivity extends AppCompatActivity {
             dialog.show();
             return;
         }
-
+        AddToCartRequest request = new AddToCartRequest(productID, quantiy, username);
         CartItemApi cartItemApi = ApiClient.getPrivateClient(this).create(CartItemApi.class);
-        cartItemApi.addToCart(productID, username).enqueue(new Callback<ApiResponse<Void>>() {
+        cartItemApi.addToCart(request).enqueue(new Callback<ApiResponse<Void>>() {
 
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
