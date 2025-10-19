@@ -23,6 +23,7 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
 import com.example.onlyfanshop.model.response.UserResponse;
+import com.example.onlyfanshop.ui.order.OrderHistoryActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,7 +35,7 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
-    private View btnSupport, btnChat, btnResetPassword, btnLogout;
+    private View btnSupport, btnChat, btnResetPassword, btnLogout, btnHistory;
     private SwitchCompat switchPushNotif, switchFaceId;
 
     private TextView tvProfileName, tvProfileEmail;
@@ -84,6 +85,7 @@ public class ProfileFragment extends Fragment {
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnSupport = view.findViewById(R.id.btnSupport);
         btnChat = view.findViewById(R.id.btnChat);
+        btnHistory = view.findViewById(R.id.History);
         btnResetPassword = view.findViewById(R.id.btnResetPassword);
         btnLogout = view.findViewById(R.id.btnLogout);
         switchPushNotif = view.findViewById(R.id.switchPushNotif);
@@ -111,7 +113,7 @@ public class ProfileFragment extends Fragment {
         btnChat.setOnClickListener(v -> openChatEntry());
         btnResetPassword.setOnClickListener(v -> startActivity(new Intent(requireContext(), ChangePasswordActivity.class)));
         btnLogout.setOnClickListener(v -> showLogoutDialog());
-
+        btnHistory.setOnClickListener(v -> startActivity(new Intent(requireContext(), OrderHistoryActivity.class)));
         switchPushNotif.setOnCheckedChangeListener((buttonView, isChecked) ->
                 Toast.makeText(requireContext(), "Push notifications: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
 
