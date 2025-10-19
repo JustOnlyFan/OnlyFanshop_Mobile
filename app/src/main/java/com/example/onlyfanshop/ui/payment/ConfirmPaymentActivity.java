@@ -19,7 +19,6 @@ import com.example.onlyfanshop.adapter.CartAdapter;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.PaymentApi;
 import com.example.onlyfanshop.api.UserApi;
-import com.example.onlyfanshop.databinding.ActivityCartBinding;
 import com.example.onlyfanshop.databinding.ActivityConfirmPaymentBinding;
 import com.example.onlyfanshop.model.CartItemDTO;
 import com.example.onlyfanshop.model.PaymentDTO;
@@ -104,6 +103,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
                     String address_1 = binding.edtDefaultAddress.getText().toString().trim();
                     if (!address_1.isEmpty()) {
                         changeAddress(address_1, token);
+                        sharedPreferences.edit().putString("address", address_1).apply();
                         sharedPreferences.edit().putString("chosenAddress", address_1).apply();
                     }
                     Log.d("TAG", "Giá trị khi rời khỏi ô: " + address_1);
