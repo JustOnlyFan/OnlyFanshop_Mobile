@@ -19,6 +19,10 @@ public interface CartItemApi {
     @GET("/cartItem/showCartItem")
     Call<ApiResponse<List<CartItemDTO>>> getCartItem(@Query("username") String username);
 
+    @GET("/cartItem/showInstantBuyItem")
+    Call<ApiResponse<List<CartItemDTO>>> getInstantBuyItem(@Query("username") String username);
+
+
     @POST("/cartItem/addQuantity")
     Call<ApiResponse<Void>> addQuantity(
             @Query("username") String username,
@@ -33,6 +37,10 @@ public interface CartItemApi {
 
     @POST("/cart/addToCart")
     Call<ApiResponse<Void>> addToCart(@Body AddToCartRequest request);
+
+    @POST("/cart/instantBuy")
+    Call<ApiResponse<Void>> instantBuy(@Body AddToCartRequest request);
+
 
     @GET("/cart/{userId}")
     Call<ApiResponse<CartDTO>> getCart(@Path("userId") int userId);

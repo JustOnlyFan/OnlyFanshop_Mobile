@@ -7,9 +7,13 @@ import com.example.onlyfanshop.utils.BadgeUtils;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -34,8 +38,12 @@ import com.example.onlyfanshop.ui.payment.PaymentWebViewActivity;
 import com.example.onlyfanshop.utils.AppPreferences;
 import com.example.onlyfanshop.ultils.NotificationHelper;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -47,9 +55,10 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private ImageView imageProduct;
     private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, textSpecs, numberItem, addQuantity, minusQuantity;
-    private MaterialButton btnAddToCart;
-    private Integer quantity = 1;
+    private MaterialButton btnAddToCart, btnBuyNow;
+    //private Integer quantity = 1;
     private ProgressBar progressBar;
+    private String imageURL;
     private boolean isFavorite = false;
 
     // THÊM: Factory method tạo Intent mở màn chi tiết
@@ -78,24 +87,37 @@ public class ProductDetailActivity extends AppCompatActivity {
         addQuantity = findViewById(R.id.addQuantity);
         minusQuantity = findViewById(R.id.minusQuantity);
         btnAddToCart = findViewById(R.id.btnAddToCart);
+        btnBuyNow = findViewById(R.id.btnBuyNow);
         progressBar = findViewById(R.id.progressBar);
 
-        numberItem.setText(quantity.toString());
+        //numberItem.setText(quantity.toString());
 
 
         findViewById(R.id.btnFavorite).setOnClickListener(v -> toggleFavorite());
-        addQuantity.setOnClickListener(v -> {
-            quantity++;
-            numberItem.setText(quantity.toString());
-        });
-        minusQuantity.setOnClickListener(v -> {
-            if (quantity > 1) {
-                quantity--;
-                numberItem.setText(quantity.toString());}
-        });
+//        addQuantity.setOnClickListener(v -> {
+//            quantity++;
+//            numberItem.setText(quantity.toString());
+//        });
+//        minusQuantity.setOnClickListener(v -> {
+//            if (quantity > 1) {
+//                quantity--;
+//                numberItem.setText(quantity.toString());}
+//        });
 
         int id = getIntent().getIntExtra(EXTRA_PRODUCT_ID, -1);
-        btnAddToCart.setOnClickListener(v -> addTocart(id, quantity));
+        btnAddToCart.setOnClickListener(v -> addTocart(id, 1));
+        btnBuyNow.setOnClickListener(v -> {
+            String name = textProductName.getText().toString();
+            String price = textBottomPrice.getText().toString();
+            ImageView imageView = imageProduct;
+            imageView.buildDrawingCache();
+            // 👉 Nếu bạn dùng ảnh từ Glide, tốt nhất truyền URL, còn không thì có thể dùng resource.
+
+            BuyNowBottomSheet bottomSheet = BuyNowBottomSheet.newInstance(name, price, imageURL,id);
+
+            bottomSheet.show(getSupportFragmentManager(), "BuyNowBottomSheet");
+        });
+
         if (id > 0) {
             fetchDetail(id);
         } else {
@@ -104,6 +126,37 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
+    private void showBuyNowBottomSheet(int id) {
+        View view = getLayoutInflater().inflate(R.layout.layout_bottom_sheet_buy_now, null);
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this, R.style.BottomSheetTheme);
+        bottomSheetDialog.setContentView(view);
+        //Objects.requireNonNull(bottomSheetDialog.getWindow()).clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        Objects.requireNonNull(bottomSheetDialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        AtomicInteger quantity = new AtomicInteger(1);
+        ImageView imgProductThumb = view.findViewById(R.id.imgProductThumb);
+        TextView tvProductNameBottom = view.findViewById(R.id.tvProductNameBottom);
+        TextView tvProductPriceBottom = view.findViewById(R.id.tvProductPriceBottom);
+        TextView tvQuantity = view.findViewById(R.id.tvQuantity);
+        MaterialButton btnAdd = view.findViewById(R.id.btnAdd);
+        MaterialButton btnMinus = view.findViewById(R.id.btnMinus);
+        Button btnConfirmBuy = view.findViewById(R.id.btnConfirmBuy);
+
+        imgProductThumb.setImageDrawable(imageProduct.getDrawable());
+        tvProductNameBottom.setText(textProductName.getText());
+        tvProductPriceBottom.setText(textBottomPrice.getText());
+        tvQuantity.setText(String.valueOf(quantity.get()));
+        btnAdd.setOnClickListener(v -> {
+            quantity.incrementAndGet();
+            tvQuantity.setText(String.valueOf(quantity.get()));
+        });
+        btnMinus.setOnClickListener(v -> {
+            if (quantity.get() > 1) {
+                quantity.decrementAndGet();
+                tvQuantity.setText(String.valueOf(quantity.get()));}
+        });
+
+        bottomSheetDialog.show();
+    }
 
 
     private void addTocart(int productID, int quantiy) {
@@ -203,7 +256,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         textBrief.setText(product.getBriefDescription() != null ? product.getBriefDescription() : "");
         textFull.setText(product.getFullDescription() != null ? product.getFullDescription() : "");
         textSpecs.setText(product.getTechnicalSpecifications() != null ? product.getTechnicalSpecifications() : "");
-
+        imageURL = product.getImageURL();
         if (product.getImageURL() != null && !product.getImageURL().isEmpty()) {
             Glide.with(ProductDetailActivity.this)
                     .load(product.getImageURL())

@@ -162,6 +162,7 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 >
 
                 <TextView
@@ -211,6 +212,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Add to Cart"
+                app:cornerRadius="50dp"/>
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBuyNow"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mua ngay"
+                android:layout_marginEnd="8dp"
                 app:cornerRadius="50dp"/>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
