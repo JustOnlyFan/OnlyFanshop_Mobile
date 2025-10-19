@@ -178,6 +178,7 @@ public class CartFragment extends Fragment {
                 if (response.isSuccessful()) {
                     // Sau khi server cập nhật, tải lại giỏ -> onResponse của getCartItems sẽ cập nhật badge
                     getCartItems(USERNAME);
+                    ((DashboardActivity) requireActivity()).updateCartBadgeNow();
                     Toast.makeText(requireContext(), "Tăng số lượng thành công", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(requireContext(), "Tăng số lượng thất bại", Toast.LENGTH_SHORT).show();
@@ -199,6 +200,7 @@ public class CartFragment extends Fragment {
                 if (response.isSuccessful()) {
                     // Sau khi server cập nhật, tải lại giỏ -> onResponse của getCartItems sẽ cập nhật badge
                     getCartItems(USERNAME);
+                    ((DashboardActivity) requireActivity()).updateCartBadgeNow();
                     Toast.makeText(requireContext(), "Giảm số lượng thành công", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(requireContext(), "Giảm số lượng thất bại", Toast.LENGTH_SHORT).show();
