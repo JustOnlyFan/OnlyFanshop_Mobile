@@ -1,5 +1,7 @@
 package com.example.onlyfanshop.map.core.facade;
 
+import static com.example.onlyfanshop.map.config.MapConfig.GeocodingPrimary.CHAINED;
+
 import com.example.onlyfanshop.map.config.MapConfig;
 import com.example.onlyfanshop.map.core.interfaces.AutocompleteProvider;
 import com.example.onlyfanshop.map.core.interfaces.GeocodingProvider;
@@ -10,6 +12,7 @@ import com.example.onlyfanshop.map.impl.geocoding.ChainedGeocodingProvider;
 import com.example.onlyfanshop.map.impl.geocoding.GeoapifyGeocodingProvider;
 import com.example.onlyfanshop.map.impl.geocoding.LocationIQGeocodingProvider;
 import com.example.onlyfanshop.map.impl.geocoding.OpenCageGeocodingProvider;
+import com.example.onlyfanshop.map.impl.routing.ChainedRoutingProvider;
 import com.example.onlyfanshop.map.impl.routing.GraphHopperRoutingProvider;
 import com.example.onlyfanshop.map.impl.routing.OpenRouteServiceRoutingProvider;
 
@@ -43,8 +46,14 @@ public class MapServiceFacade {
     private RoutingProvider buildRouting() {
         switch (MapConfig.ROUTING_PRIMARY) {
             case GRAPHHOPPER: return new GraphHopperRoutingProvider();
-            case OPENROUTESERVICE:
-            default: return new OpenRouteServiceRoutingProvider();
+            case OPENROUTESERVICE: return new OpenRouteServiceRoutingProvider();
+            case CHAINED:
+            default:
+                // Ưu tiên OpenRouteService trước, fallback sang GraphHopper
+                return new ChainedRoutingProvider(
+                        new OpenRouteServiceRoutingProvider(),
+                        new GraphHopperRoutingProvider()
+                );
         }
     }
 

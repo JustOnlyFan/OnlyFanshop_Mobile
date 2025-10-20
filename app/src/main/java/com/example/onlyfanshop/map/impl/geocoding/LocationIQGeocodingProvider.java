@@ -62,4 +62,9 @@ public class LocationIQGeocodingProvider implements GeocodingProvider {
             public void onError(Exception e){ cb.onError(e); }
         });
     }
+    @Override
+    public void reverseGeocode(double lat, double lng, Callback cb) {
+        // Gọi API reverse geocode hoặc đơn giản gọi lại reverse nếu logic giống nhau
+        reverse(lat, lng, cb);
+    }
 }

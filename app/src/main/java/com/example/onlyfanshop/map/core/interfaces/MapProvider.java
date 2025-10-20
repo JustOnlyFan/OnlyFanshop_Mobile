@@ -13,6 +13,7 @@ public interface MapProvider {
 
     void moveCamera(double lat, double lng, double zoom);
     void addMarker(String id, double lat, double lng, String title, String snippet);
+    void addMarker(String id, double lat, double lng, String title, String snippet, android.graphics.drawable.Drawable icon);
     void updateMarker(String id, double lat, double lng);
     void removeMarker(String id);
     void addPolyline(String id, List<double[]> latLngs, int color, float width);
@@ -28,4 +29,7 @@ public interface MapProvider {
     interface OnMapClickListener {
         void onClick(double lat, double lng);
     }
+    float getZoomLevel();
+    double getCenterLat();
+    double getCenterLng();
 }
