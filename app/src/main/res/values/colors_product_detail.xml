@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="peach_background">#FFE3D4</color>
+    <color name="orange_primary">#FF6B35</color>
+    <color name="dark_text">#2D2D2D</color>
+    <color name="gray_text">#757575</color>
+</resources>

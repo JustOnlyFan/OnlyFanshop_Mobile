@@ -74,6 +74,37 @@
         android:visibility="gone"
         android:elevation="8dp" />
 
+    <!-- Zoom controls -->
+    <LinearLayout
+        android:id="@+id/zoomControls"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="90dp"
+        android:gravity="end"
+        android:layout_gravity="top|end">
+
+        <ImageButton
+            android:id="@+id/btnZoomIn"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_search"
+            app:tint="@color/black"
+            android:contentDescription="Zoom In" />
+
+        <ImageButton
+            android:id="@+id/btnZoomOut"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/baseline_zoom_out_24"
+            app:tint="@color/black"
+            android:contentDescription="Zoom Out"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+
     <!-- Location Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabLocation"

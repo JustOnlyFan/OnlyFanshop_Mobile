@@ -34,7 +34,10 @@ public class MapViewModel extends ViewModel {
 
     public void autoComplete(String q){
         repository.autocomplete(q, (data, err) -> {
-            if (err != null) return; // im lặng
+            if (err != null) {
+                error.postValue("Autocomplete failed: " + err.getMessage());
+                return;
+            }
             suggestions.postValue(data);
         });
     }
@@ -43,6 +46,12 @@ public class MapViewModel extends ViewModel {
         repository.route(sLat, sLng, eLat, eLng, alt, (data, err) -> {
             if (err != null) error.postValue(err.getMessage());
             else routeResults.postValue(data);
+        });
+    }
+    public void reverseGeocode(double lat, double lng) {
+        repository.reverseGeocode(lat, lng, (data, err) -> {
+            if (err != null) error.postValue(err.getMessage());
+            else geocodeResults.postValue(data);
         });
     }
 }

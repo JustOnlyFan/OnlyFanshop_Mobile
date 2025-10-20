@@ -1,6 +1,7 @@
 package com.example.onlyfanshop.map.impl.map;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 
 import com.example.onlyfanshop.map.core.interfaces.MapProvider;
@@ -65,8 +66,8 @@ public class OsmMapProvider implements MapProvider {
         mapView.getController().setCenter(new GeoPoint(lat, lng));
     }
 
-    @Override
-    public void addMarker(String id, double lat, double lng, String title, String snippet) {
+    // Thêm hàm addMarker nhận icon riêng
+    public void addMarker(String id, double lat, double lng, String title, String snippet, Drawable icon) {
         if (mapView == null) return;
         Marker m = markerMap.get(id);
         if (m == null) {
@@ -78,7 +79,14 @@ public class OsmMapProvider implements MapProvider {
         m.setTitle(title);
         m.setSnippet(snippet);
         m.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        if (icon != null) m.setIcon(icon);
         mapView.invalidate();
+    }
+
+    // Giữ hàm cũ cho shop marker (icon mặc định)
+    @Override
+    public void addMarker(String id, double lat, double lng, String title, String snippet) {
+        addMarker(id, lat, lng, title, snippet, null);
     }
 
     @Override
@@ -149,5 +157,31 @@ public class OsmMapProvider implements MapProvider {
     @Override
     public void setOnMapClickListener(OnMapClickListener l) {
         this.clickListener = l;
+    }
+
+    @Override
+    public float getZoomLevel() {
+        if (mapView != null) {
+            return (float) mapView.getZoomLevelDouble();
+        }
+        return 0f;
+    }
+
+    @Override
+    public double getCenterLat() {
+        if (mapView != null) {
+            GeoPoint center = (GeoPoint) mapView.getMapCenter();
+            return center.getLatitude();
+        }
+        return 0d;
+    }
+
+    @Override
+    public double getCenterLng() {
+        if (mapView != null) {
+            GeoPoint center = (GeoPoint) mapView.getMapCenter();
+            return center.getLongitude();
+        }
+        return 0d;
     }
 }
