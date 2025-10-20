@@ -13,10 +13,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer; // optional nếu dùng anonymous class ở Cách 2
+import androidx.fragment.app.FragmentTransaction;
 
 import com.example.onlyfanshop.R;
-import com.example.onlyfanshop.utils.AppEvents; // ĐẢM BẢO import đúng class AppEvents bạn đã tạo
+import com.example.onlyfanshop.utils.AppEvents;
 import com.example.onlyfanshop.ui.CategoryFragment;
 import com.example.onlyfanshop.ui.HomeFragment;
 import com.example.onlyfanshop.ui.MapFragment;
@@ -37,6 +37,13 @@ public class DashboardActivity extends AppCompatActivity {
     private int currentSelectedId = R.id.nav_home;
     private final BadgeUtils badgeUtils = new BadgeUtils();
 
+    // Fragment cache
+    private Fragment homeFragment;
+    private Fragment categoryFragment;
+    private Fragment mapFragment;
+    private Fragment cartFragment;
+    private Fragment profileFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,18 +56,24 @@ public class DashboardActivity extends AppCompatActivity {
 
         applyEdgeToEdgeInsets();
         initFirebaseTest();
+        initFragmentCache(); // <-- NEW
         initNavigation(savedInstanceState);
 
-        // Đặt observe BÊN TRONG phương thức onCreate
         AppEvents.get().cartUpdated().observe(this, ts -> {
             updateCartBadgeNow();
         });
-
-        // Cập nhật badge lần đầu
         updateCartBadgeNow();
     }
 
-    // Cho phép Fragment/Activity khác gọi cập nhật badge
+    private void initFragmentCache() {
+        homeFragment = new HomeFragment();
+        categoryFragment = new CategoryFragment();
+        mapFragment = new MapFragment();
+        profileFragment = new ProfileFragment();
+        // cartFragment sẽ được tạo động khi cần vì còn username
+        cartFragment = null;
+    }
+
     public void updateCartBadgeNow() {
         try {
             SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
@@ -68,7 +81,6 @@ public class DashboardActivity extends AppCompatActivity {
             if (userId != -1 && bottomNav != null) {
                 badgeUtils.updateCartBadge(this, bottomNav, userId);
             } else if (bottomNav != null) {
-                // Nếu userId không tồn tại, xóa badge
                 badgeUtils.clearCartBadge(bottomNav);
             }
         } catch (Exception e) {
@@ -113,24 +125,22 @@ public class DashboardActivity extends AppCompatActivity {
     private void initNavigation(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             currentSelectedId = savedInstanceState.getInt(STATE_SELECTED_ITEM, R.id.nav_home);
-            bottomNav.setSelectedItemId(currentSelectedId);
-            loadFragmentById(currentSelectedId);
         } else {
-            bottomNav.setSelectedItemId(R.id.nav_home);
-            loadFragment(new HomeFragment());
+            currentSelectedId = R.id.nav_home;
         }
+        showFragmentById(currentSelectedId);
 
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (currentSelectedId != id) {
                 currentSelectedId = id;
-                loadFragmentById(id);
+                showFragmentById(id);
             }
             return true;
         });
 
         bottomNav.setOnItemReselectedListener(item -> {
-            // Optional
+            // Optional: scroll to top or refresh
         });
     }
 
@@ -143,53 +153,47 @@ public class DashboardActivity extends AppCompatActivity {
         return username;
     }
 
-    private void loadFragmentById(int id) {
-        Fragment fragment;
-        String tag;
+    private void showFragmentById(int id) {
+        Fragment fragmentToShow = null;
 
         if (id == R.id.nav_home) {
-            fragment = new HomeFragment();
-            tag = "HOME";
+            fragmentToShow = homeFragment;
         } else if (id == R.id.nav_search) {
-            fragment = new CategoryFragment();
-            tag = "SEARCH";
+            fragmentToShow = categoryFragment;
         } else if (id == R.id.nav_car) {
-            String username = getUsernameForNav();
-            fragment = CartFragment.newInstance(username);
-            tag = "CART";
+            if (cartFragment == null) {
+                String username = getUsernameForNav();
+                cartFragment = CartFragment.newInstance(username);
+            }
+            fragmentToShow = cartFragment;
         } else if (id == R.id.nav_shop) {
-            fragment = new MapFragment();
-            tag = "MAP";
+            fragmentToShow = mapFragment;
         } else if (id == R.id.nav_profile) {
-            fragment = new ProfileFragment();
-            tag = "PROFILE";
+            fragmentToShow = profileFragment;
         } else {
-            fragment = new HomeFragment();
-            tag = "HOME";
+            fragmentToShow = homeFragment;
         }
 
-        loadFragment(fragment, tag);
+        showFragment(fragmentToShow);
     }
 
-    private void loadFragment(@NonNull Fragment fragment) {
-        loadFragment(fragment, fragment.getClass().getSimpleName());
-    }
+    private void showFragment(Fragment fragmentToShow) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-    private void loadFragment(@NonNull Fragment fragment, String tag) {
-        try {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .setCustomAnimations(
-                            android.R.anim.fade_in,
-                            android.R.anim.fade_out,
-                            android.R.anim.fade_in,
-                            android.R.anim.fade_out
-                    )
-                    .replace(R.id.mainFragmentContainer, fragment, tag)
-                    .commit();
-        } catch (Exception e) {
-            Log.e(TAG, "❌ Error loading fragment: " + tag, e);
+        // Hide all fragments if they are added
+        if (homeFragment.isAdded()) transaction.hide(homeFragment);
+        if (categoryFragment.isAdded()) transaction.hide(categoryFragment);
+        if (mapFragment.isAdded()) transaction.hide(mapFragment);
+        if (cartFragment != null && cartFragment.isAdded()) transaction.hide(cartFragment);
+        if (profileFragment.isAdded()) transaction.hide(profileFragment);
+
+        // Add if not added, else show
+        if (!fragmentToShow.isAdded()) {
+            transaction.add(R.id.mainFragmentContainer, fragmentToShow);
+        } else {
+            transaction.show(fragmentToShow);
         }
+        transaction.commit();
     }
 
     @Override
@@ -207,7 +211,7 @@ public class DashboardActivity extends AppCompatActivity {
         if (currentSelectedId != R.id.nav_home) {
             bottomNav.setSelectedItemId(R.id.nav_home);
             currentSelectedId = R.id.nav_home;
-            loadFragmentById(R.id.nav_home);
+            showFragmentById(R.id.nav_home);
         } else {
             super.onBackPressed();
         }
