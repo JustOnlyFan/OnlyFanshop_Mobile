@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -31,6 +32,10 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
     public interface OnProductActionListener {
         void onEdit(ProductDTO product);
         void onDelete(ProductDTO product);
+
+        void onView(ProductDTO product);
+        void onToggleActive(ProductDTO product, boolean isActive);
+
     }
 
     public ProductManagementAdapter(List<ProductDTO> productList, OnProductActionListener listener) {
@@ -54,9 +59,17 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
         holder.tvCategory.setText("Loại: " + product.getCategory().getCategoryName());
         holder.tvBrand.setText("Hãng: " + product.getBrand().getName());
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(product));
-        holder.btnDelete.setOnClickListener(v -> listener.onDelete(product));
+//        holder.btnDelete.setOnClickListener(v -> listener.onDelete(product));
+        holder.btnView.setOnClickListener(v->listener.onView(product));
+        holder.switchActive.setOnCheckedChangeListener(null);
+        holder.switchActive.setChecked(product.isActive());
+
+        holder.switchActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            listener.onToggleActive(product, isChecked);
+        });
         String rawUrl = product.getImageURL();
         String url = resolveImageUrl(rawUrl);
+
 
         if (url != null && !url.isEmpty()) {
             Object model = url;
@@ -90,10 +103,10 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
 
     static class ProductViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvPrice, tvCategory, tvBrand;
-        Button btnEdit, btnDelete;
+        Button btnEdit, btnDelete, btnView;
 
         ImageView tvImg;
-
+        Switch switchActive;
         public ProductViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvProductName);
@@ -101,8 +114,10 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
             tvCategory = itemView.findViewById(R.id.tvProductCategory);
             tvBrand = itemView.findViewById(R.id.tvProductBrand);
             btnEdit = itemView.findViewById(R.id.btnEditProduct);
-            btnDelete = itemView.findViewById(R.id.btnDeleteProduct);
+//            btnDelete = itemView.findViewById(R.id.btnDeleteProduct);
+            btnView = itemView.findViewById(R.id.btnViewProduct);
             tvImg = itemView.findViewById(R.id.tvImg);
+            switchActive = itemView.findViewById(R.id.switchActive);
         }
     }
 }

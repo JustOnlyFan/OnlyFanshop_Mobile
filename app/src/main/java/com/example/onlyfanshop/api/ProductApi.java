@@ -12,11 +12,13 @@ import com.example.onlyfanshop.model.response.HomePageData;
 import java.util.List;
 
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -56,6 +58,31 @@ public interface ProductApi {
     @POST("product")
     Call<ApiResponse<ProductDTO>> addProduct(
             @Body ProductRequest product
+    );
+    @PUT("product/{id}")
+    Call<ProductDetailDTO> updateProduct(@Path("id") int id, @Body ProductRequest request);
+
+    @Multipart
+    @POST("/api/upload/change")
+    Call<ApiResponse<String>> changeImage(
+            @Part MultipartBody.Part file,
+            @Part("oldUrl") RequestBody oldUrl
+    );
+
+    @PUT("product/image/{id}")
+    Call<ApiResponse<Void>> updateImage(
+            @Path("id") int id,
+            @Query("imgString") String imgString
+    );
+    @POST("product/productList")
+    Call<ApiResponse<HomePageData>> getProductList(
+            @Query("page") int page,
+            @Query("size") int size,
+            @Query("sortBy") String sortBy,
+            @Query("order") String order,
+            @Query("keyword") String keyword,
+            @Query("categoryId") Integer categoryId,
+            @Query("brandId") Integer brandId
     );
 
 }
