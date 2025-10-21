@@ -27,6 +27,8 @@ public class ProductDTO implements Serializable {
     @SerializedName("category")
     private CategoryDTO category;
 
+    @SerializedName(("isActive"))
+    private boolean isActive;
     public Integer getProductID() { return productID; }
     public void setProductID(Integer productID) { this.productID = productID; }
 
@@ -47,4 +49,12 @@ public class ProductDTO implements Serializable {
 
     public CategoryDTO getCategory() { return category; }
     public void setCategory(CategoryDTO category) { this.category = category; }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
 }

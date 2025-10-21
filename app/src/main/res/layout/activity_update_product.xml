@@ -16,7 +16,7 @@
             android:id="@+id/tvAddProductTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Thêm Sản Phẩm"
+            android:text="Cập nhật Sản Phẩm"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_marginBottom="16dp" />
@@ -34,7 +34,7 @@
             android:id="@+id/btnChooseImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chọn Ảnh"
+            android:text="Cập nhật ảnh"
             android:layout_marginBottom="8dp" />
 
         <!-- Nút upload ảnh -->
@@ -107,7 +107,14 @@
             android:id="@+id/btnSubmitProduct"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Thêm sản phẩm"
+            android:text="Cập nhật sản phẩm"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Quay lại"
             android:textStyle="bold" />
 
     </LinearLayout>

@@ -1,86 +1,105 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:layout_margin="6dp"
-app:cardCornerRadius="10dp"
-app:cardElevation="4dp">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Ảnh sản phẩm -->
         <ImageView
+            android:id="@+id/tvImg"
             android:layout_width="150dp"
             android:layout_height="match_parent"
-            android:src="@drawable/img"
-            android:id="@+id/tvImg"/>
+            android:layout_margin="8dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/img" />
 
-
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="10dp">
-
-    <!-- Tên sản phẩm -->
-    <TextView
-        android:id="@+id/tvProductName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Quạt đứng Asia D16011"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="#000000" />
-
-    <!-- Giá, Category, Brand -->
-    <TextView
-        android:id="@+id/tvProductPrice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Giá: 850.000đ"
-        android:textColor="#444" />
-
-    <TextView
-        android:id="@+id/tvProductCategory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Loại: Quạt đứng"
-        android:textColor="#444" />
-
-    <TextView
-        android:id="@+id/tvProductBrand"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hãng: Asia"
-        android:textColor="#444" />
-
-    <!-- Nút chỉnh sửa & xóa -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="end"
-        android:layout_marginTop="6dp">
-
-        <Button
-            android:id="@+id/btnEditProduct"
-            android:layout_width="wrap_content"
+        <!-- Thông tin sản phẩm -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Sửa"
-            android:textSize="14sp"
-            android:layout_marginEnd="6dp"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="@android:color/white"/>
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="10dp">
 
-        <Button
-            android:id="@+id/btnDeleteProduct"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Xóa"
-            android:textSize="14sp"
-            android:backgroundTint="@color/red"
-            android:textColor="@android:color/white"/>
-    </LinearLayout>
-</LinearLayout>
+            <!-- Tên sản phẩm -->
+            <TextView
+                android:id="@+id/tvProductName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quạt đứng Asia D16011"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#000000" />
+
+            <!-- Giá, Category, Brand -->
+            <TextView
+                android:id="@+id/tvProductPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Giá: 850.000đ"
+                android:textColor="#444" />
+
+            <TextView
+                android:id="@+id/tvProductCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Loại: Quạt đứng"
+                android:textColor="#444" />
+
+            <TextView
+                android:id="@+id/tvProductBrand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hãng: Asia"
+                android:textColor="#444" />
+            <!-- Switch bật/tắt trạng thái (nằm ngay dưới 2 nút) -->
+            <Switch
+                android:id="@+id/switchActive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="4dp"
+                android:text="Kích hoạt"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
+            <!-- Nút chỉnh sửa & xem -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnEditProduct"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sửa"
+                    android:textSize="14sp"
+                    android:layout_marginEnd="6dp"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:textColor="@android:color/white" />
+
+                <Button
+                    android:id="@+id/btnViewProduct"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Xem"
+                    android:textSize="14sp"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+
+
+
+        </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

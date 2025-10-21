@@ -188,8 +188,8 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
 
 
     private void fetchProducts(String keyword, Integer categoryId, Integer brandId) {
-        ProductApi api = ApiClient.getPublicClient().create(ProductApi.class);
-        api.getHomePagePost(
+        ProductApi api = ApiClient.getPrivateClient(this).create(ProductApi.class);
+        api.getProductList(
                 1,   // page
                 10,  // size
                 "ProductID",
@@ -229,8 +229,21 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
     public void onEdit(ProductDTO product) {
         Toast.makeText(this, "Edit: " + product.getProductName(), Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, UpdateProductActivity.class);
-        intent.putExtra("productToEdit", product); // <- Sửa ở đây
+        intent.putExtra("productToEdit", product.getProductID());
+        intent.putExtra("productURL", product.getImageURL());// <- Sửa ở đây
         startActivityForResult(intent, 200); // Sử dụng startActivityForResult để có thể cập nhật lại danh sách sau khi sửa
+    }
+
+    @Override
+    public  void onView(ProductDTO product){
+        Intent intent=new Intent(this,ProductDetailManageActivity.class);
+        intent.putExtra("productId",product.getProductID());
+        startActivity(intent);
+    }
+
+    @Override
+    public void onToggleActive(ProductDTO product, boolean isActive) {
+ 
     }
 
     @Override
