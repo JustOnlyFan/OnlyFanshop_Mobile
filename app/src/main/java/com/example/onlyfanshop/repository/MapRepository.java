@@ -28,6 +28,7 @@ public class MapRepository {
             public void onSuccess(List<GeocodeResult> results) {
                 cb.onResult(results, null);
             }
+
             @Override
             public void onError(Throwable t) {
                 cb.onResult(null, t);
@@ -35,17 +36,45 @@ public class MapRepository {
         });
     }
 
-    public void route(double sLat,double sLng,double eLat,double eLng,int alt, SimpleCallback<List<RouteResult>> cb) {
+    public void route(double sLat, double sLng, double eLat, double eLng, int alt, SimpleCallback<List<RouteResult>> cb) {
         facade.routing().route(sLat, sLng, eLat, eLng, alt, new RoutingProvider.Callback() {
-            @Override public void onSuccess(List<RouteResult> routes) { cb.onResult(routes, null); }
-            @Override public void onError(Throwable t) { cb.onResult(null, t); }
+            @Override
+            public void onSuccess(List<RouteResult> routes) {
+                cb.onResult(routes, null);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                cb.onResult(null, t);
+            }
         });
     }
 
     public void autocomplete(String q, SimpleCallback<List<PlaceSuggestion>> cb) {
         facade.autocomplete().suggest(q, new AutocompleteProvider.Callback() {
-            @Override public void onSuccess(List<PlaceSuggestion> suggestions) { cb.onResult(suggestions, null); }
-            @Override public void onError(Throwable t) { cb.onResult(null, t); }
+            @Override
+            public void onSuccess(List<PlaceSuggestion> suggestions) {
+                cb.onResult(suggestions, null);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                cb.onResult(null, t);
+            }
+        });
+    }
+
+    public void reverseGeocode(double lat, double lng, SimpleCallback<List<GeocodeResult>> cb) {
+        facade.geocoding().reverseGeocode(lat, lng, new GeocodingProvider.Callback() {
+            @Override
+            public void onSuccess(List<GeocodeResult> results) {
+                cb.onResult(results, null);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                cb.onResult(null, t);
+            }
         });
     }
 }

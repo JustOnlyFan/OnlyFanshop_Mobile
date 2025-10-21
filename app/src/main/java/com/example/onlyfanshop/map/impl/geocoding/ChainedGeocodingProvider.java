@@ -41,6 +41,32 @@ public class ChainedGeocodingProvider implements GeocodingProvider {
     }
 
     @Override
+    public void reverseGeocode(double lat, double lng, Callback cb) {
+        callReverseGeocodeRecursive(0, lat, lng, cb);
+    }
+
+    private void callReverseGeocodeRecursive(int idx, double lat, double lng, Callback cb) {
+        if (idx >= providers.size()) {
+            cb.onSuccess(new java.util.ArrayList<>());
+            return;
+        }
+        providers.get(idx).reverseGeocode(lat, lng, new Callback() {
+            @Override
+            public void onSuccess(List<GeocodeResult> results) {
+                if (results.isEmpty()) {
+                    callReverseGeocodeRecursive(idx + 1, lat, lng, cb);
+                } else {
+                    cb.onSuccess(results);
+                }
+            }
+            @Override
+            public void onError(Throwable t) {
+                callReverseGeocodeRecursive(idx + 1, lat, lng, cb);
+            }
+        });
+    }
+
+    @Override
     public void reverse(double lat, double lng, Callback cb) {
         callReverseRecursive(0, lat, lng, cb);
     }
@@ -65,4 +91,5 @@ public class ChainedGeocodingProvider implements GeocodingProvider {
             }
         });
     }
+
 }
