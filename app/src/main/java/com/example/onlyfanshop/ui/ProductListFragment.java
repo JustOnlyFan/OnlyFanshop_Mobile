@@ -24,7 +24,6 @@ import com.example.onlyfanshop.model.ProductDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.HomePageData;
 import com.example.onlyfanshop.ViewModel.ProductFilterViewModel;
-// IMPORTANT: import the detail activity from its package
 import com.example.onlyfanshop.ui.product.ProductDetailActivity;
 
 import java.util.ArrayList;
@@ -62,6 +61,7 @@ public class ProductListFragment extends Fragment {
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(v, savedInstanceState);
 
+        // Khởi tạo các view
         swipeRefresh = v.findViewById(R.id.swipeRefreshProducts);
         recyclerProducts = v.findViewById(R.id.recyclerProducts);
         progressProducts = v.findViewById(R.id.progressProducts);
@@ -73,6 +73,7 @@ public class ProductListFragment extends Fragment {
         productApi = ApiClient.getPrivateClient(requireContext()).create(ProductApi.class);
         filterVM = new ViewModelProvider(requireActivity()).get(ProductFilterViewModel.class);
 
+        // Lắng nghe thay đổi từ ViewModel để fetch lại sản phẩm
         filterVM.getKeyword().observe(getViewLifecycleOwner(), kw -> {
             currentKeyword = kw;
             fetchProducts();
@@ -82,6 +83,7 @@ public class ProductListFragment extends Fragment {
             fetchProducts();
         });
 
+        // Tải sản phẩm lần đầu
         fetchProducts();
     }
 
@@ -93,17 +95,24 @@ public class ProductListFragment extends Fragment {
                 return;
             }
             startActivity(ProductDetailActivity.newIntent(requireContext(), pid));
-            // Alternatively (no import needed):
-            // startActivity(com.example.onlyfanshop.ui.product.ProductDetailActivity.newIntent(requireContext(), pid));
         });
         recyclerProducts.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         recyclerProducts.setAdapter(productAdapter);
     }
 
     private void setupSwipe() {
-        swipeRefresh.setOnRefreshListener(this::fetchProducts);
+        swipeRefresh.setOnRefreshListener(() -> {
+            fetchProducts();
+            // Tắt loading sau 5s nếu callback không về (timeout an toàn)
+            swipeRefresh.postDelayed(() -> swipeRefresh.setRefreshing(false), 5000);
+        });
     }
 
+
+
+    /**
+     * Hiện hoặc ẩn progressBar chính khi load dữ liệu (không phải loading xoay của SwipeRefreshLayout)
+     */
     private void setLoading(boolean loading) {
         if (loading) {
             progressProducts.setVisibility(View.VISIBLE);
@@ -113,24 +122,32 @@ public class ProductListFragment extends Fragment {
         }
     }
 
+    /**
+     * Gọi API để lấy danh sách sản phẩm
+     * Đảm bảo luôn tắt xoay của SwipeRefreshLayout khi hoàn thành (thành công hoặc lỗi)
+     */
     private void fetchProducts() {
         if (productApi == null) return;
+
+        // Chỉ show progressBar nhỏ ở giữa khi gọi từ code, không ảnh hưởng xoay của SwipeRefreshLayout
         setLoading(true);
 
+        // Gọi API lấy sản phẩm (thêm filter khác nếu cần)
         Call<ApiResponse<HomePageData>> call = productApi.getHomePagePost(
-                1,
-                20,
-                "ProductID",
-                "DESC",
+                1,          // page
+                20,         // size
+                "ProductID",// sortBy
+                "DESC",     // order
                 currentKeyword,
                 currentCategoryId,
-                null
+                null        // brandId nếu có filter brand
         );
 
         call.enqueue(new Callback<ApiResponse<HomePageData>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<HomePageData>> call,
                                    @NonNull Response<ApiResponse<HomePageData>> response) {
+                // Luôn tắt xoay của SwipeRefreshLayout ngay khi nhận được callback
                 swipeRefresh.setRefreshing(false);
                 setLoading(false);
 
@@ -147,7 +164,7 @@ public class ProductListFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<HomePageData>> call, @NonNull Throwable t) {
-                swipeRefresh.setRefreshing(false);
+                swipeRefresh.setRefreshing(false); // Tắt xoay khi lỗi
                 setLoading(false);
                 productAdapter.submitList(new ArrayList<>());
                 textEmptyProducts.setVisibility(View.VISIBLE);

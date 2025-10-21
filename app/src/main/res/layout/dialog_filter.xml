@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content" android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etBrand"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Thương hiệu" />
+
+    <EditText
+        android:id="@+id/etPriceMin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Giá từ" android:inputType="number"/>
+
+    <EditText
+        android:id="@+id/etPriceMax"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Giá đến" android:inputType="number"/>
+
+    <EditText
+        android:id="@+id/etRating"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Đánh giá từ (sao)" android:inputType="number"/>
+
+    <Button
+        android:id="@+id/btnApplyFilter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Áp dụng" android:layout_marginTop="12dp"/>
+</LinearLayout>
