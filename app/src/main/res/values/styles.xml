@@ -30,4 +30,9 @@
         <item name="android:background">@android:color/white</item>
     </style>
 
+    <style name="RatingBar" parent="Widget.AppCompat.RatingBar.Small">
+        <item name="android:progressTint">#FF6B35</item>
+        <item name="android:secondaryProgressTint">#FFE0B2</item>
+    </style>
+
 </resources>

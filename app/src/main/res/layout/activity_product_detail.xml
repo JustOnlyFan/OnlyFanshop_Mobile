@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="#E8F5E8"
     tools:context=".ui.product.ProductDetailActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -46,88 +46,278 @@
                 <ImageView
                     android:id="@+id/imageProduct"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp"
+                    android:layout_height="300dp"
                     android:contentDescription="product image"
-                    android:scaleType="centerInside" />
+                    android:scaleType="centerCrop" />
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Price section below image -->
             <TextView
-                android:id="@+id/textBrand"
+                android:id="@+id/textBottomPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textColor="#6A6A6A"
-                android:textSize="12sp"
+                android:layout_marginTop="16dp"
+                android:textColor="#111111"
                 android:textStyle="bold"
-                tools:text="Nike Official" />
+                android:textSize="24sp"
+                tools:text="$145.26"/>
 
-            <TextView
-                android:id="@+id/textProductName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="#111111"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                tools:text="Air Jordan 1 Low Fragment X Travis Scott" />
-
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="12dp" />
-
-            <TextView
+            <!-- Brand Badge with Animation -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="DESCRIPTION:"
-                android:textColor="#111111"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="25dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#E3F2FD"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp">
+                
+                <TextView
+                    android:id="@+id/textBrand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/brand_badge_blue_bg"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="4dp"
+                    tools:text="ASIA" />
+            </com.google.android.material.card.MaterialCardView>
 
-            <TextView
-                android:id="@+id/textBrief"
+            <!-- Product Name with Rating -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:textColor="#4A4A4A"
-                android:textSize="14sp"
-                tools:text="It’s the rare sneaker that satisfies..." />
-
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="FULL DESCRIPTION:"
-                android:textColor="#111111"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/textFull"
+                <TextView
+                    android:id="@+id/textProductName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#111111"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:lineSpacingExtra="2dp"
+                    tools:text="Air Jordan 1 Low Fragment X Travis Scott" />
+
+                <!-- Rating and Reviews -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <RatingBar
+                        android:id="@+id/ratingBar"
+                        style="?android:attr/ratingBarStyleSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:numStars="5"
+                        android:rating="4.5"
+                        android:stepSize="0.1"
+                        android:theme="@style/RatingBar" />
+
+                    <TextView
+                        android:id="@+id/textRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:textColor="#666666"
+                        android:textSize="12sp"
+                        tools:text="4.5 (128 reviews)" />
+
+                </LinearLayout>
+            </LinearLayout>
+
+
+
+            <!-- Animated Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginVertical="20dp"
+                android:background="#1976D2" />
+
+            <!-- Description Section with Expand/Collapse -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:textColor="#4A4A4A"
-                android:textSize="14sp"
-                tools:text="Detailed description..." />
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#E3F2FD"
+                android:layout_marginTop="8dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="SPECIFICATIONS:"
-                android:textColor="#111111"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-            <TextView
-                android:id="@+id/textSpecs"
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="📝 Mô tả sản phẩm"
+                            android:textColor="#1976D2"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/btnExpandDescription"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_expand_more"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/textBrief"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="#4A4A4A"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="2dp"
+                        tools:text="It's the rare sneaker that satisfies..." />
+
+                    <TextView
+                        android:id="@+id/textFull"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="#4A4A4A"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="2dp"
+                        android:visibility="gone"
+                        tools:text="Detailed description..." />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Specifications Section -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:textColor="#4A4A4A"
-                android:textSize="14sp"
-                tools:text="Specs..." />
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#E3F2FD"
+                android:layout_marginTop="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⚙️ Thông số kỹ thuật"
+                        android:textColor="#1976D2"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <!-- Technical Specs in vertical layout -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="vertical">
+
+                        <!-- Type -->
+                        <TextView
+                            android:id="@+id/textSpecType"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/spec_item_blue_bg"
+                            android:padding="12dp"
+                            android:text="Loại: Quạt treo điều khiển từ xa Asia VY377092 - Xám"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <!-- Blade Span -->
+                        <TextView
+                            android:id="@+id/textSpecBlade"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/spec_item_blue_bg"
+                            android:padding="12dp"
+                            android:text="Sải cánh: 40 cm"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <!-- Air Flow -->
+                        <TextView
+                            android:id="@+id/textSpecAirflow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/spec_item_blue_bg"
+                            android:padding="12dp"
+                            android:text="Lưu lượng gió: 50.2 m³/phút"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <!-- Rotation Speed -->
+                        <TextView
+                            android:id="@+id/textSpecSpeed"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/spec_item_blue_bg"
+                            android:padding="12dp"
+                            android:text="Tốc độ xoay: 1200 vòng/phút"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <!-- Weight -->
+                        <TextView
+                            android:id="@+id/textSpecWeight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/spec_item_blue_bg"
+                            android:padding="12dp"
+                            android:text="Trọng lượng: 4.6 kg"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <!-- Color -->
+                        <TextView
+                            android:id="@+id/textSpecColor"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/spec_item_blue_bg"
+                            android:padding="12dp"
+                            android:text="Màu sắc: Xanh, lá mạ"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
@@ -145,84 +335,51 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="14dp"
-            android:layout_marginBottom="0dp"
+            android:padding="16dp"
             android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/textBottomPrice"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textColor="#111111"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                tools:text="$145.26"/>
+            <!-- Chat Icon -->
+            <ImageButton
+                android:id="@+id/btnChat"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Chat"
+                android:padding="12dp"
+                android:src="@drawable/ic_chat"
+                app:tint="#1976D2" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                >
+            <!-- Separator -->
+            <View
+                android:layout_width="2dp"
+                android:layout_height="24dp"
+                android:layout_marginHorizontal="8dp"
+                android:background="#CCCCCC" />
 
-                <TextView
-                    android:id="@+id/addQuantity"
-                    android:layout_width="23dp"
-                    android:layout_height="23dp"
-                    android:layout_marginEnd="8dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:textStyle="bold"
+            <!-- Cart Icon -->
+            <ImageButton
+                android:id="@+id/btnCart"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Add to Cart"
+                android:padding="12dp"
+                android:src="@drawable/ic_cart"
+                app:tint="#1976D2" />
 
-                    android:text="+"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/numberItem"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="1"
-                    android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/addQuantity"
-                    app:layout_constraintStart_toEndOf="@+id/minusQuantity"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/minusQuantity"
-                    android:layout_width="23dp"
-                    android:layout_height="23dp"
-                    android:layout_marginStart="8dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:textStyle="bold"
-                    android:text="-"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAddToCart"
-                style="@style/Widget.Material3.Button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Add to Cart"
-                app:cornerRadius="50dp"/>
-
-
+            <!-- Buy Now Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBuyNow"
                 style="@style/Widget.Material3.Button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
                 android:text="Mua ngay"
-                android:layout_marginEnd="8dp"
-                app:cornerRadius="50dp"/>
+                android:textColor="@android:color/white"
+                android:backgroundTint="#1976D2"
+                app:cornerRadius="24dp" />
+
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
