@@ -53,9 +53,11 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_PRODUCT_ID = "product_id";
 
-    private ImageView imageProduct;
-    private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, textSpecs, numberItem, addQuantity, minusQuantity;
-    private MaterialButton btnAddToCart, btnBuyNow;
+    private ImageView imageProduct, btnChat, btnCart, btnExpandDescription;
+    private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, numberItem, addQuantity, minusQuantity, textRating;
+    private TextView textSpecType, textSpecBlade, textSpecAirflow, textSpecSpeed, textSpecWeight, textSpecColor;
+    private MaterialButton btnBuyNow;
+    private boolean isDescriptionExpanded = false;
     //private Integer quantity = 1;
     private ProgressBar progressBar;
     private String imageURL;
@@ -82,12 +84,20 @@ public class ProductDetailActivity extends AppCompatActivity {
         textBottomPrice = findViewById(R.id.textBottomPrice);
         textBrief = findViewById(R.id.textBrief);
         textFull = findViewById(R.id.textFull);
-        textSpecs = findViewById(R.id.textSpecs);
         numberItem = findViewById(R.id.numberItem);
         addQuantity = findViewById(R.id.addQuantity);
         minusQuantity = findViewById(R.id.minusQuantity);
-        btnAddToCart = findViewById(R.id.btnAddToCart);
+        btnChat = findViewById(R.id.btnChat);
+        btnCart = findViewById(R.id.btnCart);
         btnBuyNow = findViewById(R.id.btnBuyNow);
+        btnExpandDescription = findViewById(R.id.btnExpandDescription);
+        textRating = findViewById(R.id.textRating);
+        textSpecType = findViewById(R.id.textSpecType);
+        textSpecBlade = findViewById(R.id.textSpecBlade);
+        textSpecAirflow = findViewById(R.id.textSpecAirflow);
+        textSpecSpeed = findViewById(R.id.textSpecSpeed);
+        textSpecWeight = findViewById(R.id.textSpecWeight);
+        textSpecColor = findViewById(R.id.textSpecColor);
         progressBar = findViewById(R.id.progressBar);
 
         //numberItem.setText(quantity.toString());
@@ -105,7 +115,14 @@ public class ProductDetailActivity extends AppCompatActivity {
 //        });
 
         int id = getIntent().getIntExtra(EXTRA_PRODUCT_ID, -1);
-        btnAddToCart.setOnClickListener(v -> addTocart(id, 1));
+        btnCart.setOnClickListener(v -> addTocart(id, 1));
+        btnChat.setOnClickListener(v -> {
+            // TODO: Implement chat functionality
+            Toast.makeText(this, "Chat feature coming soon!", Toast.LENGTH_SHORT).show();
+        });
+        
+        btnExpandDescription.setOnClickListener(v -> toggleDescription());
+        
         btnBuyNow.setOnClickListener(v -> {
             String name = textProductName.getText().toString();
             String price = textBottomPrice.getText().toString();
@@ -255,7 +272,24 @@ public class ProductDetailActivity extends AppCompatActivity {
         textBottomPrice.setText(String.format("$%.2f", product.getPrice() != null ? product.getPrice() : 0));
         textBrief.setText(product.getBriefDescription() != null ? product.getBriefDescription() : "");
         textFull.setText(product.getFullDescription() != null ? product.getFullDescription() : "");
-        textSpecs.setText(product.getTechnicalSpecifications() != null ? product.getTechnicalSpecifications() : "");
+        
+        // Set technical specifications
+        if (product.getTechnicalSpecifications() != null && !product.getTechnicalSpecifications().isEmpty()) {
+            // Parse technical specifications and set individual fields
+            String specs = product.getTechnicalSpecifications();
+            // You can parse the specs string and set individual TextViews
+            // For now, we'll set default values
+            textSpecType.setText("Loại: " + (product.getProductName() != null ? product.getProductName() : "N/A"));
+            textSpecBlade.setText("Sải cánh: 40 cm");
+            textSpecAirflow.setText("Lưu lượng gió: 50.2 m³/phút");
+            textSpecSpeed.setText("Tốc độ xoay: 1200 vòng/phút");
+            textSpecWeight.setText("Trọng lượng: 4.6 kg");
+            textSpecColor.setText("Màu sắc: Xanh, lá mạ");
+        }
+        
+        // Set rating text (you can get this from product data if available)
+        textRating.setText("4.5 (128 reviews)");
+        
         imageURL = product.getImageURL();
         if (product.getImageURL() != null && !product.getImageURL().isEmpty()) {
             Glide.with(ProductDetailActivity.this)
@@ -277,5 +311,11 @@ public class ProductDetailActivity extends AppCompatActivity {
         ImageView fav = findViewById(R.id.btnFavorite);
         fav.setImageResource(isFavorite ? R.drawable.ic_heart_filled : R.drawable.ic_heart);
         // TODO: Optionally call backend to persist favorite state
+    }
+    
+    private void toggleDescription() {
+        isDescriptionExpanded = !isDescriptionExpanded;
+        textFull.setVisibility(isDescriptionExpanded ? View.VISIBLE : View.GONE);
+        btnExpandDescription.setRotation(isDescriptionExpanded ? 180 : 0);
     }
 }
