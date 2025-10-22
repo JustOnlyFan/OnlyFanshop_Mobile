@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="chat_item_avatar">44dp</dimen>
-    <dimen name="chat_item_padding">12dp</dimen>
-    <dimen name="chat_name_text">16sp</dimen>
-    <dimen name="chat_message_text">13sp</dimen>
-    <dimen name="chat_search_height">40dp</dimen>
-    <dimen name="chat_send_button">44dp</dimen>
-    <dimen name="chat_input_padding">10dp</dimen>
     <!-- Chiều cao chuẩn của BottomNavigationView (56dp). Dùng làm fallback khi chưa đo được height. -->
     <dimen name="bottom_nav_height">56dp</dimen>
 </resources>

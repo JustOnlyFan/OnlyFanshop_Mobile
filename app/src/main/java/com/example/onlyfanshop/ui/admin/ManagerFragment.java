@@ -21,7 +21,7 @@ import com.example.onlyfanshop.ui.product.ProductManagementActivity;
  * create an instance of this fragment.
  */
 public class ManagerFragment extends Fragment {
-    private LinearLayout btnUserManagement, btnProductManagement, btnChatManagement;
+    private LinearLayout btnUserManagement, btnProductManagement;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -78,21 +78,15 @@ public class ManagerFragment extends Fragment {
         if (username != null) {
             tvUserName.setText(username);
         } else {
-            tvUserName.setText("Name"); // hoặc hiển thị mặc định
+            tvUserName.setText("Name");
         }
 
         // Các nút quản lý như cũ
         btnUserManagement = view.findViewById(R.id.btnUserManagement);
         btnProductManagement = view.findViewById(R.id.btnProductManagement);
-        btnChatManagement = view.findViewById(R.id.btnChatManagement);
 
         btnProductManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), ProductManagementActivity.class);
-            startActivity(intent);
-        });
-
-        btnChatManagement.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), com.example.onlyfanshop.ui.chat.ChatListActivity.class);
             startActivity(intent);
         });
 
