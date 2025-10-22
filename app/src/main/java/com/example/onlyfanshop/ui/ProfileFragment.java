@@ -26,7 +26,6 @@ import com.example.onlyfanshop.model.response.UserResponse;
 import com.example.onlyfanshop.ui.order.OrderHistoryActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.firebase.auth.FirebaseAuth;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,7 +34,7 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
-    private View btnSupport, btnChat, btnResetPassword, btnLogout, btnHistory;
+    private View btnSupport, btnResetPassword, btnLogout, btnHistory;
     private SwitchCompat switchPushNotif, switchFaceId;
 
     private TextView tvProfileName, tvProfileEmail;
@@ -51,7 +50,7 @@ public class ProfileFragment extends Fragment {
                     .beginTransaction()
                     .replace(R.id.mainFragmentContainer, new PleaseSignInFragment(), "PLEASE_SIGN_IN")
                     .commit();
-            return new View(requireContext()); // Trả về view rỗng, tránh null pointer
+            return new View(requireContext());
         }
 
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
@@ -62,11 +61,8 @@ public class ProfileFragment extends Fragment {
         SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         String username = prefs.getString("username", "Guest");
         String email = prefs.getString("email", "");
-        String role = prefs.getString("role", "");
         tvProfileName.setText(username);
         tvProfileEmail.setText(email);
-        if ("ADMIN".equals(role)) btnChat.setVisibility(View.GONE);
-        else btnChat.setVisibility(View.VISIBLE);
 
         // 2. GỌI API ĐỂ CẬP NHẬT THÔNG TIN MỚI NHẤT
         fetchUser();
@@ -77,14 +73,12 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Khi quay lại từ EditProfileFragment, tự refresh user
         fetchUser();
     }
 
     private void initViews(View view) {
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnSupport = view.findViewById(R.id.btnSupport);
-        btnChat = view.findViewById(R.id.btnChat);
         btnHistory = view.findViewById(R.id.History);
         btnResetPassword = view.findViewById(R.id.btnResetPassword);
         btnLogout = view.findViewById(R.id.btnLogout);
@@ -110,7 +104,6 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
         btnSupport.setOnClickListener(v -> Toast.makeText(requireContext(), "Support clicked", Toast.LENGTH_SHORT).show());
-        btnChat.setOnClickListener(v -> openChatEntry());
         btnResetPassword.setOnClickListener(v -> startActivity(new Intent(requireContext(), ChangePasswordActivity.class)));
         btnLogout.setOnClickListener(v -> showLogoutDialog());
         btnHistory.setOnClickListener(v -> startActivity(new Intent(requireContext(), OrderHistoryActivity.class)));
@@ -119,35 +112,6 @@ public class ProfileFragment extends Fragment {
 
         switchFaceId.setOnCheckedChangeListener((buttonView, isChecked) ->
                 Toast.makeText(requireContext(), "Face ID: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
-    }
-
-    private void openChatEntry() {
-        String role = null;
-        Integer userId = null;
-        if (currentUser != null) {
-            try { role = currentUser.getRole(); } catch (Exception ignored) {}
-            try { userId = currentUser.getUserID(); } catch (Exception ignored) {}
-        }
-
-        if ("CUSTOMER".equals(role)) {
-            String customerId = FirebaseAuth.getInstance().getUid();
-            if (customerId == null) {
-                if (userId != null) customerId = "customer_" + userId;
-                else if (currentUser != null && currentUser.getUsername() != null) customerId = "customer_" + currentUser.getUsername();
-                else customerId = "customer_" + System.currentTimeMillis();
-            }
-            String adminId = "admin_uid";
-            String conversationId = customerId.compareTo(adminId) < 0
-                    ? customerId + "_" + adminId
-                    : adminId + "_" + customerId;
-
-            Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.chat.ChatRoomActivity.class);
-            intent.putExtra("conversationId", conversationId);
-            intent.putExtra("customerName", "Admin");
-            startActivity(intent);
-        } else {
-            Toast.makeText(requireContext(), "Chat feature is only available for customers", Toast.LENGTH_SHORT).show();
-        }
     }
 
     // GỌI API VÀ LƯU VÀO SHARED PREFERENCES ĐỂ LẦN SAU LOAD NHANH
@@ -164,7 +128,6 @@ public class ProfileFragment extends Fragment {
                         currentUser = body.getData();
                         bindUser(currentUser);
 
-                        // CẬP NHẬT SHARED PREFERENCES CHO LẦN SAU
                         SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
                         prefs.edit()
                                 .putString("username", currentUser.getUsername())
@@ -176,7 +139,6 @@ public class ProfileFragment extends Fragment {
                     }
                 } else if (response.code() == 401) {
                     Toast.makeText(requireContext(), "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.", Toast.LENGTH_LONG).show();
-                    // TODO: Điều hướng Login
                 } else {
                     Toast.makeText(requireContext(), "Lỗi: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
@@ -193,11 +155,6 @@ public class ProfileFragment extends Fragment {
     private void bindUser(User user) {
         tvProfileName.setText(user.getUsername() != null ? user.getUsername() : "Guest");
         tvProfileEmail.setText(user.getEmail() != null ? user.getEmail() : "");
-        if (user.getRole() != null && "ADMIN".equals(user.getRole())) {
-            btnChat.setVisibility(View.GONE);
-        } else {
-            btnChat.setVisibility(View.VISIBLE);
-        }
     }
 
     private void showLogoutDialog() {

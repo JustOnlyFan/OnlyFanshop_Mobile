@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="chat_item_avatar">64dp</dimen>
-    <dimen name="chat_item_padding">16dp</dimen>
-    <dimen name="chat_name_text">18sp</dimen>
-    <dimen name="chat_message_text">15sp</dimen>
-    <dimen name="chat_search_height">52dp</dimen>
-    <dimen name="chat_send_button">52dp</dimen>
-    <dimen name="chat_input_padding">14dp</dimen>
 </resources>
 
 
