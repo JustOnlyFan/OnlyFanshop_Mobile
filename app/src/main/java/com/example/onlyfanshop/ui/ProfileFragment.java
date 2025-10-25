@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,10 @@ import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
 import com.example.onlyfanshop.model.response.UserResponse;
 import com.example.onlyfanshop.ui.order.OrderHistoryActivity;
+import com.example.onlyfanshop.ui.chat.ChatRoomActivity;
+import com.example.onlyfanshop.api.ChatApi;
+import com.example.onlyfanshop.service.ChatService;
+import com.example.onlyfanshop.utils.AppPreferences;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -34,7 +39,7 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
-    private View btnSupport, btnResetPassword, btnLogout, btnHistory;
+    private View btnSupport, btnResetPassword, btnLogout, btnHistory, btnChatWithAdmin;
     private SwitchCompat switchPushNotif, switchFaceId;
 
     private TextView tvProfileName, tvProfileEmail;
@@ -79,6 +84,7 @@ public class ProfileFragment extends Fragment {
     private void initViews(View view) {
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnSupport = view.findViewById(R.id.btnSupport);
+        btnChatWithAdmin = view.findViewById(R.id.btnChatWithAdmin);
         btnHistory = view.findViewById(R.id.History);
         btnResetPassword = view.findViewById(R.id.btnResetPassword);
         btnLogout = view.findViewById(R.id.btnLogout);
@@ -104,6 +110,7 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
         btnSupport.setOnClickListener(v -> Toast.makeText(requireContext(), "Support clicked", Toast.LENGTH_SHORT).show());
+        btnChatWithAdmin.setOnClickListener(v -> openChatWithAdmin());
         btnResetPassword.setOnClickListener(v -> startActivity(new Intent(requireContext(), ChangePasswordActivity.class)));
         btnLogout.setOnClickListener(v -> showLogoutDialog());
         btnHistory.setOnClickListener(v -> startActivity(new Intent(requireContext(), OrderHistoryActivity.class)));
@@ -186,5 +193,38 @@ public class ProfileFragment extends Fragment {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void openChatWithAdmin() {
+        // ✅ Immediate response - navigate to chat room instantly
+        String currentUserId = AppPreferences.getUserId(requireContext());
+        String currentUsername = AppPreferences.getUsername(requireContext());
+        
+        // Generate room ID immediately (same logic as backend)
+        String roomId = "chatRoom_" + currentUsername + "_" + currentUserId;
+        
+        // Navigate to chat room immediately
+        Intent intent = new Intent(requireContext(), ChatRoomActivity.class);
+        intent.putExtra("roomId", roomId);
+        startActivity(intent);
+        
+        // ✅ Background task - ensure room exists in Firebase (non-blocking)
+        ChatApi chatApi = ApiClient.getPrivateClient(requireContext()).create(ChatApi.class);
+        ChatService chatService = new ChatService(chatApi, requireContext());
+        
+        // This runs in background, doesn't block UI
+        chatService.getOrCreateCustomerRoom(new ChatService.RoomCallback() {
+            @Override
+            public void onSuccess(String roomId) {
+                // Room created/verified in background
+                Log.d("ProfileFragment", "Chat room verified: " + roomId);
+            }
+
+            @Override
+            public void onError(String error) {
+                // Log error but don't show to user (already in chat room)
+                Log.e("ProfileFragment", "Background room creation failed: " + error);
+            }
+        });
     }
 }

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    android:paddingVertical="8dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true">
+
+    <!-- Avatar -->
+    <ImageView
+        android:id="@+id/chatAvatar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_person"
+        android:background="@drawable/avatar_background"
+        android:contentDescription="@string/avatar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Tên -->
+    <TextView
+        android:id="@+id/chatName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Untitled Team"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="#000000"
+        app:layout_constraintStart_toEndOf="@id/chatAvatar"
+        app:layout_constraintEnd_toStartOf="@id/chatTime"
+        app:layout_constraintTop_toTopOf="@id/chatAvatar" />
+
+    <!-- Tin nhắn cuối -->
+    <TextView
+        android:id="@+id/chatMessage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="John: Thats a good idea, I think we can..."
+        android:textSize="14sp"
+        android:textColor="#808080"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintStart_toStartOf="@id/chatName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chatName" />
+
+    <!-- Giờ -->
+    <TextView
+        android:id="@+id/chatTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="9:24 AM"
+        android:textSize="12sp"
+        android:textColor="#A0A0A0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/chatName" />
+
+    <!-- Badge tin nhắn -->
+    <TextView
+        android:id="@+id/chatBadge"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:gravity="center"
+        android:background="@drawable/badge_background"
+        android:text="99"
+        android:textSize="10sp"
+        android:textColor="#FFFFFF"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/chatAvatar" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
