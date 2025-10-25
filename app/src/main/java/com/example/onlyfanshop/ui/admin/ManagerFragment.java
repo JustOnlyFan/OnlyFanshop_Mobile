@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.ui.product.ProductManagementActivity;
+import com.example.onlyfanshop.ui.chat.ChatListActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -21,7 +22,7 @@ import com.example.onlyfanshop.ui.product.ProductManagementActivity;
  * create an instance of this fragment.
  */
 public class ManagerFragment extends Fragment {
-    private LinearLayout btnUserManagement, btnProductManagement;
+    private LinearLayout btnUserManagement, btnProductManagement, btnChatManagement;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -84,9 +85,15 @@ public class ManagerFragment extends Fragment {
         // Các nút quản lý như cũ
         btnUserManagement = view.findViewById(R.id.btnUserManagement);
         btnProductManagement = view.findViewById(R.id.btnProductManagement);
+        btnChatManagement = view.findViewById(R.id.btnChatManagement);
 
         btnProductManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), ProductManagementActivity.class);
+            startActivity(intent);
+        });
+
+        btnChatManagement.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), ChatListActivity.class);
             startActivity(intent);
         });
 

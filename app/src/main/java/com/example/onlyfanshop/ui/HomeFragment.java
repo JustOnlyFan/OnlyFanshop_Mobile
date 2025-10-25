@@ -224,9 +224,24 @@ public class HomeFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Realtime DB load failed at node '" + BANNER_NODE + "'", e);
-                    bannerAdapter.submit(new ArrayList<>());
+                    
+                    // Check if it's a permission error
+                    if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                        Log.w(TAG, "Firebase Database permission denied. Please check your database rules.");
+                        Log.w(TAG, "Required rule: {\"rules\":{\"Banner\":{\".read\":true}}}");
+                    }
+                    
+                    // Show fallback banners or handle gracefully
+                    loadFallbackBanners();
                     setBannerLoading(false);
                 });
+    }
+
+    private void loadFallbackBanners() {
+        // Load default banners or show empty state
+        ArrayList<BannerModel> fallbackBanners = new ArrayList<>();
+        // You can add some default banner URLs here if needed
+        bannerAdapter.submit(fallbackBanners);
     }
 
     private void startAutoSlide() {

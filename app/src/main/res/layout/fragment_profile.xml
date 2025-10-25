@@ -139,6 +139,44 @@
                     android:background="#F0F0F0"
                     android:layout_marginHorizontal="16dp"/>
 
+                <!-- Chat with Admin -->
+                <LinearLayout
+                    android:id="@+id/btnChatWithAdmin"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp"
+                    android:background="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chat"
+                        app:tint="#333"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Chat with Admin"
+                        android:textSize="15sp"
+                        android:textColor="@color/black"
+                        android:layout_marginStart="12dp"/>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/right_arrow"
+                        app:tint="#999"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#F0F0F0"
+                    android:layout_marginHorizontal="16dp"/>
+
                 <LinearLayout
                     android:id="@+id/History"
                     android:layout_width="match_parent"

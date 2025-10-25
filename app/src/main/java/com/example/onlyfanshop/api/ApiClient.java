@@ -138,9 +138,9 @@ public final class ApiClient {
 
     private static OkHttpClient buildOkHttp(boolean withAuth, @Nullable Context context) {
         OkHttpClient.Builder b = new OkHttpClient.Builder()
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(20, TimeUnit.SECONDS)
-                .writeTimeout(20, TimeUnit.SECONDS);
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS);
 
         // Default headers (trước)
         b.addInterceptor(chain -> {
