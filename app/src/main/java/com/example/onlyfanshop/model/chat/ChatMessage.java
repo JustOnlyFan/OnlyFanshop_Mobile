@@ -85,6 +85,9 @@ public class ChatMessage {
     // Method to handle Long timestamp from Firebase
     public void setTimestampFromLong(Long timestamp) {
         if (timestamp != null) {
+            // Store the original timestamp for sorting
+            this.originalTimestamp = timestamp;
+            
             // Convert Unix timestamp (milliseconds) to LocalDateTime
             java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofEpochSecond(
                 timestamp / 1000, 0, java.time.ZoneOffset.UTC);
@@ -94,6 +97,17 @@ public class ChatMessage {
                 java.time.format.DateTimeFormatter.ofPattern("HH:mm");
             this.timestamp = dateTime.format(formatter);
         }
+    }
+    
+    // Add field to store original timestamp for sorting
+    private long originalTimestamp = 0;
+    
+    public long getOriginalTimestamp() {
+        return originalTimestamp;
+    }
+    
+    public void setOriginalTimestamp(long originalTimestamp) {
+        this.originalTimestamp = originalTimestamp;
     }
 
     public String getAttachmentUrl() {

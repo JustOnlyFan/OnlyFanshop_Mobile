@@ -52,12 +52,12 @@ public class ChatRoomActivity extends AppCompatActivity {
         setupBackButton();
         setupSendButton();
 
+        // ✅ Initialize services first (fast operation)
+        initServices();
+        
         // ✅ Move heavy operations to background thread
         new Thread(() -> {
             try {
-                // Initialize services in background
-                initServices();
-                
                 // Load messages in background
                 loadMessages();
                 
@@ -173,21 +173,43 @@ public class ChatRoomActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 // ✅ Check for duplicate messages to prevent duplicates
                 boolean isDuplicate = false;
-                for (ChatMessage existingMessage : messageList) {
+                int existingIndex = -1;
+                
+                for (int i = 0; i < messageList.size(); i++) {
+                    ChatMessage existingMessage = messageList.get(i);
+                    
+                    // ✅ Kiểm tra duplicate bằng messageId thật
                     if (existingMessage.getMessageId() != null && 
                         existingMessage.getMessageId().equals(newMessage.getMessageId())) {
                         isDuplicate = true;
                         break;
                     }
+                    
+                    // ✅ Kiểm tra tin nhắn tạm thời cần thay thế
+                    if (existingMessage.getMessageId() != null && 
+                        existingMessage.getMessageId().startsWith("temp_") &&
+                        existingMessage.getMessage().equals(newMessage.getMessage()) &&
+                        existingMessage.getSenderId().equals(newMessage.getSenderId())) {
+                        existingIndex = i;
+                        break;
+                    }
                 }
                 
-                if (!isDuplicate) {
+                if (isDuplicate) {
+                    Log.d(TAG, "Skipped duplicate message: " + newMessage.getMessage());
+                } else if (existingIndex >= 0) {
+                    // ✅ Thay thế tin nhắn tạm thời bằng tin nhắn thật
+                    messageList.set(existingIndex, newMessage);
+                    chatAdapter.notifyItemChanged(existingIndex);
+                    Log.d(TAG, "Replaced temporary message with real message: " + newMessage.getMessage());
+                } else {
+                    // ✅ Thêm tin nhắn mới và sắp xếp theo thời gian
                     messageList.add(newMessage);
-                    chatAdapter.notifyItemInserted(messageList.size() - 1);
+                    // ✅ Sắp xếp tin nhắn theo timestamp để đảm bảo thứ tự đúng
+                    messageList.sort((m1, m2) -> Long.compare(m1.getOriginalTimestamp(), m2.getOriginalTimestamp()));
+                    chatAdapter.notifyDataSetChanged();
                     scrollToBottom(true);
                     Log.d(TAG, "Added new message: " + newMessage.getMessage());
-                } else {
-                    Log.d(TAG, "Skipped duplicate message: " + newMessage.getMessage());
                 }
             });
         });
@@ -201,7 +223,12 @@ public class ChatRoomActivity extends AppCompatActivity {
             // Add haptic feedback for better UX
             v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
 
+            // ✅ Clear input ngay lập tức để người dùng có thể gõ tin nhắn tiếp theo
             messageInput.setText("");
+
+            // ✅ Disable send button temporarily để tránh spam
+            sendButton.setEnabled(false);
+            sendButton.setAlpha(0.5f);
 
             // ✅ Gửi tin nhắn
             sendMessage(messageText);
@@ -209,13 +236,46 @@ public class ChatRoomActivity extends AppCompatActivity {
     }
 
     private void sendMessage(String messageText) {
+        // ✅ Tạo tin nhắn tạm thời để hiển thị ngay lập tức
+        ChatMessage tempMessage = new ChatMessage();
+        tempMessage.setMessageId("temp_" + System.currentTimeMillis()); // Temporary ID
+        tempMessage.setSenderId(currentUserId);
+        tempMessage.setSenderName(AppPreferences.getUsername(this));
+        tempMessage.setMessage(messageText);
+        long currentTime = System.currentTimeMillis();
+        tempMessage.setTimestampFromLong(currentTime); // This will set both timestamp and originalTimestamp
+        tempMessage.setMe(true);
+        tempMessage.setRoomId(roomId);
+        tempMessage.setRead(false);
+        
+        // ✅ Thêm tin nhắn vào UI ngay lập tức - KHÔNG cần runOnUiThread vì đã trong UI thread
+        messageList.add(tempMessage);
+        chatAdapter.notifyItemInserted(messageList.size() - 1);
+        
+        // ✅ Force refresh UI ngay lập tức
+        chatRecyclerView.post(() -> {
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
+        });
+        
+        // ✅ Thêm delay nhỏ để đảm bảo UI được refresh
+        chatRecyclerView.postDelayed(() -> {
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
+        }, 50);
+        
+        Log.d(TAG, "Added temporary message to UI: " + messageText);
+        
+        // ✅ Gửi tin nhắn lên server
         chatService.sendMessage(roomId, messageText, new ChatService.SendMessageCallback() {
             @Override
             public void onSuccess() {
                 runOnUiThread(() -> {
-                    // ✅ Don't add message to UI here - Firebase listener will handle it
-                    // This prevents duplicate messages
-                    Log.d(TAG, "Message sent successfully, waiting for Firebase listener");
+                    Log.d(TAG, "Message sent successfully to server");
+                    // ✅ Enable lại send button
+                    sendButton.setEnabled(true);
+                    sendButton.setAlpha(1.0f);
+                    // Firebase listener sẽ cập nhật tin nhắn với ID thật từ server
                 });
             }
 
@@ -223,6 +283,15 @@ public class ChatRoomActivity extends AppCompatActivity {
             public void onError(String error) {
                 runOnUiThread(() -> {
                     Log.e(TAG, "Error sending message: " + error);
+                    // ✅ Xóa tin nhắn tạm thời nếu gửi thất bại
+                    int index = messageList.indexOf(tempMessage);
+                    if (index >= 0) {
+                        messageList.remove(index);
+                        chatAdapter.notifyItemRemoved(index);
+                    }
+                    // ✅ Enable lại send button
+                    sendButton.setEnabled(true);
+                    sendButton.setAlpha(1.0f);
                     Toast.makeText(ChatRoomActivity.this, "Failed to send message", Toast.LENGTH_SHORT).show();
                 });
             }
