@@ -168,50 +168,62 @@ public class ChatRoomActivity extends AppCompatActivity {
     }
 
     private void setupFirebaseListener() {
-        // ✅ Setup Firebase listener in background thread
+        // ✅ Setup Firebase listener for real-time updates
         chatService.listenForNewMessages(roomId, newMessage -> {
             runOnUiThread(() -> {
-                // ✅ Check for duplicate messages to prevent duplicates
-                boolean isDuplicate = false;
-                int existingIndex = -1;
-                
-                for (int i = 0; i < messageList.size(); i++) {
-                    ChatMessage existingMessage = messageList.get(i);
-                    
-                    // ✅ Kiểm tra duplicate bằng messageId thật
-                    if (existingMessage.getMessageId() != null && 
-                        existingMessage.getMessageId().equals(newMessage.getMessageId())) {
-                        isDuplicate = true;
-                        break;
-                    }
-                    
-                    // ✅ Kiểm tra tin nhắn tạm thời cần thay thế
-                    if (existingMessage.getMessageId() != null && 
-                        existingMessage.getMessageId().startsWith("temp_") &&
-                        existingMessage.getMessage().equals(newMessage.getMessage()) &&
-                        existingMessage.getSenderId().equals(newMessage.getSenderId())) {
-                        existingIndex = i;
-                        break;
-                    }
-                }
-                
-                if (isDuplicate) {
-                    Log.d(TAG, "Skipped duplicate message: " + newMessage.getMessage());
-                } else if (existingIndex >= 0) {
-                    // ✅ Thay thế tin nhắn tạm thời bằng tin nhắn thật
-                    messageList.set(existingIndex, newMessage);
-                    chatAdapter.notifyItemChanged(existingIndex);
-                    Log.d(TAG, "Replaced temporary message with real message: " + newMessage.getMessage());
-                } else {
-                    // ✅ Thêm tin nhắn mới và sắp xếp theo thời gian
-                    messageList.add(newMessage);
-                    // ✅ Sắp xếp tin nhắn theo timestamp để đảm bảo thứ tự đúng
-                    messageList.sort((m1, m2) -> Long.compare(m1.getOriginalTimestamp(), m2.getOriginalTimestamp()));
-                    chatAdapter.notifyDataSetChanged();
-                    scrollToBottom(true);
-                    Log.d(TAG, "Added new message: " + newMessage.getMessage());
-                }
+                // ✅ Real-time message processing
+                processNewMessage(newMessage);
             });
+        });
+    }
+    
+    // ✅ New method to process messages in real-time
+    private void processNewMessage(ChatMessage newMessage) {
+        // ✅ Check for duplicate messages to prevent duplicates
+        boolean isDuplicate = false;
+        int existingIndex = -1;
+        
+        for (int i = 0; i < messageList.size(); i++) {
+            ChatMessage existingMessage = messageList.get(i);
+            
+            // ✅ Kiểm tra duplicate bằng messageId thật
+            if (existingMessage.getMessageId() != null && 
+                existingMessage.getMessageId().equals(newMessage.getMessageId())) {
+                isDuplicate = true;
+                break;
+            }
+            
+            // ✅ Kiểm tra tin nhắn tạm thời cần thay thế
+            if (existingMessage.getMessageId() != null && 
+                existingMessage.getMessageId().startsWith("temp_") &&
+                existingMessage.getMessage().equals(newMessage.getMessage()) &&
+                existingMessage.getSenderId().equals(newMessage.getSenderId())) {
+                existingIndex = i;
+                break;
+            }
+        }
+        
+        if (isDuplicate) {
+            Log.d(TAG, "Skipped duplicate message: " + newMessage.getMessage());
+        } else if (existingIndex >= 0) {
+            // ✅ Thay thế tin nhắn tạm thời bằng tin nhắn thật
+            messageList.set(existingIndex, newMessage);
+            chatAdapter.notifyItemChanged(existingIndex);
+            Log.d(TAG, "Replaced temporary message with real message: " + newMessage.getMessage());
+        } else {
+            // ✅ Thêm tin nhắn mới và sắp xếp theo thời gian
+            messageList.add(newMessage);
+            // ✅ Sắp xếp tin nhắn theo timestamp để đảm bảo thứ tự đúng
+            messageList.sort((m1, m2) -> Long.compare(m1.getOriginalTimestamp(), m2.getOriginalTimestamp()));
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
+            Log.d(TAG, "Added new message: " + newMessage.getMessage());
+        }
+        
+        // ✅ Force refresh UI for real-time updates
+        chatRecyclerView.post(() -> {
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
         });
     }
 
@@ -248,17 +260,22 @@ public class ChatRoomActivity extends AppCompatActivity {
         tempMessage.setRoomId(roomId);
         tempMessage.setRead(false);
         
-        // ✅ Thêm tin nhắn vào UI ngay lập tức - KHÔNG cần runOnUiThread vì đã trong UI thread
+        // ✅ Thêm tin nhắn vào UI ngay lập tức
         messageList.add(tempMessage);
         chatAdapter.notifyItemInserted(messageList.size() - 1);
         
-        // ✅ Force refresh UI ngay lập tức
+        // ✅ Force refresh UI ngay lập tức với multiple attempts
         chatRecyclerView.post(() -> {
             chatAdapter.notifyDataSetChanged();
             scrollToBottom(true);
         });
         
-        // ✅ Thêm delay nhỏ để đảm bảo UI được refresh
+        // ✅ Additional refresh attempts for real-time feel
+        chatRecyclerView.postDelayed(() -> {
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
+        }, 10);
+        
         chatRecyclerView.postDelayed(() -> {
             chatAdapter.notifyDataSetChanged();
             scrollToBottom(true);
