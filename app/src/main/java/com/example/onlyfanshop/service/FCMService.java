@@ -11,6 +11,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.ui.chat.ChatRoomActivity;
+import com.example.onlyfanshop.ui.chat.ChatListActivity;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -51,11 +52,15 @@ public class FCMService extends FirebaseMessagingService {
         String senderName = remoteMessage.getData().get("senderName");
         
         Log.d(TAG, "Chat notification - Room: " + roomId + ", Sender: " + senderName);
-        
-        // You can add additional logic here, such as:
-        // - Updating local database
-        // - Refreshing chat list
-        // - Playing notification sound
+
+        // ✅ Trigger lightweight refresh of chat list via broadcast
+        try {
+            android.content.Intent intent = new android.content.Intent("com.example.onlyfanshop.ACTION_CHAT_UPDATED");
+            intent.putExtra("roomId", roomId);
+            sendBroadcast(intent);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to send chat update broadcast: " + e.getMessage());
+        }
     }
 
     private void showNotification(String title, String body, java.util.Map<String, String> data) {

@@ -12,6 +12,7 @@ import com.example.onlyfanshop.utils.AppPreferences;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 
@@ -42,6 +43,14 @@ public class RealtimeChatService {
     
     // Firebase listeners
     private final Map<String, ValueEventListener> firebaseListeners = new HashMap<>();
+    private final Map<String, ChildEventListener> childFirebaseListeners = new HashMap<>();
+
+    // Dedupe and tracking
+    private final Map<String, java.util.Set<String>> deliveredMessageIds = new HashMap<>();
+    private final Map<String, Long> lastFirebaseEventAt = new HashMap<>();
+
+    // Global chat rooms listener
+    private ValueEventListener chatRoomsListener;
     
     private RealtimeChatService(Context context, ChatApi chatApi) {
         this.context = context;
@@ -64,8 +73,8 @@ public class RealtimeChatService {
         // Store listener
         messageListeners.put(roomId, listener);
         
-        // Start Firebase listener
-        startFirebaseListener(roomId);
+        // Start Firebase child listener
+        startFirebaseChildListener(roomId);
         
         // Start polling as backup
         startPolling(roomId);
@@ -82,32 +91,77 @@ public class RealtimeChatService {
         startChatRoomPolling();
     }
     
-    // ✅ Firebase listener
-    private void startFirebaseListener(String roomId) {
+    // ✅ Firebase child listener for new messages only (reliable realtime)
+    private void startFirebaseChildListener(String roomId) {
         try {
             DatabaseReference messagesRef = FirebaseDatabase.getInstance()
                     .getReference("ChatRooms")
                     .child(roomId)
                     .child("messages");
-            
-            ValueEventListener listener = new ValueEventListener() {
+
+            ChildEventListener listener = new ChildEventListener() {
                 @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    Log.d(TAG, "Firebase data changed for room: " + roomId);
-                    processFirebaseMessages(roomId, snapshot);
+                public void onChildAdded(DataSnapshot snapshot, String previousChildName) {
+                    try {
+                        ChatMessage message = parseMessageFromSnapshot(snapshot, roomId);
+                        if (message == null) return;
+
+                        String messageId = snapshot.getKey();
+                        java.util.Set<String> seen = deliveredMessageIds.computeIfAbsent(roomId, k -> new java.util.HashSet<>());
+                        if (messageId != null && seen.contains(messageId)) {
+                            return; // already delivered
+                        }
+                        if (messageId != null) {
+                            seen.add(messageId);
+                        }
+                        lastMessageTimestamps.put(roomId, message.getOriginalTimestamp());
+                        lastFirebaseEventAt.put(roomId, System.currentTimeMillis());
+
+                        OnNewMessageListener cb = messageListeners.get(roomId);
+                        if (cb != null) {
+                            mainHandler.post(() -> cb.onNewMessage(message));
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "onChildAdded parse error: " + e.getMessage());
+                    }
                 }
-                
+
+                @Override
+                public void onChildChanged(DataSnapshot snapshot, String previousChildName) {
+                    // Optionally handle message updates (read status, edits)
+                    try {
+                        ChatMessage message = parseMessageFromSnapshot(snapshot, roomId);
+                        if (message == null) return;
+                        lastFirebaseEventAt.put(roomId, System.currentTimeMillis());
+                        OnNewMessageListener cb = messageListeners.get(roomId);
+                        if (cb != null) {
+                            mainHandler.post(() -> cb.onNewMessage(message));
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "onChildChanged parse error: " + e.getMessage());
+                    }
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot snapshot) {
+                    // No-op for now
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot snapshot, String previousChildName) {
+                    // No-op
+                }
+
                 @Override
                 public void onCancelled(DatabaseError error) {
-                    Log.e(TAG, "Firebase listener cancelled for room: " + roomId + ", error: " + error.getMessage());
+                    Log.e(TAG, "Firebase child listener cancelled for room: " + roomId + ", error: " + error.getMessage());
                 }
             };
-            
-            messagesRef.addValueEventListener(listener);
-            firebaseListeners.put(roomId, listener);
-            
+
+            messagesRef.addChildEventListener(listener);
+            childFirebaseListeners.put(roomId, listener);
         } catch (Exception e) {
-            Log.e(TAG, "Error starting Firebase listener: " + e.getMessage());
+            Log.e(TAG, "Error starting Firebase child listener: " + e.getMessage());
         }
     }
     
@@ -153,7 +207,12 @@ public class RealtimeChatService {
     private void startPolling(String roomId) {
         scheduler.scheduleAtFixedRate(() -> {
             try {
-                pollForNewMessages(roomId);
+                // If Firebase has recently delivered events, skip polling to reduce load
+                Long lastEvent = lastFirebaseEventAt.get(roomId);
+                long now = System.currentTimeMillis();
+                if (lastEvent == null || (now - lastEvent) > 5000) {
+                    pollForNewMessages(roomId);
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Error in polling: " + e.getMessage());
             }
@@ -200,6 +259,9 @@ public class RealtimeChatService {
     
     // ✅ Polling for chat rooms
     private void startChatRoomPolling() {
+        // Also start a lightweight Firebase listener to trigger immediate refreshes
+        startChatRoomsFirebaseListener();
+
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 pollForChatRooms();
@@ -207,6 +269,29 @@ public class RealtimeChatService {
                 Log.e(TAG, "Error in chat room polling: " + e.getMessage());
             }
         }, 0, 3, TimeUnit.SECONDS); // Poll every 3 seconds
+    }
+
+    private void startChatRoomsFirebaseListener() {
+        try {
+            if (chatRoomsListener != null) return; // already started
+            DatabaseReference roomsRef = FirebaseDatabase.getInstance()
+                    .getReference("ChatRooms");
+            chatRoomsListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    // Any change to rooms triggers immediate refresh via API
+                    pollForChatRooms();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Log.e(TAG, "ChatRooms listener cancelled: " + error.getMessage());
+                }
+            };
+            roomsRef.addValueEventListener(chatRoomsListener);
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting chat rooms Firebase listener: " + e.getMessage());
+        }
     }
     
     // ✅ Poll for chat rooms
@@ -275,18 +360,24 @@ public class RealtimeChatService {
         
         messageListeners.remove(roomId);
         lastMessageTimestamps.remove(roomId);
+        deliveredMessageIds.remove(roomId);
+        lastFirebaseEventAt.remove(roomId);
         
-        ValueEventListener listener = firebaseListeners.remove(roomId);
-        if (listener != null) {
-            try {
-                DatabaseReference messagesRef = FirebaseDatabase.getInstance()
-                        .getReference("ChatRooms")
-                        .child(roomId)
-                        .child("messages");
-                messagesRef.removeEventListener(listener);
-            } catch (Exception e) {
-                Log.e(TAG, "Error removing Firebase listener: " + e.getMessage());
+        ValueEventListener vListener = firebaseListeners.remove(roomId);
+        ChildEventListener cListener = childFirebaseListeners.remove(roomId);
+        try {
+            DatabaseReference messagesRef = FirebaseDatabase.getInstance()
+                    .getReference("ChatRooms")
+                    .child(roomId)
+                    .child("messages");
+            if (vListener != null) {
+                messagesRef.removeEventListener(vListener);
             }
+            if (cListener != null) {
+                messagesRef.removeEventListener(cListener);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing Firebase listener: " + e.getMessage());
         }
     }
     
@@ -294,6 +385,15 @@ public class RealtimeChatService {
     public void stopListeningForChatRooms() {
         Log.d(TAG, "Stopping real-time listening for chat rooms");
         roomListeners.clear();
+        try {
+            if (chatRoomsListener != null) {
+                DatabaseReference roomsRef = FirebaseDatabase.getInstance().getReference("ChatRooms");
+                roomsRef.removeEventListener(chatRoomsListener);
+                chatRoomsListener = null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing chat rooms Firebase listener: " + e.getMessage());
+        }
     }
     
     // ✅ Stop all listening
@@ -309,15 +409,40 @@ public class RealtimeChatService {
                         .child("messages");
                 messagesRef.removeEventListener(entry.getValue());
             } catch (Exception e) {
-                Log.e(TAG, "Error removing Firebase listener: " + e.getMessage());
+                Log.e(TAG, "Error removing Firebase value listener: " + e.getMessage());
             }
         }
-        
+        for (Map.Entry<String, ChildEventListener> entry : childFirebaseListeners.entrySet()) {
+            try {
+                DatabaseReference messagesRef = FirebaseDatabase.getInstance()
+                        .getReference("ChatRooms")
+                        .child(entry.getKey())
+                        .child("messages");
+                messagesRef.removeEventListener(entry.getValue());
+            } catch (Exception e) {
+                Log.e(TAG, "Error removing Firebase child listener: " + e.getMessage());
+            }
+        }
+
+        // Remove chat rooms global listener
+        try {
+            if (chatRoomsListener != null) {
+                DatabaseReference roomsRef = FirebaseDatabase.getInstance().getReference("ChatRooms");
+                roomsRef.removeEventListener(chatRoomsListener);
+                chatRoomsListener = null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error removing chatRooms listener: " + e.getMessage());
+        }
+
         firebaseListeners.clear();
+        childFirebaseListeners.clear();
         messageListeners.clear();
         roomListeners.clear();
         lastMessageTimestamps.clear();
         lastRoomUpdateTimes.clear();
+        deliveredMessageIds.clear();
+        lastFirebaseEventAt.clear();
     }
     
     // ✅ Cleanup
@@ -333,5 +458,22 @@ public class RealtimeChatService {
     
     public interface OnChatRoomUpdateListener {
         void onChatRoomsUpdated(List<ChatRoom> chatRooms);
+    }
+
+    // ✅ Seed seen messages to avoid re-delivery on initial attach
+    public void seedSeenMessages(String roomId, List<ChatMessage> existingMessages) {
+        if (existingMessages == null || existingMessages.isEmpty()) return;
+        long maxTs = 0L;
+        java.util.Set<String> seen = deliveredMessageIds.computeIfAbsent(roomId, k -> new java.util.HashSet<>());
+        for (ChatMessage m : existingMessages) {
+            if (m.getMessageId() != null) {
+                seen.add(m.getMessageId());
+            }
+            if (m.getOriginalTimestamp() > maxTs) {
+                maxTs = m.getOriginalTimestamp();
+            }
+        }
+        lastMessageTimestamps.put(roomId, maxTs);
+        lastFirebaseEventAt.put(roomId, System.currentTimeMillis());
     }
 }
