@@ -210,6 +210,88 @@ public class ChatService {
     }
 
     public void listenForNewMessages(String roomId, OnNewMessageListener listener) {
+        // ✅ Initialize Firebase immediately for real-time updates
+        try {
+            DatabaseReference messagesRef = FirebaseDatabase.getInstance()
+                    .getReference("ChatRooms")
+                    .child(roomId)
+                    .child("messages");
+    
+            // ✅ Use ValueEventListener for real-time updates
+            messagesRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    // ✅ Process all messages when data changes
+                    for (DataSnapshot messageSnapshot : snapshot.getChildren()) {
+                        try {
+                            ChatMessage message = parseMessageFromSnapshot(messageSnapshot, roomId);
+                            if (message != null) {
+                                listener.onNewMessage(message);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing message: " + e.getMessage());
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Log.e(TAG, "Error listening for messages: " + error.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting up Firebase listener: " + e.getMessage());
+        }
+    }
+    
+    // ✅ Helper method to parse message from snapshot
+    private ChatMessage parseMessageFromSnapshot(DataSnapshot snapshot, String roomId) {
+        try {
+            ChatMessage message = new ChatMessage();
+            message.setMessageId(snapshot.getKey());
+            message.setSenderId(snapshot.child("senderId").getValue(String.class));
+            
+            // ✅ Fix: Lấy senderName từ Firebase và log để debug
+            String senderName = snapshot.child("senderName").getValue(String.class);
+            Log.d(TAG, "Firebase senderName: " + senderName + " for senderId: " + message.getSenderId());
+            message.setSenderName(senderName);
+            
+            message.setMessage(snapshot.child("message").getValue(String.class));
+            
+            // Handle Long timestamp
+            Long timestamp = snapshot.child("timestamp").getValue(Long.class);
+            if (timestamp != null) {
+                message.setTimestampFromLong(timestamp);
+            }
+            
+            message.setAttachmentUrl(snapshot.child("attachmentUrl").getValue(String.class));
+            message.setAttachmentType(snapshot.child("attachmentType").getValue(String.class));
+            message.setReplyToMessageId(snapshot.child("replyToMessageId").getValue(String.class));
+            
+            Boolean isRead = snapshot.child("isRead").getValue(Boolean.class);
+            message.setRead(isRead != null ? isRead : false);
+            
+            message.setRoomId(roomId);
+            
+            // Set isMe flag
+            String currentUserId = AppPreferences.getUserId(context);
+            message.setMe(message.getSenderId().equals(currentUserId));
+            
+            // ✅ Log để debug vấn đề tên
+            Log.d(TAG, "Final message - senderId: " + message.getSenderId() + 
+                  ", senderName: " + message.getSenderName() + 
+                  ", message: " + message.getMessage());
+            
+            return message;
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing message: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    // ✅ Keep the old method for backward compatibility but mark as deprecated
+    @Deprecated
+    public void listenForNewMessagesOld(String roomId, OnNewMessageListener listener) {
         // ✅ Initialize Firebase in background thread to prevent ANR
         new Thread(() -> {
             try {
