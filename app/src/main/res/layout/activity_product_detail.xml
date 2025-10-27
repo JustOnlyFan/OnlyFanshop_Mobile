@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#E8F5E8"
+    android:id="@+id/coordinatorLayout"
     tools:context=".ui.product.ProductDetailActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -407,15 +408,14 @@
             app:tint="#111111" />
 
          <ImageButton
-             android:id="@+id/btnFavorite"
+             android:id="@+id/btnCartDetail"
              android:layout_width="40dp"
              android:layout_height="40dp"
              android:layout_gravity="end|center_vertical"
              android:background="?attr/selectableItemBackgroundBorderless"
-             android:contentDescription="Favorite"
+             android:contentDescription="Cart"
              android:padding="8dp"
-             android:src="@drawable/ic_heart"
-             app:tint="#FF3B30" />
+             android:src="@drawable/ic_cart" />
 
     </com.google.android.material.appbar.MaterialToolbar>
 
