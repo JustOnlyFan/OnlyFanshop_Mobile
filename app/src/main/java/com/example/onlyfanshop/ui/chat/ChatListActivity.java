@@ -42,6 +42,7 @@ public class ChatListActivity extends AppCompatActivity {
     private LinearLayout emptyStateLayout;
     private TextView totalChatsText, unreadChatsText, onlineChatsText;
     private ImageView backButton;
+    private android.content.BroadcastReceiver chatUpdateReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -217,6 +218,35 @@ public class ChatListActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // ✅ Register broadcast receiver to refresh immediately when FCM arrives
+        if (chatUpdateReceiver == null) {
+            chatUpdateReceiver = new android.content.BroadcastReceiver() {
+                @Override
+                public void onReceive(android.content.Context context, android.content.Intent intent) {
+                    if ("com.example.onlyfanshop.ACTION_CHAT_UPDATED".equals(intent.getAction())) {
+                        // Trigger an immediate refresh
+                        loadChatRooms();
+                    }
+                }
+            };
+        }
+        android.content.IntentFilter filter = new android.content.IntentFilter("com.example.onlyfanshop.ACTION_CHAT_UPDATED");
+        registerReceiver(chatUpdateReceiver, filter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (chatUpdateReceiver != null) {
+            try {
+                unregisterReceiver(chatUpdateReceiver);
+            } catch (Exception ignored) {}
+        }
     }
 
     @Override

@@ -62,7 +62,7 @@ public class ChatRoomActivity extends AppCompatActivity {
             try {
                 // Load messages in background
                 loadMessages();
-                
+
                 // Setup Firebase listener in background
                 setupFirebaseListener();
             } catch (Exception e) {
@@ -157,6 +157,15 @@ public class ChatRoomActivity extends AppCompatActivity {
 
                     // ✅ Auto scroll xuống cuối cùng
                     chatRecyclerView.postDelayed(() -> scrollToBottom(true), 150);
+
+                    // ✅ Seed realtime service to avoid duplicating already-loaded messages
+                    try {
+                        if (realtimeChatService != null) {
+                            realtimeChatService.seedSeenMessages(roomId, new ArrayList<>(messageList));
+                        }
+                    } catch (Exception se) {
+                        Log.w(TAG, "seedSeenMessages warning: " + se.getMessage());
+                    }
                 });
             }
 
@@ -171,7 +180,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     }
 
     private void setupFirebaseListener() {
-        // ✅ Setup real-time listener for messages
+        // ✅ Setup real-time listener for messages using optimized child listener
         realtimeChatService.startListeningForMessages(roomId, newMessage -> {
             runOnUiThread(() -> {
                 // ✅ Real-time message processing
@@ -218,14 +227,14 @@ public class ChatRoomActivity extends AppCompatActivity {
             messageList.add(newMessage);
             // ✅ Sắp xếp tin nhắn theo timestamp để đảm bảo thứ tự đúng
             messageList.sort((m1, m2) -> Long.compare(m1.getOriginalTimestamp(), m2.getOriginalTimestamp()));
-            chatAdapter.notifyDataSetChanged();
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
             scrollToBottom(true);
             Log.d(TAG, "Added new message: " + newMessage.getMessage());
         }
         
         // ✅ Force refresh UI for real-time updates
         chatRecyclerView.post(() -> {
-            chatAdapter.notifyDataSetChanged();
+            chatAdapter.notifyItemRangeChanged(Math.max(0, messageList.size() - 3), 3);
             scrollToBottom(true);
         });
     }
