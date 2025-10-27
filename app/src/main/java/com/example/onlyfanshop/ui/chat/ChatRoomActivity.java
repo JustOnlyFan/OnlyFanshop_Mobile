@@ -19,6 +19,7 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ChatApi;
 import com.example.onlyfanshop.model.chat.ChatMessage;
 import com.example.onlyfanshop.service.ChatService;
+import com.example.onlyfanshop.service.RealtimeChatService;
 import com.example.onlyfanshop.utils.AppPreferences;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     private ImageButton sendButton;
 
     private ChatService chatService;
+    private RealtimeChatService realtimeChatService;
     private String roomId;
     private String currentUserId;
 
@@ -108,6 +110,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     private void initServices() {
         ChatApi chatApi = ApiClient.getPrivateClient(this).create(ChatApi.class);
         chatService = new ChatService(chatApi, this);
+        realtimeChatService = RealtimeChatService.getInstance(this, chatApi);
         currentUserId = AppPreferences.getUserId(this);
         Log.d(TAG, "Current User ID from AppPreferences: " + currentUserId);
     }
@@ -168,8 +171,8 @@ public class ChatRoomActivity extends AppCompatActivity {
     }
 
     private void setupFirebaseListener() {
-        // ✅ Setup Firebase listener for real-time updates
-        chatService.listenForNewMessages(roomId, newMessage -> {
+        // ✅ Setup real-time listener for messages
+        realtimeChatService.startListeningForMessages(roomId, newMessage -> {
             runOnUiThread(() -> {
                 // ✅ Real-time message processing
                 processNewMessage(newMessage);
@@ -348,6 +351,15 @@ public class ChatRoomActivity extends AppCompatActivity {
         // Smooth back navigation with custom animation
         super.onBackPressed();
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // ✅ Stop real-time listening when activity is destroyed
+        if (realtimeChatService != null && roomId != null) {
+            realtimeChatService.stopListeningForMessages(roomId);
+        }
     }
     
     private String extractCustomerNameFromRoomId(String roomId) {

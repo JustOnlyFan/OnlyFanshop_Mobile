@@ -22,6 +22,7 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ChatApi;
 import com.example.onlyfanshop.model.chat.ChatRoom;
 import com.example.onlyfanshop.service.ChatService;
+import com.example.onlyfanshop.service.RealtimeChatService;
 import com.example.onlyfanshop.utils.AppPreferences;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class ChatListActivity extends AppCompatActivity {
     private List<ChatRoom> filteredChatRoomList;
     
     private ChatService chatService;
+    private RealtimeChatService realtimeChatService;
     private EditText searchEditText;
     private LinearLayout emptyStateLayout;
     private TextView totalChatsText, unreadChatsText, onlineChatsText;
@@ -71,6 +73,7 @@ public class ChatListActivity extends AppCompatActivity {
     private void initServices() {
         ChatApi chatApi = ApiClient.getPrivateClient(this).create(ChatApi.class);
         chatService = new ChatService(chatApi, this);
+        realtimeChatService = RealtimeChatService.getInstance(this, chatApi);
     }
 
     private void setupRecyclerView() {
@@ -172,6 +175,7 @@ public class ChatListActivity extends AppCompatActivity {
     }
 
     private void loadChatRooms() {
+        // ✅ Load initial chat rooms
         chatService.getChatRooms(new ChatService.ChatRoomsCallback() {
             @Override
             public void onSuccess(List<ChatRoom> chatRooms) {
@@ -196,6 +200,23 @@ public class ChatListActivity extends AppCompatActivity {
                 });
             }
         });
+        
+        // ✅ Start real-time listening for chat rooms
+        realtimeChatService.startListeningForChatRooms(new RealtimeChatService.OnChatRoomUpdateListener() {
+            @Override
+            public void onChatRoomsUpdated(List<ChatRoom> chatRooms) {
+                runOnUiThread(() -> {
+                    chatRoomList.clear();
+                    chatRoomList.addAll(chatRooms);
+                    
+                    // Update filtered list
+                    filterChatRooms(searchEditText.getText().toString());
+                    updateStats();
+                    
+                    Log.d(TAG, "Real-time updated " + chatRooms.size() + " chat rooms");
+                });
+            }
+        });
     }
 
     @Override
@@ -210,5 +231,14 @@ public class ChatListActivity extends AppCompatActivity {
         // Smooth back navigation with custom animation
         super.onBackPressed();
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // ✅ Stop real-time listening when activity is destroyed
+        if (realtimeChatService != null) {
+            realtimeChatService.stopListeningForChatRooms();
+        }
     }
 }
