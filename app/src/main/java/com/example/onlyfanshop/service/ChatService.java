@@ -226,7 +226,12 @@ public class ChatService {
                             ChatMessage message = new ChatMessage();
                             message.setMessageId(snapshot.getKey());
                             message.setSenderId(snapshot.child("senderId").getValue(String.class));
-                            message.setSenderName(snapshot.child("senderName").getValue(String.class));
+                            
+                            // ✅ Fix: Lấy senderName từ Firebase và log để debug
+                            String senderName = snapshot.child("senderName").getValue(String.class);
+                            Log.d(TAG, "Firebase senderName: " + senderName + " for senderId: " + message.getSenderId());
+                            message.setSenderName(senderName);
+                            
                             message.setMessage(snapshot.child("message").getValue(String.class));
                             
                             // Handle Long timestamp
@@ -247,6 +252,11 @@ public class ChatService {
                             // Set isMe flag
                             String currentUserId = AppPreferences.getUserId(context);
                             message.setMe(message.getSenderId().equals(currentUserId));
+                            
+                            // ✅ Log để debug vấn đề tên
+                            Log.d(TAG, "Final message - senderId: " + message.getSenderId() + 
+                                  ", senderName: " + message.getSenderName() + 
+                                  ", message: " + message.getMessage());
                             
                             listener.onNewMessage(message);
                         } catch (Exception e) {
