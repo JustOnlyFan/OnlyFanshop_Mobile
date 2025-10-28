@@ -2,10 +2,10 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#E8F5E8"
+    android:id="@+id/coordinatorLayout"
     tools:context=".ui.product.ProductDetailActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -412,23 +412,10 @@
              android:layout_width="40dp"
              android:layout_height="40dp"
              android:layout_gravity="end|center_vertical"
-             android:layout_marginEnd="48dp"
              android:background="?attr/selectableItemBackgroundBorderless"
              android:contentDescription="Cart"
              android:padding="8dp"
-             android:src="@drawable/ic_cart"
-             app:tint="#1976D2" />
-
-         <ImageButton
-             android:id="@+id/btnFavorite"
-             android:layout_width="40dp"
-             android:layout_height="40dp"
-             android:layout_gravity="end|center_vertical"
-             android:background="?attr/selectableItemBackgroundBorderless"
-             android:contentDescription="Favorite"
-             android:padding="8dp"
-             android:src="@drawable/ic_heart"
-             app:tint="#FF3B30" />
+             android:src="@drawable/ic_cart" />
 
     </com.google.android.material.appbar.MaterialToolbar>
 

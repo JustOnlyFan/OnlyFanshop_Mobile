@@ -27,7 +27,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.activity.OnBackPressedCallback;
 
 import com.bumptech.glide.Glide;
 import com.example.onlyfanshop.MainActivity;
@@ -60,9 +59,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     public static final String EXTRA_PRODUCT_ID = "product_id";
 
     private ImageView imageProduct, btnChat, btnCart, btnExpandDescription;
-    private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, textRating;
-    // Quantity controls are handled in the bottom sheet
-    // private TextView numberItem, addQuantity, minusQuantity;
+    private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, numberItem, addQuantity, minusQuantity, textRating;
     private TextView textSpecType, textSpecBlade, textSpecAirflow, textSpecSpeed, textSpecWeight, textSpecColor;
     private MaterialButton btnBuyNow;
     private boolean isDescriptionExpanded = false;
@@ -84,14 +81,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_product_detail);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        findViewById(R.id.btnBack).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                finish();
-                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-            }
-        });
+        findViewById(R.id.btnBack).setOnClickListener(v -> onBackPressed());
 
         imageProduct = findViewById(R.id.imageProduct);
         textBrand = findViewById(R.id.textBrand);
@@ -99,10 +89,9 @@ public class ProductDetailActivity extends AppCompatActivity {
         textBottomPrice = findViewById(R.id.textBottomPrice);
         textBrief = findViewById(R.id.textBrief);
         textFull = findViewById(R.id.textFull);
-        // Quantity controls are handled in the bottom sheet, not in the main layout
-        // numberItem = findViewById(R.id.numberItem);
-        // addQuantity = findViewById(R.id.addQuantity);
-        // minusQuantity = findViewById(R.id.minusQuantity);
+        numberItem = findViewById(R.id.numberItem);
+        addQuantity = findViewById(R.id.addQuantity);
+        minusQuantity = findViewById(R.id.minusQuantity);
         btnChat = findViewById(R.id.btnChat);
         btnCart = findViewById(R.id.btnCart);
         btnBuyNow = findViewById(R.id.btnBuyNow);
