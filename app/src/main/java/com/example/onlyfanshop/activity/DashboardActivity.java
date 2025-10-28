@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -58,11 +59,33 @@ public class DashboardActivity extends AppCompatActivity {
         initFirebaseTest();
         initFragmentCache(); // <-- NEW
         initNavigation(savedInstanceState);
+        setupBackHandler();
 
         AppEvents.get().cartUpdated().observe(this, ts -> {
             updateCartBadgeNow();
         });
         updateCartBadgeNow();
+    }
+
+    private void setupBackHandler() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    getSupportFragmentManager().popBackStack();
+                    return;
+                }
+                if (currentSelectedId != R.id.nav_home) {
+                    bottomNav.setSelectedItemId(R.id.nav_home);
+                    currentSelectedId = R.id.nav_home;
+                    showFragmentById(R.id.nav_home);
+                } else {
+                    setEnabled(false);
+                    DashboardActivity.super.onBackPressed();
+                    setEnabled(true);
+                }
+            }
+        });
     }
 
     private void initFragmentCache() {
@@ -202,18 +225,5 @@ public class DashboardActivity extends AppCompatActivity {
         outState.putInt(STATE_SELECTED_ITEM, currentSelectedId);
     }
 
-    @Override
-    public void onBackPressed() {
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-            getSupportFragmentManager().popBackStack();
-            return;
-        }
-        if (currentSelectedId != R.id.nav_home) {
-            bottomNav.setSelectedItemId(R.id.nav_home);
-            currentSelectedId = R.id.nav_home;
-            showFragmentById(R.id.nav_home);
-        } else {
-            super.onBackPressed();
-        }
-    }
+    
 }

@@ -25,6 +25,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public final class ApiClient {
 
+    private static final boolean IS_EMULATOR = android.os.Build.FINGERPRINT.contains("generic");
+    private static volatile String BASE_URL = IS_EMULATOR
+            ? "http://10.0.2.2:8080/"
+            : "http://192.168.100.47:8080/";
+
     private ApiClient() {}
 
     private static volatile Retrofit retrofitPublic;
@@ -34,7 +39,6 @@ public final class ApiClient {
     private static volatile OkHttpClient okHttpPrivate;
 
     // Mặc định cho Android Emulator
-    private static volatile String BASE_URL = "http://10.0.2.2:8080/";
     private static volatile String authToken;
 
     // Bật/tắt logging mức BODY cho debug
@@ -44,8 +48,13 @@ public final class ApiClient {
     // Config helpers
     // =========================
     public static void setBaseUrl(String baseUrl) {
-        if (baseUrl == null || baseUrl.trim().isEmpty()) return;
-        BASE_URL = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
+        if (baseUrl == null) return;
+        String trimmed = baseUrl.trim();
+        if (trimmed.isEmpty()) return;
+        if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+            trimmed = "http://" + trimmed;
+        }
+        BASE_URL = trimmed.endsWith("/") ? trimmed : trimmed + "/";
         reset();
     }
 
@@ -85,10 +94,6 @@ public final class ApiClient {
         }
     }
 
-    // =========================
-    // Retrofit getters
-    // =========================
-    // API không cần token
     public static Retrofit getPublicClient() {
         if (retrofitPublic == null) {
             synchronized (ApiClient.class) {
@@ -123,7 +128,7 @@ public final class ApiClient {
     // =========================
     private static Retrofit buildRetrofit(OkHttpClient client) {
         return new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(BASE_URL.trim())
                 .addConverterFactory(GsonConverterFactory.create(buildGson()))
                 .client(client)
                 .build();

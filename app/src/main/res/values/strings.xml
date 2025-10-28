@@ -7,10 +7,6 @@
     <string name="total">Tổng thanh toán</string>
     <string name="checkOut">Thanh toán</string>
 
-    <!-- Facebook Login Configuration -->
-    <string name="facebook_app_id">740687805683224</string>
-    <string name="facebook_client_token">62eedeef160da0a7f138a5e90e0bee0b</string>
-
     <!-- Google Sign-In Configuration -->
     <string name="default_web_client_id">328191492825-8iket64hs1nr651gn0jnb19js7aimj10.apps.googleusercontent.com</string>
     <string name="splash_title">YOUR\nSTYLE WILL\nTELL ABOUT\nYOU</string>

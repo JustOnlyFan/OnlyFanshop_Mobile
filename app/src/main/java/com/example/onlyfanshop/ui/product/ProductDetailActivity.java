@@ -4,6 +4,10 @@ import com.example.onlyfanshop.databinding.ActivityProductDetailBinding;
 import com.example.onlyfanshop.model.Request.AddToCartRequest;
 import com.example.onlyfanshop.utils.BadgeUtils;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -22,6 +26,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.activity.OnBackPressedCallback;
 
 import com.bumptech.glide.Glide;
 import com.example.onlyfanshop.MainActivity;
@@ -54,7 +60,9 @@ public class ProductDetailActivity extends AppCompatActivity {
     public static final String EXTRA_PRODUCT_ID = "product_id";
 
     private ImageView imageProduct, btnChat, btnCart, btnExpandDescription;
-    private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, numberItem, addQuantity, minusQuantity, textRating;
+    private TextView textBrand, textProductName, textBottomPrice, textBrief, textFull, textRating;
+    // Quantity controls are handled in the bottom sheet
+    // private TextView numberItem, addQuantity, minusQuantity;
     private TextView textSpecType, textSpecBlade, textSpecAirflow, textSpecSpeed, textSpecWeight, textSpecColor;
     private MaterialButton btnBuyNow;
     private boolean isDescriptionExpanded = false;
@@ -76,7 +84,14 @@ public class ProductDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_product_detail);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        findViewById(R.id.btnBack).setOnClickListener(v -> onBackPressed());
+        findViewById(R.id.btnBack).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            }
+        });
 
         imageProduct = findViewById(R.id.imageProduct);
         textBrand = findViewById(R.id.textBrand);
@@ -84,9 +99,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         textBottomPrice = findViewById(R.id.textBottomPrice);
         textBrief = findViewById(R.id.textBrief);
         textFull = findViewById(R.id.textFull);
-        numberItem = findViewById(R.id.numberItem);
-        addQuantity = findViewById(R.id.addQuantity);
-        minusQuantity = findViewById(R.id.minusQuantity);
+        // Quantity controls are handled in the bottom sheet, not in the main layout
+        // numberItem = findViewById(R.id.numberItem);
+        // addQuantity = findViewById(R.id.addQuantity);
+        // minusQuantity = findViewById(R.id.minusQuantity);
         btnChat = findViewById(R.id.btnChat);
         btnCart = findViewById(R.id.btnCart);
         btnBuyNow = findViewById(R.id.btnBuyNow);
@@ -103,16 +119,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         //numberItem.setText(quantity.toString());
 
 
-        findViewById(R.id.btnFavorite).setOnClickListener(v -> toggleFavorite());
-//        addQuantity.setOnClickListener(v -> {
-//            quantity++;
-//            numberItem.setText(quantity.toString());
-//        });
-//        minusQuantity.setOnClickListener(v -> {
-//            if (quantity > 1) {
-//                quantity--;
-//                numberItem.setText(quantity.toString());}
-//        });
+
 
         int id = getIntent().getIntExtra(EXTRA_PRODUCT_ID, -1);
         btnCart.setOnClickListener(v -> addTocart(id, 1));
@@ -120,9 +127,9 @@ public class ProductDetailActivity extends AppCompatActivity {
             // TODO: Implement chat functionality
             Toast.makeText(this, "Chat feature coming soon!", Toast.LENGTH_SHORT).show();
         });
-        
+
         btnExpandDescription.setOnClickListener(v -> toggleDescription());
-        
+
         btnBuyNow.setOnClickListener(v -> {
             String name = textProductName.getText().toString();
             String price = textBottomPrice.getText().toString();
@@ -219,6 +226,8 @@ public class ProductDetailActivity extends AppCompatActivity {
                     Toast.makeText(ProductDetailActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
 
                     AppEvents.get().notifyCartUpdated();
+
+                    animateCartAdd();
                 } else {
                     Toast.makeText(ProductDetailActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
                 }
@@ -272,7 +281,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         textBottomPrice.setText(String.format("$%.2f", product.getPrice() != null ? product.getPrice() : 0));
         textBrief.setText(product.getBriefDescription() != null ? product.getBriefDescription() : "");
         textFull.setText(product.getFullDescription() != null ? product.getFullDescription() : "");
-        
+
         // Set technical specifications
         if (product.getTechnicalSpecifications() != null && !product.getTechnicalSpecifications().isEmpty()) {
             // Parse technical specifications and set individual fields
@@ -286,10 +295,10 @@ public class ProductDetailActivity extends AppCompatActivity {
             textSpecWeight.setText("Trọng lượng: 4.6 kg");
             textSpecColor.setText("Màu sắc: Xanh, lá mạ");
         }
-        
+
         // Set rating text (you can get this from product data if available)
         textRating.setText("4.5 (128 reviews)");
-        
+
         imageURL = product.getImageURL();
         if (product.getImageURL() != null && !product.getImageURL().isEmpty()) {
             Glide.with(ProductDetailActivity.this)
@@ -306,16 +315,73 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void toggleFavorite() {
-        isFavorite = !isFavorite;
-        ImageView fav = findViewById(R.id.btnFavorite);
-        fav.setImageResource(isFavorite ? R.drawable.ic_heart_filled : R.drawable.ic_heart);
-        // TODO: Optionally call backend to persist favorite state
-    }
-    
+
+
     private void toggleDescription() {
         isDescriptionExpanded = !isDescriptionExpanded;
         textFull.setVisibility(isDescriptionExpanded ? View.VISIBLE : View.GONE);
         btnExpandDescription.setRotation(isDescriptionExpanded ? 180 : 0);
+    }
+
+    private void animateCartAdd() {
+        CoordinatorLayout rootLayout = findViewById(R.id.coordinatorLayout);
+        int size = 140; // Hình to hơn
+
+        final ImageView flyingImage = new ImageView(this);
+        CoordinatorLayout.LayoutParams params = new CoordinatorLayout.LayoutParams(size, size);
+        flyingImage.setLayoutParams(params);
+        flyingImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        Glide.with(this)
+                .load(imageURL)
+                .placeholder(R.drawable.ic_launcher_foreground)
+                .into(flyingImage);
+
+        rootLayout.addView(flyingImage);
+
+        int[] startLocation = new int[2];
+        btnCart.getLocationInWindow(startLocation);
+
+        int[] endLocation = new int[2];
+        ImageView btnCartDetail = findViewById(R.id.btnCartDetail);
+        btnCartDetail.getLocationInWindow(endLocation);
+
+        flyingImage.setTranslationX(startLocation[0]);
+        flyingImage.setTranslationY(startLocation[1]);
+
+        // Tính vị trí trung tâm icon đích
+        int iconWidth = btnCartDetail.getWidth();
+        int iconHeight = btnCartDetail.getHeight();
+        int imageWidth = params.width;
+        int imageHeight = params.height;
+        float targetX = endLocation[0] + iconWidth / 2f - imageWidth / 2f;
+        float targetY = endLocation[1] + iconHeight / 2f - imageHeight / 2f - 12; // -12 để nhích lên xíu
+
+        ObjectAnimator rotateAnim = ObjectAnimator.ofFloat(flyingImage, "rotation", 0f, 720f);
+
+        ObjectAnimator translateX = ObjectAnimator.ofFloat(flyingImage, "translationX", startLocation[0], targetX);
+        ObjectAnimator translateY = ObjectAnimator.ofFloat(flyingImage, "translationY", startLocation[1], targetY);
+
+        AnimatorSet moveSet = new AnimatorSet();
+        moveSet.playTogether(rotateAnim, translateX, translateY);
+        moveSet.setDuration(1200);
+
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(flyingImage, "scaleX", 1f, 0f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(flyingImage, "scaleY", 1f, 0f);
+        ObjectAnimator alphaAnim = ObjectAnimator.ofFloat(flyingImage, "alpha", 1f, 0f);
+
+        AnimatorSet shrinkSet = new AnimatorSet();
+        shrinkSet.playTogether(scaleX, scaleY, alphaAnim);
+        shrinkSet.setDuration(400);
+
+        AnimatorSet totalSet = new AnimatorSet();
+        totalSet.playSequentially(moveSet, shrinkSet);
+        totalSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                rootLayout.removeView(flyingImage);
+            }
+        });
+        totalSet.start();
     }
 }

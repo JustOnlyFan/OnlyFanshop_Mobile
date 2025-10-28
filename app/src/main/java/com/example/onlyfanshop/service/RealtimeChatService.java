@@ -14,14 +14,20 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RealtimeChatService {
     private static final String TAG = "RealtimeChatService";
@@ -42,6 +48,13 @@ public class RealtimeChatService {
     
     // Firebase listeners
     private final Map<String, ValueEventListener> firebaseListeners = new HashMap<>();
+    private final Map<String, ChildEventListener> firebaseChildListeners = new HashMap<>();
+    private final Map<String, ValueEventListener> roomMetaListeners = new HashMap<>();
+    // Track polling tasks per room to allow cancellation and avoid duplicates
+    private final Map<String, ScheduledFuture<?>> messagePollingFutures = new HashMap<>();
+    private ScheduledFuture<?> chatRoomsPollingFuture;
+    private final Map<String, AtomicBoolean> messagePollInFlight = new ConcurrentHashMap<>();
+    private final AtomicBoolean chatRoomsPollInFlight = new AtomicBoolean(false);
     
     private RealtimeChatService(Context context, ChatApi chatApi) {
         this.context = context;
@@ -61,7 +74,12 @@ public class RealtimeChatService {
     public void startListeningForMessages(String roomId, OnNewMessageListener listener) {
         Log.d(TAG, "Starting real-time listening for room: " + roomId);
         
-        // Store listener
+        // If already listening for this room, just replace listener and return
+        if (messageListeners.containsKey(roomId)) {
+            Log.d(TAG, "Already listening for room: " + roomId + ", updating listener only");
+            messageListeners.put(roomId, listener);
+            return;
+        }
         messageListeners.put(roomId, listener);
         
         // Start Firebase listener
@@ -75,37 +93,112 @@ public class RealtimeChatService {
     public void startListeningForChatRooms(OnChatRoomUpdateListener listener) {
         Log.d(TAG, "Starting real-time listening for chat rooms");
         
-        // Store listener
-        roomListeners.put("global", listener);
+        // If already listening, just replace listener
+        if (roomListeners.containsKey("global")) {
+            Log.d(TAG, "Already listening for chat rooms, updating listener only");
+            roomListeners.put("global", listener);
+        } else {
+            roomListeners.put("global", listener);
+        }
         
-        // Start polling for chat rooms
+        // Start Firebase listener to nudge instant updates, plus polling as fallback
+        startChatRoomsFirebaseListener();
         startChatRoomPolling();
     }
     
     // ✅ Firebase listener
     private void startFirebaseListener(String roomId) {
         try {
+            Runnable attach = () -> {
+                try {
             DatabaseReference messagesRef = FirebaseDatabase.getInstance()
-                    .getReference("ChatRooms")
-                    .child(roomId)
-                    .child("messages");
-            
-            ValueEventListener listener = new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    Log.d(TAG, "Firebase data changed for room: " + roomId);
-                    processFirebaseMessages(roomId, snapshot);
-                }
-                
-                @Override
-                public void onCancelled(DatabaseError error) {
-                    Log.e(TAG, "Firebase listener cancelled for room: " + roomId + ", error: " + error.getMessage());
+                    .getReference("Messages")
+                    .child(roomId);
+
+                    ChildEventListener childListener = new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(DataSnapshot snapshot, String previousChildName) {
+                            ChatMessage message = parseMessageFromSnapshot(snapshot, roomId);
+                            if (message != null) {
+                                // Forward immediately; UI layer will deduplicate by messageId
+                                OnNewMessageListener listener = messageListeners.get(roomId);
+                                if (listener != null) {
+                                    mainHandler.post(() -> listener.onNewMessage(message));
+                                }
+                                // Update last seen timestamp as a hint for poll fallback
+                                Long messageTime = message.getOriginalTimestamp();
+                                if (messageTime != null) {
+                                    Long lastTime = lastMessageTimestamps.get(roomId);
+                                    if (lastTime == null || messageTime > lastTime) {
+                                        lastMessageTimestamps.put(roomId, messageTime);
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override public void onChildChanged(DataSnapshot s, String p) {}
+                        @Override public void onChildRemoved(DataSnapshot s) {}
+                        @Override public void onChildMoved(DataSnapshot s, String p) {}
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Firebase child listener cancelled: " + error.getMessage());
+                        }
+                    };
+                    messagesRef.addChildEventListener(childListener);
+                    firebaseChildListeners.put(roomId, childListener);
+
+                    ValueEventListener valueListener = new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            processFirebaseMessages(roomId, snapshot);
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Firebase listener cancelled for room: " + roomId + ", error: " + error.getMessage());
+                        }
+                    };
+                    messagesRef.addValueEventListener(valueListener);
+                    firebaseListeners.put(roomId, valueListener);
+
+                    // Also listen to lastMessageTime to nudge HTTP fetch when backend only updates metadata
+                    DatabaseReference lastMessageTimeRef = FirebaseDatabase.getInstance()
+                            .getReference("ChatRooms")
+                            .child(roomId)
+                            .child("lastMessageTime");
+                    ValueEventListener metaListener = new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            // Trigger immediate fetch of latest messages
+                            Log.d(TAG, "lastMessageTime changed for room: " + roomId);
+                            pollForNewMessages(roomId);
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Meta listener cancelled: " + error.getMessage());
+                        }
+                    };
+                    lastMessageTimeRef.addValueEventListener(metaListener);
+                    roomMetaListeners.put(roomId, metaListener);
+                } catch (Exception e) {
+                    Log.e(TAG, "attach listeners error: " + e.getMessage());
                 }
             };
-            
-            messagesRef.addValueEventListener(listener);
-            firebaseListeners.put(roomId, listener);
-            
+
+            FirebaseUser u = FirebaseAuth.getInstance().getCurrentUser();
+            if (u == null) {
+                FirebaseAuth.getInstance().addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                    @Override
+                    public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
+                        FirebaseUser cu = firebaseAuth.getCurrentUser();
+                        if (cu != null) {
+                            firebaseAuth.removeAuthStateListener(this);
+                            mainHandler.post(attach);
+                        }
+                    }
+                });
+            } else {
+                mainHandler.post(attach);
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error starting Firebase listener: " + e.getMessage());
         }
@@ -151,13 +244,22 @@ public class RealtimeChatService {
     
     // ✅ Polling system for messages
     private void startPolling(String roomId) {
-        scheduler.scheduleAtFixedRate(() -> {
+        // Prevent duplicate pollers for the same room
+        ScheduledFuture<?> existing = messagePollingFutures.get(roomId);
+        if (existing != null && !existing.isCancelled()) {
+            Log.d(TAG, "Polling already active for room: " + roomId);
+            return;
+        }
+
+        ScheduledFuture<?> future = scheduler.scheduleWithFixedDelay(() -> {
             try {
                 pollForNewMessages(roomId);
             } catch (Exception e) {
                 Log.e(TAG, "Error in polling: " + e.getMessage());
             }
-        }, 0, 2, TimeUnit.SECONDS); // Poll every 2 seconds
+        }, 0, 1, TimeUnit.SECONDS); // Faster fallback ~1s
+
+        messagePollingFutures.put(roomId, future);
     }
     
     // ✅ Poll for new messages
@@ -200,13 +302,18 @@ public class RealtimeChatService {
     
     // ✅ Polling for chat rooms
     private void startChatRoomPolling() {
-        scheduler.scheduleAtFixedRate(() -> {
+        if (chatRoomsPollingFuture != null && !chatRoomsPollingFuture.isCancelled()) {
+            Log.d(TAG, "Chat room polling already active");
+            return;
+        }
+
+        chatRoomsPollingFuture = scheduler.scheduleWithFixedDelay(() -> {
             try {
                 pollForChatRooms();
             } catch (Exception e) {
                 Log.e(TAG, "Error in chat room polling: " + e.getMessage());
             }
-        }, 0, 3, TimeUnit.SECONDS); // Poll every 3 seconds
+        }, 0, 1, TimeUnit.SECONDS); // Faster fallback ~1s
     }
     
     // ✅ Poll for chat rooms
@@ -235,6 +342,31 @@ public class RealtimeChatService {
             Log.e(TAG, "Error in pollForChatRooms: " + e.getMessage());
         }
     }
+
+    // Best-effort Firebase listener to trigger faster chat room refreshes
+    private void startChatRoomsFirebaseListener() {
+        try {
+            DatabaseReference chatRoomsRef = FirebaseDatabase.getInstance()
+                    .getReference("Conversations");
+
+            ValueEventListener listener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    // Nudge immediate refresh of chat rooms list
+                    mainHandler.post(() -> pollForChatRooms());
+                }
+
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Log.e(TAG, "ChatRooms Firebase listener cancelled: " + error.getMessage());
+                }
+            };
+
+            chatRoomsRef.addValueEventListener(listener);
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting chat rooms Firebase listener: " + e.getMessage());
+        }
+    }
     
     // ✅ Parse message from snapshot
     private ChatMessage parseMessageFromSnapshot(DataSnapshot snapshot, String roomId) {
@@ -247,7 +379,10 @@ public class RealtimeChatService {
             
             Long timestamp = snapshot.child("timestamp").getValue(Long.class);
             if (timestamp != null) {
-                message.setTimestampFromLong(timestamp);
+                // Detect seconds vs millis
+                long ts = timestamp;
+                if (ts < 1_000_000_000_000L) ts *= 1000L;
+                message.setTimestampFromLong(ts);
             }
             
             message.setAttachmentUrl(snapshot.child("attachmentUrl").getValue(String.class));
@@ -258,9 +393,10 @@ public class RealtimeChatService {
             message.setRead(isRead != null ? isRead : false);
             
             message.setRoomId(roomId);
-            
+
             String currentUserId = AppPreferences.getUserId(context);
-            message.setMe(message.getSenderId().equals(currentUserId));
+            String sender = message.getSenderId();
+            message.setMe(currentUserId != null && currentUserId.equals(sender));
             
             return message;
         } catch (Exception e) {
@@ -288,12 +424,52 @@ public class RealtimeChatService {
                 Log.e(TAG, "Error removing Firebase listener: " + e.getMessage());
             }
         }
+
+        ChildEventListener child = firebaseChildListeners.remove(roomId);
+        if (child != null) {
+            try {
+                DatabaseReference messagesRef = FirebaseDatabase.getInstance()
+                        .getReference("ChatRooms")
+                        .child(roomId)
+                        .child("messages");
+                messagesRef.removeEventListener(child);
+            } catch (Exception e) {
+                Log.e(TAG, "Error removing Firebase child listener: " + e.getMessage());
+            }
+        }
+
+        ValueEventListener meta = roomMetaListeners.remove(roomId);
+        if (meta != null) {
+            try {
+                DatabaseReference lastMessageTimeRef = FirebaseDatabase.getInstance()
+                        .getReference("ChatRooms")
+                        .child(roomId)
+                        .child("lastMessageTime");
+                lastMessageTimeRef.removeEventListener(meta);
+            } catch (Exception e) {
+                Log.e(TAG, "Error removing room meta listener: " + e.getMessage());
+            }
+        }
+
+        // Cancel polling task for this room if exists
+        ScheduledFuture<?> future = messagePollingFutures.remove(roomId);
+        if (future != null && !future.isCancelled()) {
+            future.cancel(true);
+            Log.d(TAG, "Cancelled polling for room: " + roomId);
+        }
     }
     
     // ✅ Stop listening for chat rooms
     public void stopListeningForChatRooms() {
         Log.d(TAG, "Stopping real-time listening for chat rooms");
         roomListeners.clear();
+
+        // Cancel chat room polling if running
+        if (chatRoomsPollingFuture != null && !chatRoomsPollingFuture.isCancelled()) {
+            chatRoomsPollingFuture.cancel(true);
+            chatRoomsPollingFuture = null;
+            Log.d(TAG, "Cancelled chat rooms polling");
+        }
     }
     
     // ✅ Stop all listening
@@ -318,6 +494,20 @@ public class RealtimeChatService {
         roomListeners.clear();
         lastMessageTimestamps.clear();
         lastRoomUpdateTimes.clear();
+
+        // Cancel all polling futures
+        for (Map.Entry<String, ScheduledFuture<?>> entry : messagePollingFutures.entrySet()) {
+            try {
+                ScheduledFuture<?> f = entry.getValue();
+                if (f != null && !f.isCancelled()) f.cancel(true);
+            } catch (Exception ignored) {}
+        }
+        messagePollingFutures.clear();
+
+        if (chatRoomsPollingFuture != null && !chatRoomsPollingFuture.isCancelled()) {
+            chatRoomsPollingFuture.cancel(true);
+            chatRoomsPollingFuture = null;
+        }
     }
     
     // ✅ Cleanup
