@@ -176,6 +176,15 @@ public class DashboardActivity extends AppCompatActivity {
         return username;
     }
 
+    /**
+     * Minimal change: create a fresh CartFragment instance every time user navigates to the cart.
+     * This way onViewCreated() in CartFragment (which already calls getCartItems(...)) will run
+     * immediately when we add the new fragment.
+     *
+     * To avoid leaving the old (hidden) cart fragment around, remove it first if it was added.
+     * We use commitNow()/remove(commitNow) to make the operations synchronous so the new fragment's
+     * onViewCreated runs without delay.
+     */
     private void showFragmentById(int id) {
         Fragment fragmentToShow = null;
 
@@ -184,10 +193,20 @@ public class DashboardActivity extends AppCompatActivity {
         } else if (id == R.id.nav_search) {
             fragmentToShow = categoryFragment;
         } else if (id == R.id.nav_car) {
-            if (cartFragment == null) {
-                String username = getUsernameForNav();
-                cartFragment = CartFragment.newInstance(username);
+            // Remove previous cart fragment if exists so we always create a fresh one
+            String username = getUsernameForNav();
+            if (cartFragment != null && cartFragment.isAdded()) {
+                try {
+                    getSupportFragmentManager().beginTransaction().remove(cartFragment).commitNow();
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to remove previous cartFragment synchronously", e);
+                    // fallback to asynchronous remove if commitNow not allowed
+                    getSupportFragmentManager().beginTransaction().remove(cartFragment).commit();
+                    getSupportFragmentManager().executePendingTransactions();
+                }
+                cartFragment = null;
             }
+            cartFragment = CartFragment.newInstance(username);
             fragmentToShow = cartFragment;
         } else if (id == R.id.nav_shop) {
             fragmentToShow = mapFragment;
@@ -207,7 +226,7 @@ public class DashboardActivity extends AppCompatActivity {
         if (homeFragment.isAdded()) transaction.hide(homeFragment);
         if (categoryFragment.isAdded()) transaction.hide(categoryFragment);
         if (mapFragment.isAdded()) transaction.hide(mapFragment);
-        if (cartFragment != null && cartFragment.isAdded()) transaction.hide(cartFragment);
+        if (cartFragment != null && cartFragment.isAdded() && cartFragment != fragmentToShow) transaction.hide(cartFragment);
         if (profileFragment.isAdded()) transaction.hide(profileFragment);
 
         // Add if not added, else show
@@ -216,7 +235,17 @@ public class DashboardActivity extends AppCompatActivity {
         } else {
             transaction.show(fragmentToShow);
         }
-        transaction.commit();
+
+        // Use commitNow() to apply transaction immediately so the fragment's lifecycle (onCreateView/onViewCreated)
+        // runs right away and the CartFragment's existing getCartItems(...) call executes without delay.
+        try {
+            transaction.commitNow();
+        } catch (IllegalStateException e) {
+            // commitNow can fail if called after onSaveInstanceState; fallback to commit + executePendingTransactions
+            Log.w(TAG, "commitNow failed, falling back to commit + executePendingTransactions", e);
+            transaction.commit();
+            getSupportFragmentManager().executePendingTransactions();
+        }
     }
 
     @Override
@@ -225,5 +254,5 @@ public class DashboardActivity extends AppCompatActivity {
         outState.putInt(STATE_SELECTED_ITEM, currentSelectedId);
     }
 
-    
+
 }
