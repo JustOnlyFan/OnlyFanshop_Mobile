@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.OnBackPressedCallback;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -51,6 +52,19 @@ public class ChatListActivity extends AppCompatActivity {
         initViews();
         initServices();
         setupRecyclerView();
+        // Defer initial loading to onStart to ensure Activity is visible
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            }
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         loadChatRooms();
     }
 
@@ -222,21 +236,23 @@ public class ChatListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh chat rooms when returning to this activity
-        loadChatRooms();
+        // No-op: onStart already handles initial load; avoid duplicate
     }
     
-    @Override
-    public void onBackPressed() {
-        // Smooth back navigation with custom animation
-        super.onBackPressed();
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-    }
+    
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
         // ✅ Stop real-time listening when activity is destroyed
+        if (realtimeChatService != null) {
+            realtimeChatService.stopListeningForChatRooms();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
         if (realtimeChatService != null) {
             realtimeChatService.stopListeningForChatRooms();
         }

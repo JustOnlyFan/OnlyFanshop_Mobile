@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.OnBackPressedCallback;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,6 +22,10 @@ import com.example.onlyfanshop.model.chat.ChatMessage;
 import com.example.onlyfanshop.service.ChatService;
 import com.example.onlyfanshop.service.RealtimeChatService;
 import com.example.onlyfanshop.utils.AppPreferences;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,21 +62,79 @@ public class ChatRoomActivity extends AppCompatActivity {
         // ✅ Initialize services first (fast operation)
         initServices();
         
-        // ✅ Move heavy operations to background thread
+        // Defer network calls until onStart to avoid firing before UI is visible
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            }
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Start loading messages and listening when activity becomes visible
         new Thread(() -> {
             try {
-                // Load messages in background
-                loadMessages();
-                
-                // Setup Firebase listener in background
-                setupFirebaseListener();
+                ensureFirebaseReadyThen(() -> {
+                    runOnUiThread(() -> {
+                        loadMessages();
+                        setupFirebaseListener();
+                    });
+                });
             } catch (Exception e) {
                 Log.e(TAG, "Error in background initialization: " + e.getMessage());
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "Failed to initialize chat", Toast.LENGTH_SHORT).show();
-                });
+                runOnUiThread(() -> Toast.makeText(this, "Failed to initialize chat", Toast.LENGTH_SHORT).show());
             }
         }).start();
+    }
+
+    private void ensureFirebaseReadyThen(Runnable onReady) {
+        try {
+            if (roomId == null) { onReady.run(); return; }
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            FirebaseUser u = auth.getCurrentUser();
+            if (u != null) {
+                writeParticipantAndThen(u.getUid(), onReady);
+                return;
+            }
+            auth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
+                    FirebaseUser cu = firebaseAuth.getCurrentUser();
+                    if (cu != null) {
+                        firebaseAuth.removeAuthStateListener(this);
+                        writeParticipantAndThen(cu.getUid(), onReady);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "ensureFirebaseReadyThen error: " + e.getMessage());
+            onReady.run();
+        }
+    }
+
+    private void writeParticipantAndThen(String uid, Runnable onReady) {
+        try {
+            DatabaseReference participantsRef = FirebaseDatabase.getInstance()
+                    .getReference("Conversations")
+                    .child(roomId)
+                    .child("participants");
+            participantsRef.child(uid).setValue(true)
+                    .addOnSuccessListener(r -> {
+                        Log.d(TAG, "Joined participants for room: " + roomId + " as " + uid);
+                        onReady.run();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Join participants failed: " + e.getMessage());
+                        onReady.run();
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "writeParticipantAndThen error: " + e.getMessage());
+            onReady.run();
+        }
     }
 
     private void initViews() {
@@ -346,17 +409,21 @@ public class ChatRoomActivity extends AppCompatActivity {
         });
     }
     
-    @Override
-    public void onBackPressed() {
-        // Smooth back navigation with custom animation
-        super.onBackPressed();
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-    }
+    
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
         // ✅ Stop real-time listening when activity is destroyed
+        if (realtimeChatService != null && roomId != null) {
+            realtimeChatService.stopListeningForMessages(roomId);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Stop listeners/pollers when screen is no longer visible
         if (realtimeChatService != null && roomId != null) {
             realtimeChatService.stopListeningForMessages(roomId);
         }
