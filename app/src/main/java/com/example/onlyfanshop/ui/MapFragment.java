@@ -45,6 +45,7 @@ import com.example.onlyfanshop.map.shop.ShopRepository;
 import com.example.onlyfanshop.map.shop.ShopUiMapper;
 import com.example.onlyfanshop.model.Attraction;
 import com.example.onlyfanshop.map.shop.AttractionCarouselController;
+import com.example.onlyfanshop.map.shop.DatabaseShopDataSource;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -52,15 +53,17 @@ import android.location.Location;
 import androidx.core.app.ActivityCompat;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MapFragment extends Fragment {
 
-    private static final double DEFAULT_LAT_VN = 15.9266657;
-    private static final double DEFAULT_LNG_VN = 107.9650855;
-    private static final float DEFAULT_ZOOM_VN = 5.5f;
+    // Default location: Việt Nam (center)
+    private static final double DEFAULT_LAT_VN = 16.0;
+    private static final double DEFAULT_LNG_VN = 108.0;
+    private static final float DEFAULT_ZOOM_VN = 6.0f;
 
     private MapViewModel vm;
     private MapProvider mapProvider;
@@ -114,16 +117,22 @@ public class MapFragment extends Fragment {
         fabLocation = v.findViewById(R.id.fabLocation);
         btnZoomIn = v.findViewById(R.id.btnZoomIn);
         btnZoomOut = v.findViewById(R.id.btnZoomOut);
+        
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
 
         tvLocation.setText("Việt Nam");
         KeyStorage.loadIntoConfig(requireContext());
 
         initSuggestionAdapter();
         initMap(v);
-        initData();
-        initCarousel();
+        initCarousel(); // Init carousel trước
+        initData(); // Load data sau khi carousel đã ready
         bindViewModel();
         bindEvents();
+        
+        // Mặc định hiển thị Việt Nam khi vào map
+        // Comment dòng này nếu muốn tự động lấy vị trí user
+        // getCurrentUserLocation();
 
         btnZoomIn.setOnClickListener(view -> {
             float currentZoom = mapProvider.getZoomLevel();
@@ -134,7 +143,74 @@ public class MapFragment extends Fragment {
             mapProvider.moveCamera(mapProvider.getCenterLat(), mapProvider.getCenterLng(), currentZoom - 1);
         });
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        // FAB location button - di chuyển đến vị trí người dùng
+        fabLocation.setOnClickListener(view -> getCurrentUserLocation());
+    }
+    
+    private void getCurrentUserLocation() {
+        // Kiểm tra permission
+        if (ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request permission
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+            return;
+        }
+
+        // Lấy vị trí hiện tại
+        fusedLocationClient.getLastLocation()
+            .addOnSuccessListener(requireActivity(), location -> {
+                if (location != null) {
+                    double lat = location.getLatitude();
+                    double lng = location.getLongitude();
+                    
+                    Log.d("MapFragment", "User location: " + lat + ", " + lng);
+                    
+                    // Di chuyển camera đến vị trí người dùng
+                    mapProvider.moveCamera(lat, lng, 13.0);
+                    
+                    // Hiển thị marker vị trí người dùng
+                    showUserLocationMarker(lat, lng);
+                    
+                    tvLocation.setText("Your Location");
+                } else {
+                    Log.w("MapFragment", "Location is null, using default Vietnam location");
+                    // Nếu không lấy được vị trí, hiển thị Việt Nam
+                    mapProvider.moveCamera(DEFAULT_LAT_VN, DEFAULT_LNG_VN, DEFAULT_ZOOM_VN);
+                    tvLocation.setText("Việt Nam");
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e("MapFragment", "Failed to get location: " + e.getMessage());
+                Toast.makeText(getContext(), "Cannot get your location", Toast.LENGTH_SHORT).show();
+                // Fallback to default Vietnam view
+                mapProvider.moveCamera(DEFAULT_LAT_VN, DEFAULT_LNG_VN, DEFAULT_ZOOM_VN);
+            });
+    }
+    
+    private void showUserLocationMarker(double lat, double lng) {
+        try {
+            mapProvider.removeMarker("user_location");
+            Drawable userIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_my_location);
+            if (userIcon != null) {
+                userIcon.setBounds(0, 0, 40, 40);
+            }
+            mapProvider.addMarker("user_location", lat, lng, "Your Location", "", userIcon);
+        } catch (Exception e) {
+            Log.e("MapFragment", "Error showing user location marker: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, get location again
+                getCurrentUserLocation();
+            } else {
+                Toast.makeText(getContext(), "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void showStartPin(double lat, double lng, String address) {
@@ -208,13 +284,131 @@ public class MapFragment extends Fragment {
 
     private void initData() {
         shopRepository = ShopRepository.getInstance();
-        shops = shopRepository.getAllShops();
-        attractions = ShopUiMapper.toAttractions(shops);
+        
+        // Load stores from database
+        loadStoresFromDatabase();
+    }
 
-        showShopPins(shops); // Hiển thị tất cả pin shop
+    private void loadStoresFromDatabase() {
+        shopRepository.loadFromDatabase(new DatabaseShopDataSource.OnDataLoadedListener() {
+            @Override
+            public void onDataLoaded(List<Shop> loadedShops) {
+                if (getActivity() == null) return;
+                
+                getActivity().runOnUiThread(() -> {
+                    Log.d("MapFragment", "onDataLoaded callback - Received " + loadedShops.size() + " stores");
+                    
+                    // Update shops list
+                    shops.clear();
+                    shops.addAll(loadedShops);
+                    Log.d("MapFragment", "shops list size after update: " + shops.size());
+                    
+                    // Convert to attractions
+                    List<Attraction> newAttractions = ShopUiMapper.toAttractions(shops);
+                    Log.d("MapFragment", "Converted to " + newAttractions.size() + " attractions");
+                    
+                    attractions.clear();
+                    attractions.addAll(newAttractions);
+                    Log.d("MapFragment", "attractions list size: " + attractions.size());
+                    
+                    // Show all store pins on map
+                    if (!shops.isEmpty()) {
+                        showShopPins(shops);
+                        Log.d("MapFragment", "Called showShopPins with " + shops.size() + " shops");
+                    }
+                    
+                    // Update adapter với data mới
+                    Log.d("MapFragment", "Before updateData - attractions size: " + attractions.size());
+                    if (attractionAdapter != null) {
+                        attractionAdapter.updateData(new ArrayList<>(attractions));
+                        Log.d("MapFragment", "After updateData - adapter count: " + attractionAdapter.getItemCount());
+                    }
+                    
+                    // Attach carousel controller với callback
+                    if (carouselController != null && !attractions.isEmpty()) {
+                        // Make sure RecyclerView is visible and has correct height
+                        if (rvAttractions != null) {
+                            rvAttractions.setVisibility(View.VISIBLE);
+                            ViewGroup.LayoutParams params = rvAttractions.getLayoutParams();
+                            if (params != null) {
+                                params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                                rvAttractions.setLayoutParams(params);
+                            }
+                            Log.d("MapFragment", "RecyclerView set to VISIBLE");
+                        }
+                        
+                        carouselController.attach(attractions, (attraction, position) -> {
+                            // Khi lướt carousel, map tự động zoom vào store đó
+                            Shop shop = shopRepository.findById(attraction.getId());
+                            if (shop != null) {
+                                Log.d("MapFragment", "🎯 Carousel snapped to: " + shop.getName() + " at position " + position);
+                                focusShop(shop);
+                            }
+                        });
+                        
+                        // Force initial focus on first store
+                        if (!shops.isEmpty()) {
+                            rvAttractions.post(() -> {
+                                focusShop(shops.get(0));
+                                Log.d("MapFragment", "Initial focus on first store: " + shops.get(0).getName());
+                            });
+                        }
+                        
+                        Log.d("MapFragment", "✅ Attached carousel controller with " + attractions.size() + " items");
+                    } else {
+                        Log.w("MapFragment", "⚠️ Carousel not attached - controller: " + (carouselController != null) + ", attractions: " + attractions.size());
+                        if (rvAttractions != null) {
+                            rvAttractions.setVisibility(View.GONE);
+                        }
+                    }
+                    
+                    Log.d("MapFragment", "✅ UI updated complete - shops: " + shops.size() + ", attractions: " + attractions.size());
+                    
+                    if (!shops.isEmpty()) {
+                        Toast.makeText(getContext(), "Loaded " + shops.size() + " stores", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "No stores found. Add stores via Store Management.", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onDataLoadFailed(String error) {
+                if (getActivity() == null) return;
+                
+                getActivity().runOnUiThread(() -> {
+                    Log.e("MapFragment", "Failed to load stores: " + error);
+                    
+                    // Show user-friendly message
+                    String userMessage;
+                    if (error.contains("Connection refused") || error.contains("Failed to connect")) {
+                        userMessage = "Cannot connect to server. Please check if backend is running.";
+                    } else if (error.contains("UnknownHost")) {
+                        userMessage = "Cannot reach server. Check network connection.";
+                    } else if (error.contains("timeout")) {
+                        userMessage = "Server timeout. Try again later.";
+                    } else {
+                        userMessage = "Cannot load stores. " + error;
+                    }
+                    
+                    Toast.makeText(getContext(), userMessage, Toast.LENGTH_LONG).show();
+                    
+                    // Clear everything
+                    shops.clear();
+                    attractions.clear();
+                    if (attractionAdapter != null) {
+                        attractionAdapter.updateData(attractions);
+                    }
+                });
+            }
+        });
     }
 
     private void initCarousel() {
+        Log.d("MapFragment", "🎪 initCarousel() called");
+        Log.d("MapFragment", "rvAttractions: " + (rvAttractions != null ? "not null" : "NULL!"));
+        Log.d("MapFragment", "attractions size: " + attractions.size());
+        
         attractionAdapter = new AttractionAdapter(attractions, new AttractionAdapter.OnAttractionClickListener() {
             @Override
             public void onAttractionClick(Attraction a) {
@@ -242,15 +436,26 @@ public class MapFragment extends Fragment {
 
         LinearLayoutManager lm = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         carouselController = new AttractionCarouselController(rvAttractions, lm, attractionAdapter);
-        carouselController.attach(attractions, (a, pos) -> {
-            Shop s = shopRepository.findById(a.getId());
-            if (s != null) focusShop(s);
-        });
+        
+        Log.d("MapFragment", "✅ Carousel initialized - adapter: " + (attractionAdapter != null) + ", controller: " + (carouselController != null));
+        
+        // Không attach ngay ở đây - sẽ attach sau khi data load xong
+        // Will be attached in loadStoresFromDatabase() after data is loaded
     }
 
     private void focusShop(Shop s) {
-        mapProvider.moveCamera(s.getLatitude(), s.getLongitude(), 15f);
+        Log.d("MapFragment", "Focusing on shop: " + s.getName() + " at " + s.getLatitude() + ", " + s.getLongitude());
+        
+        // Zoom vào store với animation
+        mapProvider.moveCamera(s.getLatitude(), s.getLongitude(), 16f);
+        
+        // Highlight marker
         markerManager.showSelectedMarker(s);
+        
+        // Update location text
+        if (tvLocation != null) {
+            tvLocation.setText(s.getName());
+        }
     }
 
     private void bindViewModel() {
@@ -333,27 +538,6 @@ public class MapFragment extends Fragment {
             mapProvider.removeMarker("start"); // XÓA marker bắt đầu, shop pins vẫn giữ nguyên
         });
 
-        fabLocation.setOnClickListener(view -> {
-            if (ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(requireActivity(),
-                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_LOCATION_PERMISSION);
-                return;
-            }
-
-            fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
-                if (location != null) {
-                    double lat = location.getLatitude();
-                    double lng = location.getLongitude();
-                    // Reverse geocode lấy địa chỉ
-                    vm.reverseGeocode(lat, lng); // MapViewModel phải có hàm này
-                } else {
-                    Toast.makeText(getContext(), "Không thể lấy vị trí. Hãy thử lại!", Toast.LENGTH_SHORT).show();
-                }
-            });
-        });
-
         routePanel.findViewById(R.id.btnClearRoute).setOnClickListener(view -> {
             mapProvider.clearPolyline("route_main");
             mapProvider.removeMarker("start");
@@ -370,20 +554,18 @@ public class MapFragment extends Fragment {
 
 
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_LOCATION_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                fabLocation.performClick();
-            } else {
-                Toast.makeText(getContext(), "Không có quyền truy cập vị trí!", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 
     @Override
-    public void onResume() { super.onResume(); mapProvider.onResume(); }
+    public void onResume() { 
+        super.onResume(); 
+        mapProvider.onResume(); 
+        
+        // Refresh stores khi quay lại fragment (sau khi add/edit store)
+        if (shopRepository != null && shopRepository.isLoaded()) {
+            loadStoresFromDatabase();
+        }
+    }
+    
     @Override
     public void onPause() { super.onPause(); mapProvider.onPause(); }
     @Override

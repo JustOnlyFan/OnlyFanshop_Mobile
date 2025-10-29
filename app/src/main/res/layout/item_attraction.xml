@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="280dp"
-    android:layout_height="260dp"
-    android:layout_marginEnd="12dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="8dp"
+    android:layout_width="300dp"
+    android:layout_height="280dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginStart="4dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="12dp"
     app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
@@ -17,7 +18,7 @@
         <ImageView
             android:id="@+id/imgAttraction"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
+            android:layout_height="140dp"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_launcher_foreground" />
 
@@ -34,10 +35,11 @@
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Miniatur Wunderland"
-                android:textColor="#333333"
-                android:textSize="16sp"
+                android:text="Store Name"
+                android:textColor="#1A1A1A"
+                android:textSize="18sp"
                 android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
                 android:maxLines="1"
                 android:ellipsize="end" />
 
@@ -46,10 +48,12 @@
                 android:id="@+id/tvDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Tiny trains travel through a world of wonder."
+                android:layout_marginTop="6dp"
+                android:text="Store description"
                 android:textColor="#666666"
-                android:textSize="12sp"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif"
+                android:lineSpacingExtra="2dp"
                 android:maxLines="2"
                 android:ellipsize="end" />
 
@@ -62,20 +66,16 @@
             <!-- Directions Button (anchored at bottom) -->
             <Button
                 android:id="@+id/btnDirections"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_gravity="end"
-                android:minHeight="32dp"
-                android:maxLines="3"
-                android:includeFontPadding="false"
-                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
                 android:text="Directions"
-                android:textSize="12sp"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
                 android:textColor="#FFFFFF"
-                android:background="@drawable/button_directions_background"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="4dp" />
+                android:backgroundTint="@color/colorPrimary"
+                android:elevation="2dp" />
 
         </LinearLayout>
 

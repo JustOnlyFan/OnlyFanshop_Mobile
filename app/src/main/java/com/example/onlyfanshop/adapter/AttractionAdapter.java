@@ -14,6 +14,7 @@ import com.bumptech.glide.Glide;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.model.Attraction;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.VH> {
@@ -28,8 +29,10 @@ public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.VH
 
     public AttractionAdapter(@NonNull List<Attraction> items,
                              @NonNull OnAttractionClickListener listener) {
-        this.items = items;
+        // Don't use reference to external list - create new list
+        this.items = new ArrayList<>(items);
         this.listener = listener;
+        android.util.Log.d("AttractionAdapter", "Constructor - created with " + this.items.size() + " items");
     }
 
     @NonNull
@@ -72,6 +75,18 @@ public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.VH
     public Attraction getItemAt(int position) {
         if (position < 0 || position >= getItemCount()) return null;
         return items.get(position);
+    }
+    
+    // Update data và notify adapter
+    public void updateData(List<Attraction> newData) {
+        android.util.Log.d("AttractionAdapter", "updateData called with " + (newData != null ? newData.size() : "null") + " items");
+        items.clear();
+        if (newData != null && !newData.isEmpty()) {
+            items.addAll(newData);
+            android.util.Log.d("AttractionAdapter", "Added " + items.size() + " items to adapter");
+        }
+        notifyDataSetChanged();
+        android.util.Log.d("AttractionAdapter", "notifyDataSetChanged called - final count: " + getItemCount());
     }
 
     static class VH extends RecyclerView.ViewHolder {
