@@ -6,16 +6,19 @@ public class ShopRepository {
 
     private static volatile ShopRepository INSTANCE;
     private ShopDataSource dataSource;
+    private DatabaseShopDataSource databaseSource;
 
     private ShopRepository(ShopDataSource ds) {
-        this.dataSource = ds != null ? ds : new InMemoryShopDataSource();
+        // Use DatabaseShopDataSource instead of InMemoryShopDataSource
+        this.databaseSource = new DatabaseShopDataSource();
+        this.dataSource = this.databaseSource;
     }
 
     public static ShopRepository getInstance() {
         if (INSTANCE == null) {
             synchronized (ShopRepository.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new ShopRepository(new InMemoryShopDataSource());
+                    INSTANCE = new ShopRepository(null);
                 }
             }
         }
@@ -24,6 +27,16 @@ public class ShopRepository {
 
     public void setDataSource(ShopDataSource ds) {
         this.dataSource = ds;
+    }
+    
+    public void loadFromDatabase(DatabaseShopDataSource.OnDataLoadedListener listener) {
+        if (databaseSource != null) {
+            databaseSource.loadFromDatabase(listener);
+        }
+    }
+    
+    public boolean isLoaded() {
+        return databaseSource != null && databaseSource.isLoaded();
     }
 
     public List<Shop> getAllShops() { return dataSource.getAll(); }

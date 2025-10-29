@@ -280,6 +280,34 @@
                         android:textStyle="bold"
                         android:textSize="14sp" />
                 </LinearLayout>
+
+                <!-- Store Management -->
+                <LinearLayout
+                    android:id="@+id/btnStoreManagement"
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="8dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@color/grey"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_home" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Store Management"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+                </LinearLayout>
             </GridLayout>
         </LinearLayout>
 

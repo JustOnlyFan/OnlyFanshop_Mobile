@@ -13,9 +13,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.onlyfanshop.R;
-import com.example.onlyfanshop.ui.user.UserManagementActivity;
 import com.example.onlyfanshop.ui.product.ProductManagementActivity;
 import com.example.onlyfanshop.ui.chat.ChatListActivity;
+import com.example.onlyfanshop.activity.StoreManagementActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,7 +23,7 @@ import com.example.onlyfanshop.ui.chat.ChatListActivity;
  * create an instance of this fragment.
  */
 public class ManagerFragment extends Fragment {
-    private LinearLayout btnUserManagement, btnProductManagement, btnChatManagement;
+    private LinearLayout btnUserManagement, btnProductManagement, btnChatManagement, btnStoreManagement;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -87,10 +87,8 @@ public class ManagerFragment extends Fragment {
         btnUserManagement = view.findViewById(R.id.btnUserManagement);
         btnProductManagement = view.findViewById(R.id.btnProductManagement);
         btnChatManagement = view.findViewById(R.id.btnChatManagement);
-        btnUserManagement.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), UserManagementActivity.class);
-            startActivity(intent);
-        });
+        btnStoreManagement = view.findViewById(R.id.btnStoreManagement);
+
         btnProductManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), ProductManagementActivity.class);
             startActivity(intent);
@@ -98,6 +96,11 @@ public class ManagerFragment extends Fragment {
 
         btnChatManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), ChatListActivity.class);
+            startActivity(intent);
+        });
+
+        btnStoreManagement.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), StoreManagementActivity.class);
             startActivity(intent);
         });
 

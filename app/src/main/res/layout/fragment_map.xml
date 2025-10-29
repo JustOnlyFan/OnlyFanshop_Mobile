@@ -4,7 +4,8 @@
     android:id="@+id/mapRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="#F5F5F5"
+    android:fitsSystemWindows="true">
 
     <!-- Map Container -->
     <FrameLayout
@@ -19,10 +20,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:layout_marginTop="24dp"
         android:padding="16dp"
         android:background="@drawable/search_bar_background"
         android:elevation="8dp"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:fitsSystemWindows="true">
 
         <ImageView
             android:layout_width="20dp"
@@ -37,18 +40,21 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:hint="Attractions"
+            android:hint="Search location..."
             android:textSize="16sp"
             android:textColor="#333333"
             android:textColorHint="#999999"
             android:background="@android:color/transparent"
-            android:padding="0dp" />
+            android:padding="0dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
 
         <TextView
             android:id="@+id/tvLocation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hamburg, Germany"
+            android:text="Việt Nam"
             android:textSize="12sp"
             android:textColor="#999999"
             android:layout_marginStart="8dp" />
@@ -118,16 +124,17 @@
         android:tint="#333333"
         android:elevation="8dp" />
 
-    <!-- Attractions Carousel -->
+    <!-- Attractions Carousel (Store Cards) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvAttractions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="16dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:layout_marginBottom="80dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
         android:clipToPadding="false"
+        android:elevation="4dp"
         android:orientation="horizontal" />
 
     <!-- Route Info Panel (Hidden by default) -->
