@@ -56,15 +56,36 @@
                     android:focusable="true"/>
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/btnNotif"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="10dp"
-                android:src="@drawable/ic_notification" />
+
+            <FrameLayout
+                android:id="@+id/notifContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/btnNotif"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_notification"
+                    android:contentDescription="Thông báo" />
+
+                <TextView
+                    android:id="@+id/tvNotifBadge"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="end|top"
+                    android:background="@drawable/bg_badge_red"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    android:textStyle="bold" />
+
+            </FrameLayout>
+
 
             <ImageView
-                android:id="@+id/btnSettings"
+                android:id="@+id/btnChat"
                 android:layout_width="42dp"
                 android:layout_height="42dp"
                 android:padding="10dp"

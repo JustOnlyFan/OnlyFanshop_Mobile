@@ -1,8 +1,7 @@
 package com.example.onlyfanshop.ui.product;
 
-import com.example.onlyfanshop.databinding.ActivityProductDetailBinding;
 import com.example.onlyfanshop.model.Request.AddToCartRequest;
-import com.example.onlyfanshop.utils.BadgeUtils;
+
 
 import android.content.Context;
 import android.content.Intent;
@@ -36,7 +35,7 @@ import com.example.onlyfanshop.model.ProductDetailDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.ui.payment.PaymentWebViewActivity;
 import com.example.onlyfanshop.utils.AppPreferences;
-import com.example.onlyfanshop.ultils.NotificationHelper;
+import com.example.onlyfanshop.utils.NotificationHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
@@ -206,19 +205,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    int currentCount = AppPreferences.getCartCount(ProductDetailActivity.this);
-                    AppPreferences.setCartCount(ProductDetailActivity.this, currentCount + 1);
-
-                    int cartCount = AppPreferences.getCartCount(ProductDetailActivity.this);
-                    NotificationHelper.showNotification(
-                            ProductDetailActivity.this,
-                            "Giỏ hàng",
-                            "Bạn đang có " + cartCount + " sản phẩm trong giỏ hàng!"
-                    );
-
                     Toast.makeText(ProductDetailActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
-
-                    AppEvents.get().notifyCartUpdated();
                 } else {
                     Toast.makeText(ProductDetailActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
                 }

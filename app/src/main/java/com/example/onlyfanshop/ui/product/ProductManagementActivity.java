@@ -2,6 +2,7 @@ package com.example.onlyfanshop.ui.product;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -109,7 +110,6 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
         spinnerBrand.setAdapter(brandAdapter);
 
 
-        // ✅ Đặt sẵn giá trị được chọn từ server (nếu có)
         if (data.filters != null) {
             // --- Category ---
             if (data.filters.selectedCategory != null) {
@@ -117,7 +117,7 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
                 for (int i = 0; i < data.categories.size(); i++) {
                     if (data.categories.get(i).getCategoryName()
                             .equalsIgnoreCase(data.filters.selectedCategory)) {
-                        categoryIndex = i + 1; // +1 vì có "Tất cả" ở đầu
+                        categoryIndex = i + 1;
                         break;
                     }
                 }
@@ -130,7 +130,7 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
                 for (int i = 0; i < data.brands.size(); i++) {
                     if (data.brands.get(i).getName()
                             .equalsIgnoreCase(data.filters.selectedBrand)) {
-                        brandIndex = i + 1; // +1 vì có "Tất cả" ở đầu
+                        brandIndex = i + 1;
                         break;
                     }
                 }
@@ -138,13 +138,11 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
             }
         }
 
-        // --- Lắng nghe khi người dùng chọn ---
         AdapterView.OnItemSelectedListener listener = new AdapterView.OnItemSelectedListener() {
             boolean initialized = false;
 
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // Bỏ qua lần load đầu tiên (vì khi setSelection)
                 if (!initialized) {
                     initialized = true;
                     return;
@@ -203,11 +201,9 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     HomePageData data = response.body().getData();
 
-                    // ✅ Cập nhật danh sách sản phẩm
                     productList = data.products;
                     adapter.setFilteredList(productList);
 
-                    // ✅ Chỉ setup spinner lần đầu tiên
                     if (!isSpinnerInitialized) {
                         setupSpinners(data);
                         isSpinnerInitialized = true;
@@ -230,8 +226,8 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
         Toast.makeText(this, "Edit: " + product.getProductName(), Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, UpdateProductActivity.class);
         intent.putExtra("productToEdit", product.getProductID());
-        intent.putExtra("productURL", product.getImageURL());// <- Sửa ở đây
-        startActivityForResult(intent, 200); // Sử dụng startActivityForResult để có thể cập nhật lại danh sách sau khi sửa
+        intent.putExtra("productURL", product.getImageURL());
+        startActivityForResult(intent, 200);
     }
 
     @Override
@@ -243,7 +239,21 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
 
     @Override
     public void onToggleActive(ProductDTO product, boolean isActive) {
- 
+        ProductApi api = ApiClient.getPrivateClient(this).create(ProductApi.class);
+        Log.d("Update active product", "Product: " + product.getProductID() + "onToggleActive: " + isActive);
+        api.toggleActive(product.getProductID(), !isActive).enqueue(new Callback<ApiResponse<Void>>() {
+
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                fetchProducts(null, null, null);
+                Toast.makeText(ProductManagementActivity.this, response.message().toString(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable throwable) {
+                Toast.makeText(ProductManagementActivity.this, "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -259,13 +269,13 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
         if (requestCode == 100 && resultCode == RESULT_OK) {
             boolean addedProduct = data != null && data.getBooleanExtra("addedProduct", false);
             if (addedProduct) {
-                fetchProducts(null, null, null); // 🔁 Gọi API để cập nhật lại danh sách
+                fetchProducts(null, null, null);
             }
         }
         if (requestCode == 200 && resultCode == RESULT_OK) {
             boolean updatedProduct = data != null && data.getBooleanExtra("updatedProduct", false);
             if (updatedProduct) {
-                fetchProducts(null, null, null); // 🔁 Gọi API để cập nhật lại danh sách
+                fetchProducts(null, null, null);
             }
         }
     }

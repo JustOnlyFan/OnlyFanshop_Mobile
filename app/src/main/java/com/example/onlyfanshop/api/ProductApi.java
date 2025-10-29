@@ -85,4 +85,8 @@ public interface ProductApi {
             @Query("brandId") Integer brandId
     );
 
+    @PUT("product/active/{id}")
+    Call<ApiResponse<Void>> toggleActive(@Path("id") int id, @Query("active") boolean active);
+
+
 }

@@ -1,4 +1,4 @@
-package com.example.onlyfanshop.ultils;
+package com.example.onlyfanshop.utils;
 
 import android.util.Patterns;
 

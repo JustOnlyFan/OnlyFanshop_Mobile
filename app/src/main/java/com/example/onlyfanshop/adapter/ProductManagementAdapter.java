@@ -4,6 +4,7 @@ import static com.example.onlyfanshop.adapter.ProductAdapter.asGlideUrlWithAuth;
 import static com.example.onlyfanshop.adapter.ProductAdapter.resolveImageUrl;
 
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +33,6 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
     public interface OnProductActionListener {
         void onEdit(ProductDTO product);
         void onDelete(ProductDTO product);
-
         void onView(ProductDTO product);
         void onToggleActive(ProductDTO product, boolean isActive);
 
@@ -63,9 +63,8 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
         holder.btnView.setOnClickListener(v->listener.onView(product));
         holder.switchActive.setOnCheckedChangeListener(null);
         holder.switchActive.setChecked(product.isActive());
-
         holder.switchActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            listener.onToggleActive(product, isChecked);
+            listener.onToggleActive(product, product.isActive());
         });
         String rawUrl = product.getImageURL();
         String url = resolveImageUrl(rawUrl);

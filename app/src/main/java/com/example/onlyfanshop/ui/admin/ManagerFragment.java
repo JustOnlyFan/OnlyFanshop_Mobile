@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.onlyfanshop.R;
+import com.example.onlyfanshop.ui.user.UserManagementActivity;
 import com.example.onlyfanshop.ui.product.ProductManagementActivity;
 import com.example.onlyfanshop.ui.chat.ChatListActivity;
 
@@ -86,7 +87,10 @@ public class ManagerFragment extends Fragment {
         btnUserManagement = view.findViewById(R.id.btnUserManagement);
         btnProductManagement = view.findViewById(R.id.btnProductManagement);
         btnChatManagement = view.findViewById(R.id.btnChatManagement);
-
+        btnUserManagement.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), UserManagementActivity.class);
+            startActivity(intent);
+        });
         btnProductManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), ProductManagementActivity.class);
             startActivity(intent);

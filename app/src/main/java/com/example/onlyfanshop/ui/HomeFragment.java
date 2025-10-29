@@ -1,6 +1,9 @@
 package com.example.onlyfanshop.ui;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -9,7 +12,9 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -74,6 +79,8 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerSuggest;
     private ProgressBar progressSearch;
     private SearchSuggestionAdapter suggestAdapter;
+
+    private ImageView btnNotif,btnChat ;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingSearch;
     private static final long SEARCH_DEBOUNCE_MS = 300L;
@@ -106,7 +113,29 @@ public class HomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(v, savedInstanceState);
+        btnNotif = v.findViewById(R.id.btnNotif);
+        btnChat = v.findViewById(R.id.btnChat);
+        TextView tvNotifBadge = v.findViewById(R.id.tvNotifBadge);
+        SharedPreferences prefs = requireContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        int userId = prefs.getInt("userId", -1);
+        if (userId != -1) {
+            fetchUnreadNotificationCount(userId, tvNotifBadge);
+        }
 
+        btnNotif.setOnClickListener(view -> {
+            SharedPreferences sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+
+            if (userId == -1) {
+                // Nếu chưa đăng nhập, chuyển về Login
+                Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.login.LoginActivity.class);
+                startActivity(intent);
+                return;
+            }
+
+            Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.notification.NotificationListActivity.class);
+            intent.putExtra("userId", userId);
+            startActivity(intent);
+        });
 
         // Welcome
         tvUserName = v.findViewById(R.id.tvUserName);
@@ -256,6 +285,14 @@ public class HomeFragment extends Fragment {
     @Override public void onResume() {
         super.onResume();
         startAutoSlide();
+        SharedPreferences prefs = requireContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        int userId = prefs.getInt("userId", -1);
+        if (userId != -1 && getView() != null) {
+            TextView tvNotifBadge = getView().findViewById(R.id.tvNotifBadge);
+            if (tvNotifBadge != null) {
+                fetchUnreadNotificationCount(userId, tvNotifBadge);
+            }
+        }
     }
 
     @Override public void onPause() {
@@ -426,4 +463,35 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+    private void fetchUnreadNotificationCount(int userId, TextView badgeView) {
+        com.example.onlyfanshop.api.NotificationApi api =
+                ApiClient.getPrivateClient(requireContext()).create(com.example.onlyfanshop.api.NotificationApi.class);
+
+        api.getUnreadCount(userId).enqueue(new retrofit2.Callback<Long>() {
+            @Override
+            public void onResponse(@NonNull retrofit2.Call<Long> call,
+                                   @NonNull retrofit2.Response<Long> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null) {
+                    int unreadCount = response.body().intValue();
+                    if (unreadCount > 0) {
+                        badgeView.setText(unreadCount > 99 ? "99+" : String.valueOf(unreadCount));
+                        badgeView.setVisibility(View.VISIBLE);
+                    } else {
+                        badgeView.setVisibility(View.GONE);
+                    }
+                } else {
+                    badgeView.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull retrofit2.Call<Long> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Log.e("HomeFragment", "Lỗi khi lấy số thông báo chưa đọc", t);
+                badgeView.setVisibility(View.GONE);
+            }
+        });
+    }
+
 }

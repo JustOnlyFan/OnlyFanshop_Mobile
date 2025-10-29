@@ -1,4 +1,4 @@
-package com.example.onlyfanshop.ultils;
+package com.example.onlyfanshop.utils;
 
 import android.Manifest;
 import android.app.NotificationChannel;
@@ -24,6 +24,7 @@ public class NotificationHelper {
                     "Cart Notifications",
                     NotificationManager.IMPORTANCE_HIGH
             );
+            channel.setSound(null, null);
             NotificationManager manager = context.getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
@@ -36,7 +37,8 @@ public class NotificationHelper {
                 .setContentTitle(title)
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setSilent(true);;
 
         // ✅ Kiểm tra quyền trước khi gửi thông báo (Android 13+ yêu cầu)
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)

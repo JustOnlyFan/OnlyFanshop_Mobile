@@ -29,12 +29,18 @@
         android:textSize="16sp"
         android:textColor="@color/black"
         android:layout_marginTop="8dp" />
-
+    <Button
+        android:id="@+id/btnViewOrder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Xem đơn hàng"
+        android:layout_marginTop="32dp"
+        style="@style/Widget.Material3.Button" />
     <Button
         android:id="@+id/btnGoHome"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Về trang chủ"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="20dp"
         style="@style/Widget.Material3.Button" />
 </LinearLayout>
