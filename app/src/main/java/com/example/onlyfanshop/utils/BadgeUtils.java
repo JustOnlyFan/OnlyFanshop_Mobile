@@ -3,12 +3,14 @@ package com.example.onlyfanshop.utils;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.CartDTO;
+import com.example.onlyfanshop.ui.product.ProductDetailActivity;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -32,6 +34,12 @@ public class BadgeUtils {
                     if (totalQuantity > 0) {
                         badge.setVisible(true);
                         badge.setNumber(totalQuantity);
+                        com.example.onlyfanshop.utils.NotificationHelper.showNotification(
+                                context,
+                                "Giỏ hàng",
+                                "Bạn đang có " + totalQuantity + " sản phẩm trong giỏ hàng!"
+                        );
+                        Log.d("BadgeUtils", "Updating badge with number: " + totalQuantity);
                     } else {
                         badge.clearNumber();
                         badge.setVisible(false);
@@ -60,4 +68,34 @@ public class BadgeUtils {
     public void clearCartBadge(BottomNavigationView bottomNav) {
         bottomNav.removeBadge(R.id.nav_car); // hoặc id cart của bạn
     }
+    public void updateNotificationBadge(Context context, BottomNavigationView bottomNavigationView, int userId) {
+        com.example.onlyfanshop.api.NotificationApi api = ApiClient.getPrivateClient(context).create(com.example.onlyfanshop.api.NotificationApi.class);
+
+        api.getUnreadCount(userId).enqueue(new Callback<Long>() {
+            @Override
+            public void onResponse(Call<Long> call, Response<Long> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    int unreadCount = response.body().intValue();
+
+                    BadgeDrawable badge = bottomNavigationView.getOrCreateBadge(R.id.btnNotif);
+                    if (unreadCount > 0) {
+                        badge.setVisible(true);
+                        badge.setNumber(unreadCount);
+                        Log.d("BadgeUtils", "Unread notifications: " + unreadCount);
+                    } else {
+                        badge.clearNumber();
+                        badge.setVisible(false);
+                    }
+                } else {
+                    Log.w("BadgeUtils", "Không thể tải số lượng thông báo chưa đọc");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Long> call, Throwable t) {
+                Log.e("BadgeUtils", "Lỗi tải badge notification", t);
+            }
+        });
+    }
+
 }

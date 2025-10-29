@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="12dp"
+    android:background="@color/white">
+
+    <!-- Thanh tìm kiếm + tiêu chí -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:layout_marginTop="30dp"
+        android:gravity="center_vertical">
+
+        <!-- Spinner chọn tiêu chí tìm -->
+        <Spinner
+            android:id="@+id/spinnerSearchType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/stroke_bg"
+            android:paddingHorizontal="8dp"
+            android:entries="@array/user_filter_options"
+            android:dropDownHeight="200dp" />
+
+        <EditText
+            android:id="@+id/edtSearchUser"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Nhập từ khóa..."
+            android:background="@android:color/transparent"
+            android:inputType="text"
+            android:padding="8dp" />
+
+        <ImageButton
+            android:id="@+id/btnSearchUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_search"
+            android:contentDescription="Tìm kiếm"
+            android:padding="6dp" />
+    </LinearLayout>
+
+    <!-- Bộ lọc theo vai trò -->
+    <LinearLayout
+        android:id="@+id/filterContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <Spinner
+            android:id="@+id/spinnerRole"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:spinnerMode="dropdown"
+            android:background="@drawable/stroke_bg"
+            android:padding="8dp"
+            android:dropDownHeight="200dp" />
+    </LinearLayout>
+
+    <!-- Nút thêm người dùng -->
+    <Button
+        android:id="@+id/btnAddUser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Thêm người dùng"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:textColor="@android:color/white" />
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:layout_marginTop="16dp" />
+
+    <!-- Danh sách người dùng -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rcvUserList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="12dp"
+        android:paddingBottom="12dp"
+        android:scrollbars="vertical" />
+
+</LinearLayout>

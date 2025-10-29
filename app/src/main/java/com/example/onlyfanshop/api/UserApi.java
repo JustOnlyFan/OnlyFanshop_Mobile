@@ -4,6 +4,7 @@ import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.Request.LoginRequest;
 import com.example.onlyfanshop.model.Request.RegisterRequest;
 import com.example.onlyfanshop.model.UserDTO;
+import com.example.onlyfanshop.model.response.UserPageResponse;
 
 import java.util.Map;
 
@@ -80,4 +81,14 @@ public interface UserApi {
 
     @PUT("users/changeAddress")
     Call<ApiResponse<Void>> changeAddress(@Query("address") String address,@Header("Authorization") String token);
+
+    @GET("users/getAllUsers")
+    Call<ApiResponse<UserPageResponse>> getAllUsers(
+            @Query("keyword") String keyword,
+            @Query("role") String role,
+            @Query("page") int page,
+            @Query("size") int size,
+            @Query("sortField") String sortField,
+            @Query("sortDirection") String sortDirection
+    );
 }

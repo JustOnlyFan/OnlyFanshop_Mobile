@@ -6,4 +6,9 @@
         <item>Phổ biến nhất</item>
         <item>Mới nhất</item>
     </string-array>
+    <string-array name="user_filter_options">
+        <item>username</item>
+        <item>email</item>
+        <item>Phone</item>
+    </string-array>
 </resources>

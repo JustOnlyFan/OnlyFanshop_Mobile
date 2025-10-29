@@ -2,7 +2,9 @@ package com.example.onlyfanshop.ui.payment; // Hoặc package phù hợp với b
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -43,21 +45,20 @@ public class PaymentWebViewActivity extends AppCompatActivity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url.contains("onlyfanshop.app/payment-result")) {
-                    if (url.contains("status=success")) {
-                        Intent intent = new Intent(PaymentWebViewActivity.this, PaymentResultActivity.class);
-                        intent.putExtra(PaymentResultActivity.EXTRA_RESULT, "success");
-                        startActivity(intent);
-                        finish();
-                    } else if (url.contains("status=fail")) {
-                        Intent intent = new Intent(PaymentWebViewActivity.this, PaymentResultActivity.class);
-                        intent.putExtra(PaymentResultActivity.EXTRA_RESULT, "fail");
-                        startActivity(intent);
-                        finish();
-                    }
-                    return true; // Ngăn WebView mở trang ngoài
+                    Uri uri = Uri.parse(url);
+                    String status = uri.getQueryParameter("status");
+                    String orderId = uri.getQueryParameter("order");// 👈 lấy orderId
+                    Log.d("orderID", orderId);
+                    Intent intent = new Intent(PaymentWebViewActivity.this, PaymentResultActivity.class);
+                    intent.putExtra(PaymentResultActivity.EXTRA_RESULT, status);
+                    intent.putExtra("orderId", orderId); // 👈 truyền qua Result
+                    startActivity(intent);
+                    finish();
+                    return true;
                 }
-                return false; // Cho phép các URL khác load bình thường
+                return false;
             }
+
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
