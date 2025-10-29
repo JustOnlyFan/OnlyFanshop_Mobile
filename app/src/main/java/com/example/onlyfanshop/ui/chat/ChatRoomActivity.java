@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.OnBackPressedCallback;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,7 +20,12 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ChatApi;
 import com.example.onlyfanshop.model.chat.ChatMessage;
 import com.example.onlyfanshop.service.ChatService;
+import com.example.onlyfanshop.service.RealtimeChatService;
 import com.example.onlyfanshop.utils.AppPreferences;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +40,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     private ImageButton sendButton;
 
     private ChatService chatService;
+    private RealtimeChatService realtimeChatService;
     private String roomId;
     private String currentUserId;
 
@@ -52,24 +59,82 @@ public class ChatRoomActivity extends AppCompatActivity {
         setupBackButton();
         setupSendButton();
 
-        // ✅ Move heavy operations to background thread
+        // ✅ Initialize services first (fast operation)
+        initServices();
+        
+        // Defer network calls until onStart to avoid firing before UI is visible
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            }
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Start loading messages and listening when activity becomes visible
         new Thread(() -> {
             try {
-                // Initialize services in background
-                initServices();
-                
-                // Load messages in background
-                loadMessages();
-                
-                // Setup Firebase listener in background
-                setupFirebaseListener();
+                ensureFirebaseReadyThen(() -> {
+                    runOnUiThread(() -> {
+                        loadMessages();
+                        setupFirebaseListener();
+                    });
+                });
             } catch (Exception e) {
                 Log.e(TAG, "Error in background initialization: " + e.getMessage());
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "Failed to initialize chat", Toast.LENGTH_SHORT).show();
-                });
+                runOnUiThread(() -> Toast.makeText(this, "Failed to initialize chat", Toast.LENGTH_SHORT).show());
             }
         }).start();
+    }
+
+    private void ensureFirebaseReadyThen(Runnable onReady) {
+        try {
+            if (roomId == null) { onReady.run(); return; }
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            FirebaseUser u = auth.getCurrentUser();
+            if (u != null) {
+                writeParticipantAndThen(u.getUid(), onReady);
+                return;
+            }
+            auth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
+                    FirebaseUser cu = firebaseAuth.getCurrentUser();
+                    if (cu != null) {
+                        firebaseAuth.removeAuthStateListener(this);
+                        writeParticipantAndThen(cu.getUid(), onReady);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "ensureFirebaseReadyThen error: " + e.getMessage());
+            onReady.run();
+        }
+    }
+
+    private void writeParticipantAndThen(String uid, Runnable onReady) {
+        try {
+            DatabaseReference participantsRef = FirebaseDatabase.getInstance()
+                    .getReference("Conversations")
+                    .child(roomId)
+                    .child("participants");
+            participantsRef.child(uid).setValue(true)
+                    .addOnSuccessListener(r -> {
+                        Log.d(TAG, "Joined participants for room: " + roomId + " as " + uid);
+                        onReady.run();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Join participants failed: " + e.getMessage());
+                        onReady.run();
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "writeParticipantAndThen error: " + e.getMessage());
+            onReady.run();
+        }
     }
 
     private void initViews() {
@@ -108,6 +173,7 @@ public class ChatRoomActivity extends AppCompatActivity {
     private void initServices() {
         ChatApi chatApi = ApiClient.getPrivateClient(this).create(ChatApi.class);
         chatService = new ChatService(chatApi, this);
+        realtimeChatService = RealtimeChatService.getInstance(this, chatApi);
         currentUserId = AppPreferences.getUserId(this);
         Log.d(TAG, "Current User ID from AppPreferences: " + currentUserId);
     }
@@ -168,28 +234,62 @@ public class ChatRoomActivity extends AppCompatActivity {
     }
 
     private void setupFirebaseListener() {
-        // ✅ Setup Firebase listener in background thread
-        chatService.listenForNewMessages(roomId, newMessage -> {
+        // ✅ Setup real-time listener for messages
+        realtimeChatService.startListeningForMessages(roomId, newMessage -> {
             runOnUiThread(() -> {
-                // ✅ Check for duplicate messages to prevent duplicates
-                boolean isDuplicate = false;
-                for (ChatMessage existingMessage : messageList) {
-                    if (existingMessage.getMessageId() != null && 
-                        existingMessage.getMessageId().equals(newMessage.getMessageId())) {
-                        isDuplicate = true;
-                        break;
-                    }
-                }
-                
-                if (!isDuplicate) {
-                    messageList.add(newMessage);
-                    chatAdapter.notifyItemInserted(messageList.size() - 1);
-                    scrollToBottom(true);
-                    Log.d(TAG, "Added new message: " + newMessage.getMessage());
-                } else {
-                    Log.d(TAG, "Skipped duplicate message: " + newMessage.getMessage());
-                }
+                // ✅ Real-time message processing
+                processNewMessage(newMessage);
             });
+        });
+    }
+    
+    // ✅ New method to process messages in real-time
+    private void processNewMessage(ChatMessage newMessage) {
+        // ✅ Check for duplicate messages to prevent duplicates
+        boolean isDuplicate = false;
+        int existingIndex = -1;
+        
+        for (int i = 0; i < messageList.size(); i++) {
+            ChatMessage existingMessage = messageList.get(i);
+            
+            // ✅ Kiểm tra duplicate bằng messageId thật
+            if (existingMessage.getMessageId() != null && 
+                existingMessage.getMessageId().equals(newMessage.getMessageId())) {
+                isDuplicate = true;
+                break;
+            }
+            
+            // ✅ Kiểm tra tin nhắn tạm thời cần thay thế
+            if (existingMessage.getMessageId() != null && 
+                existingMessage.getMessageId().startsWith("temp_") &&
+                existingMessage.getMessage().equals(newMessage.getMessage()) &&
+                existingMessage.getSenderId().equals(newMessage.getSenderId())) {
+                existingIndex = i;
+                break;
+            }
+        }
+        
+        if (isDuplicate) {
+            Log.d(TAG, "Skipped duplicate message: " + newMessage.getMessage());
+        } else if (existingIndex >= 0) {
+            // ✅ Thay thế tin nhắn tạm thời bằng tin nhắn thật
+            messageList.set(existingIndex, newMessage);
+            chatAdapter.notifyItemChanged(existingIndex);
+            Log.d(TAG, "Replaced temporary message with real message: " + newMessage.getMessage());
+        } else {
+            // ✅ Thêm tin nhắn mới và sắp xếp theo thời gian
+            messageList.add(newMessage);
+            // ✅ Sắp xếp tin nhắn theo timestamp để đảm bảo thứ tự đúng
+            messageList.sort((m1, m2) -> Long.compare(m1.getOriginalTimestamp(), m2.getOriginalTimestamp()));
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
+            Log.d(TAG, "Added new message: " + newMessage.getMessage());
+        }
+        
+        // ✅ Force refresh UI for real-time updates
+        chatRecyclerView.post(() -> {
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
         });
     }
 
@@ -201,7 +301,12 @@ public class ChatRoomActivity extends AppCompatActivity {
             // Add haptic feedback for better UX
             v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
 
+            // ✅ Clear input ngay lập tức để người dùng có thể gõ tin nhắn tiếp theo
             messageInput.setText("");
+
+            // ✅ Disable send button temporarily để tránh spam
+            sendButton.setEnabled(false);
+            sendButton.setAlpha(0.5f);
 
             // ✅ Gửi tin nhắn
             sendMessage(messageText);
@@ -209,13 +314,51 @@ public class ChatRoomActivity extends AppCompatActivity {
     }
 
     private void sendMessage(String messageText) {
+        // ✅ Tạo tin nhắn tạm thời để hiển thị ngay lập tức
+        ChatMessage tempMessage = new ChatMessage();
+        tempMessage.setMessageId("temp_" + System.currentTimeMillis()); // Temporary ID
+        tempMessage.setSenderId(currentUserId);
+        tempMessage.setSenderName(AppPreferences.getUsername(this));
+        tempMessage.setMessage(messageText);
+        long currentTime = System.currentTimeMillis();
+        tempMessage.setTimestampFromLong(currentTime); // This will set both timestamp and originalTimestamp
+        tempMessage.setMe(true);
+        tempMessage.setRoomId(roomId);
+        tempMessage.setRead(false);
+        
+        // ✅ Thêm tin nhắn vào UI ngay lập tức
+        messageList.add(tempMessage);
+        chatAdapter.notifyItemInserted(messageList.size() - 1);
+        
+        // ✅ Force refresh UI ngay lập tức với multiple attempts
+        chatRecyclerView.post(() -> {
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
+        });
+        
+        // ✅ Additional refresh attempts for real-time feel
+        chatRecyclerView.postDelayed(() -> {
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
+        }, 10);
+        
+        chatRecyclerView.postDelayed(() -> {
+            chatAdapter.notifyDataSetChanged();
+            scrollToBottom(true);
+        }, 50);
+        
+        Log.d(TAG, "Added temporary message to UI: " + messageText);
+        
+        // ✅ Gửi tin nhắn lên server
         chatService.sendMessage(roomId, messageText, new ChatService.SendMessageCallback() {
             @Override
             public void onSuccess() {
                 runOnUiThread(() -> {
-                    // ✅ Don't add message to UI here - Firebase listener will handle it
-                    // This prevents duplicate messages
-                    Log.d(TAG, "Message sent successfully, waiting for Firebase listener");
+                    Log.d(TAG, "Message sent successfully to server");
+                    // ✅ Enable lại send button
+                    sendButton.setEnabled(true);
+                    sendButton.setAlpha(1.0f);
+                    // Firebase listener sẽ cập nhật tin nhắn với ID thật từ server
                 });
             }
 
@@ -223,6 +366,15 @@ public class ChatRoomActivity extends AppCompatActivity {
             public void onError(String error) {
                 runOnUiThread(() -> {
                     Log.e(TAG, "Error sending message: " + error);
+                    // ✅ Xóa tin nhắn tạm thời nếu gửi thất bại
+                    int index = messageList.indexOf(tempMessage);
+                    if (index >= 0) {
+                        messageList.remove(index);
+                        chatAdapter.notifyItemRemoved(index);
+                    }
+                    // ✅ Enable lại send button
+                    sendButton.setEnabled(true);
+                    sendButton.setAlpha(1.0f);
                     Toast.makeText(ChatRoomActivity.this, "Failed to send message", Toast.LENGTH_SHORT).show();
                 });
             }
@@ -257,11 +409,24 @@ public class ChatRoomActivity extends AppCompatActivity {
         });
     }
     
+    
+    
     @Override
-    public void onBackPressed() {
-        // Smooth back navigation with custom animation
-        super.onBackPressed();
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    protected void onDestroy() {
+        super.onDestroy();
+        // ✅ Stop real-time listening when activity is destroyed
+        if (realtimeChatService != null && roomId != null) {
+            realtimeChatService.stopListeningForMessages(roomId);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Stop listeners/pollers when screen is no longer visible
+        if (realtimeChatService != null && roomId != null) {
+            realtimeChatService.stopListeningForMessages(roomId);
+        }
     }
     
     private String extractCustomerNameFromRoomId(String roomId) {

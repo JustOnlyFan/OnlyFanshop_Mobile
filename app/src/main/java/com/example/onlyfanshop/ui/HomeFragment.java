@@ -65,6 +65,9 @@ public class HomeFragment extends Fragment {
     private final Handler sliderHandler = new Handler();
     private static final long SLIDER_INTERVAL_MS = 3000L;
 
+    private static final int LOOP_COUNT = 10000; // Số lượng lớn để giả infinite loop
+    private List<BannerModel> bannerList = new ArrayList<>(); // List banner thực
+
     // Popular
     private RecyclerView popularView;
     private ProgressBar progressBarPopular;
@@ -91,13 +94,11 @@ public class HomeFragment extends Fragment {
     private static final int SUGGEST_ROW_DP = 68;
 
     private final Runnable sliderRunnable = new Runnable() {
-        @Override public void run() {
-            if (!isAdded() || viewPagerBanner == null || bannerAdapter == null) return;
-            int count = bannerAdapter.getItemCount();
-            if (count <= 1) return;
+        @Override
+        public void run() {
+            if (!isAdded() || viewPagerBanner == null || bannerAdapter == null || bannerList == null || bannerList.isEmpty()) return;
             int next = viewPagerBanner.getCurrentItem() + 1;
-            if (next >= count) next = 0;
-            viewPagerBanner.setCurrentItem(next, true);
+            viewPagerBanner.setCurrentItem(next, true); // luôn trượt phải, không giật về đầu
             sliderHandler.postDelayed(this, SLIDER_INTERVAL_MS);
         }
     };
@@ -150,7 +151,20 @@ public class HomeFragment extends Fragment {
         viewPagerBanner = v.findViewById(R.id.viewPagerBanner);
         progressBarBanner = v.findViewById(R.id.progressBarBanner);
 
-        bannerAdapter = new BannerAdapter(new ArrayList<>(), viewPagerBanner);
+        bannerAdapter = new BannerAdapter(new ArrayList<>(), viewPagerBanner) {
+            @Override
+            public int getItemCount() {
+                // Trả về số lượng lớn để giả infinite
+                return bannerList == null || bannerList.isEmpty() ? 0 : LOOP_COUNT;
+            }
+            @Override
+            public void onBindViewHolder(@NonNull BannerViewHolder holder, int position) {
+                if (bannerList == null || bannerList.isEmpty()) return;
+                int realPos = position % bannerList.size();
+                holder.bind(bannerList.get(realPos));
+            }
+        };
+
         viewPagerBanner.setAdapter(bannerAdapter);
 
         viewPagerBanner.setClipToPadding(false);
@@ -160,8 +174,15 @@ public class HomeFragment extends Fragment {
         composite.addTransformer(new MarginPageTransformer(40));
         viewPagerBanner.setPageTransformer(composite);
 
+        // Đặt vị trí ở giữa để loop đẹp cả trái và phải
+        viewPagerBanner.post(() -> {
+            int mid = LOOP_COUNT / 2;
+            viewPagerBanner.setCurrentItem(mid, false);
+        });
+
         viewPagerBanner.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override public void onPageSelected(int position) {
+            @Override
+            public void onPageSelected(int position) {
                 sliderHandler.removeCallbacks(sliderRunnable);
                 sliderHandler.postDelayed(sliderRunnable, SLIDER_INTERVAL_MS);
             }
@@ -247,30 +268,28 @@ public class HomeFragment extends Fragment {
                             banners.add(m);
                         }
                     }
-                    bannerAdapter.submit(banners);
+                    bannerList = banners; // Gán cho list thực
+                    bannerAdapter.notifyDataSetChanged();
+
                     setBannerLoading(false);
-                    if (!banners.isEmpty()) startAutoSlide();
+                    if (!banners.isEmpty()) {
+                        int mid = LOOP_COUNT / 2;
+                        viewPagerBanner.setCurrentItem(mid, false);
+                        startAutoSlide();
+                    }
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Realtime DB load failed at node '" + BANNER_NODE + "'", e);
-                    
-                    // Check if it's a permission error
-                    if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
-                        Log.w(TAG, "Firebase Database permission denied. Please check your database rules.");
-                        Log.w(TAG, "Required rule: {\"rules\":{\"Banner\":{\".read\":true}}}");
-                    }
-                    
-                    // Show fallback banners or handle gracefully
                     loadFallbackBanners();
                     setBannerLoading(false);
                 });
     }
 
+
+
     private void loadFallbackBanners() {
-        // Load default banners or show empty state
-        ArrayList<BannerModel> fallbackBanners = new ArrayList<>();
-        // You can add some default banner URLs here if needed
-        bannerAdapter.submit(fallbackBanners);
+        bannerList = new ArrayList<>();
+        bannerAdapter.notifyDataSetChanged();
     }
 
     private void startAutoSlide() {

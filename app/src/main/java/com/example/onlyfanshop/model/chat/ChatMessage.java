@@ -5,11 +5,17 @@ import android.os.Build;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ChatMessage {
     private String messageId;
     private String senderId;
     private String senderName;
     private String message;
+    
+    @SerializedName("epochMillis")
+    private Long epochMillis;
+    
     private String timestamp;
     private String attachmentUrl;
     private String attachmentType;
@@ -85,15 +91,24 @@ public class ChatMessage {
     // Method to handle Long timestamp from Firebase
     public void setTimestampFromLong(Long timestamp) {
         if (timestamp != null) {
-            // Convert Unix timestamp (milliseconds) to LocalDateTime
-            java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofEpochSecond(
-                timestamp / 1000, 0, java.time.ZoneOffset.UTC);
-            
-            // Format to readable time string
-            java.time.format.DateTimeFormatter formatter = 
-                java.time.format.DateTimeFormatter.ofPattern("HH:mm");
-            this.timestamp = dateTime.format(formatter);
+            this.originalTimestamp = timestamp;
+            // Format using device local timezone from epoch millis
+            java.time.Instant instant = java.time.Instant.ofEpochMilli(timestamp);
+            java.time.ZonedDateTime zdt = java.time.ZonedDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+            this.timestamp = zdt.format(formatter);
         }
+    }
+    
+    // Add field to store original timestamp for sorting
+    private long originalTimestamp = 0;
+    
+    public long getOriginalTimestamp() {
+        return originalTimestamp;
+    }
+    
+    public void setOriginalTimestamp(long originalTimestamp) {
+        this.originalTimestamp = originalTimestamp;
     }
 
     public String getAttachmentUrl() {
@@ -152,32 +167,45 @@ public class ChatMessage {
         this.avatarRes = avatarRes;
     }
 
+    public Long getEpochMillis() {
+        return epochMillis;
+    }
+
+    public void setEpochMillis(Long epochMillis) {
+        this.epochMillis = epochMillis;
+        if (epochMillis != null) {
+            setTimestampFromLong(epochMillis);
+        }
+    }
+
     public void setTime(String time) {
         this.time = time;
     }
 
     // Helper method to get formatted time
     public String getTime() {
+        // Priority: use epochMillis from backend if available
+        if (epochMillis != null && epochMillis > 0) {
+            try {
+                java.time.Instant instant = java.time.Instant.ofEpochMilli(epochMillis);
+                java.time.ZonedDateTime zdt = java.time.ZonedDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+                return zdt.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            } catch (Exception e) {
+                // fallthrough
+            }
+        }
+        
         if (timestamp != null) {
-            // If timestamp is already formatted (HH:mm), return it
             if (timestamp.matches("\\d{2}:\\d{2}")) {
                 return timestamp;
             }
-            
-            // If timestamp is a Unix timestamp (long number), convert it
             try {
-                long timestampLong = Long.parseLong(timestamp);
-                java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofEpochSecond(
-                    timestampLong / 1000, 0, java.time.ZoneOffset.UTC);
-                return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
-            } catch (NumberFormatException e) {
-                // If it's not a number, try to parse as LocalDateTime
-                try {
-                    java.time.LocalDateTime dateTime = java.time.LocalDateTime.parse(timestamp);
-                    return dateTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
-                } catch (Exception ex) {
-                    return timestamp; // Return raw string if all parsing fails
-                }
+                long val = Long.parseLong(timestamp);
+                java.time.Instant instant = java.time.Instant.ofEpochMilli(val);
+                java.time.ZonedDateTime zdt = java.time.ZonedDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+                return zdt.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            } catch (Exception e) {
+                return timestamp;
             }
         }
         return "";

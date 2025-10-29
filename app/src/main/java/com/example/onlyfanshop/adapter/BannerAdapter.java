@@ -59,7 +59,7 @@ public class BannerAdapter extends RecyclerView.Adapter<BannerAdapter.BannerView
             super(itemView);
             imageView = itemView.findViewById(R.id.imageSlider);
         }
-        void bind(BannerModel item) {
+        public void bind(BannerModel item) {
             Glide.with(itemView.getContext())
                     .load(item.getUrl())
                     .placeholder(R.drawable.ic_launcher_foreground)
