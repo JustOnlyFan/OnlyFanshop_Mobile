@@ -60,6 +60,7 @@ public class BrandManagementActivity extends AppCompatActivity {
             binding.addBrandLayout.setVisibility(View.VISIBLE);
         });
         binding.btnConfirmAdd.setOnClickListener(v->confirmAdd());
+        binding.back.setOnClickListener(v->finish());
 
     }
 
@@ -79,6 +80,9 @@ public class BrandManagementActivity extends AppCompatActivity {
             public void onResponse(Call<BrandManagementDTO> call, Response<BrandManagementDTO> response) {
                 if(response.isSuccessful()){
                     binding.addBrandLayout.setVisibility(View.GONE);
+                    binding.edtCountry.setText("");
+                    binding.edtDes.setText("");
+                    binding.edtName.setText("");
                     Toast.makeText(BrandManagementActivity.this, "Thêm thành công", Toast.LENGTH_SHORT).show();
                     getBrands();
                 }

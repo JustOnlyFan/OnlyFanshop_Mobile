@@ -419,7 +419,6 @@ public class MapFragment extends Fragment {
 
             @Override
             public void onDirectionsClick(Attraction a) {
-<<<<<<< Updated upstream
                 if (routeStartLat != null && routeStartLng != null) {
                     // Đã có địa chỉ bắt đầu
                     vm.route(routeStartLat, routeStartLng, a.getLatitude(), a.getLongitude(), MapConfig.ROUTE_MAX_ALTERNATIVES);
@@ -438,7 +437,6 @@ public class MapFragment extends Fragment {
                         }
                     });
                 }
-=======
                 if (isGeocodingInProgress) {
                     Toast.makeText(getContext(), "Please wait, getting start location...", Toast.LENGTH_SHORT).show();
                     return;
@@ -450,7 +448,6 @@ public class MapFragment extends Fragment {
                 Log.d("ROUTE", "Routing from: " + routeStartLat + "," + routeStartLng +
                         " to: " + a.getLatitude() + "," + a.getLongitude());
                 vm.route(routeStartLat, routeStartLng, a.getLatitude(), a.getLongitude(), MapConfig.ROUTE_MAX_ALTERNATIVES);
->>>>>>> Stashed changes
             }
         });
         LinearLayoutManager lm = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
@@ -481,7 +478,6 @@ public class MapFragment extends Fragment {
                 return;
             }
             GeocodeResult r = results.get(0);
-<<<<<<< Updated upstream
 
             // Nếu là vị trí thiết bị, hiện marker location, ngược lại marker start
             if (r.formattedAddress.equals("Your Location")) {
@@ -493,10 +489,8 @@ public class MapFragment extends Fragment {
             }
 
             etSearch.setText(r.formattedAddress);
-=======
             etSearch.setText(r.formattedAddress); // Display address on search bar
             showStartPin(r.lat, r.lng, r.formattedAddress);
->>>>>>> Stashed changes
             mapProvider.moveCamera(r.lat, r.lng, 15);
 
             routeStartLat = r.lat;
