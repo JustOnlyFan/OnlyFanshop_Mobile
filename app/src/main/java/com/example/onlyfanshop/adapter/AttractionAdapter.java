@@ -27,6 +27,9 @@ public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.VH
     private final List<Attraction> items;
     private final OnAttractionClickListener listener;
 
+    private Double currentLat = null;
+    private Double currentLng = null;
+
     public AttractionAdapter(@NonNull List<Attraction> items,
                              @NonNull OnAttractionClickListener listener) {
         // Don't use reference to external list - create new list
@@ -49,7 +52,6 @@ public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.VH
         h.tvTitle.setText(a.getTitle());
         h.tvDescription.setText(a.getDescription());
 
-        // Load ảnh cửa hàng
         Glide.with(h.imgAttraction)
                 .load(a.getImageUrl())
                 .placeholder(R.drawable.ic_launcher_foreground)
@@ -61,10 +63,39 @@ public class AttractionAdapter extends RecyclerView.Adapter<AttractionAdapter.VH
             if (listener != null) listener.onAttractionClick(a);
         });
 
+        // Tính khoảng cách
+        String kmText;
+        if (currentLat != null && currentLng != null) {
+            double d = distance(currentLat, currentLng, a.getLatitude(), a.getLongitude());
+            kmText = String.format("Directions (%.1f km)", d);
+        } else {
+            kmText = "Directions"; // KHÔNG hiện số km nếu chưa có location
+        }
+        h.btnDirections.setText(kmText);
+
         h.btnDirections.setOnClickListener(v -> {
             if (listener != null) listener.onDirectionsClick(a);
         });
     }
+
+    public void setCurrentLocation(Double lat, Double lng) {
+        this.currentLat = lat;
+        this.currentLng = lng;
+        notifyDataSetChanged();
+    }
+
+    // Haversine formula để tính khoảng cách km
+    private static double distance(double lat1, double lng1, double lat2, double lng2) {
+        double R = 6371.0; // Earth radius in km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng/2) * Math.sin(dLng/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
 
     @Override
     public int getItemCount() {
