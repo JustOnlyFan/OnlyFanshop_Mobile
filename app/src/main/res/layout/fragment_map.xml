@@ -4,14 +4,28 @@
     android:id="@+id/mapRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    android:fitsSystemWindows="true">
+    android:background="#F5F5F5">
 
     <!-- Map Container -->
     <FrameLayout
         android:id="@+id/mapContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent" >
+
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAttractions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="20dp"
+            android:clipToPadding="false"
+            android:elevation="4dp"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
+    </FrameLayout>
 
     <!-- Modern Search Bar -->
     <LinearLayout
@@ -19,13 +33,13 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:layout_marginTop="24dp"
-        android:padding="16dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:padding="15dp"
         android:background="@drawable/search_bar_background"
         android:elevation="8dp"
-        android:gravity="center_vertical"
-        android:fitsSystemWindows="true">
+        android:gravity="center_vertical">
 
         <ImageView
             android:layout_width="20dp"
@@ -93,6 +107,7 @@
 
         <ImageButton
             android:id="@+id/btnZoomIn"
+            android:layout_marginTop="15dp"
             android:layout_width="38dp"
             android:layout_height="38dp"
             android:background="@android:color/transparent"
@@ -112,30 +127,8 @@
     </LinearLayout>
 
     <!-- Location Button -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabLocation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_margin="16dp"
-        android:layout_marginBottom="200dp"
-        android:src="@drawable/ic_my_location"
-        android:backgroundTint="#FFFFFF"
-        android:tint="#333333"
-        android:elevation="8dp" />
 
     <!-- Attractions Carousel (Store Cards) -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvAttractions"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="80dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:clipToPadding="false"
-        android:elevation="4dp"
-        android:orientation="horizontal" />
 
     <!-- Route Info Panel (Hidden by default) -->
     <LinearLayout
@@ -150,22 +143,22 @@
         android:visibility="gone"
         android:elevation="8dp">
 
-        <TextView
-            android:id="@+id/tvRouteInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="No route selected"
-            android:textColor="#333333"
-            android:textSize="14sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/tvRouteInfo"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="No route selected"-->
+<!--            android:textColor="#333333"-->
+<!--            android:textSize="14sp" />-->
 
-        <Button
-            android:id="@+id/btnClearRoute"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Clear Route"
-            android:textSize="12sp"
-            android:layout_marginTop="8dp"
-            style="@style/Widget.Material3.Button.TextButton" />
+<!--        <Button-->
+<!--            android:id="@+id/btnClearRoute"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Clear Route"-->
+<!--            android:textSize="12sp"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            style="@style/Widget.Material3.Button.TextButton" />-->
     </LinearLayout>
 
 </FrameLayout>
