@@ -69,7 +69,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
         if(!cartView){
             holder.binding.addQuantity.setVisibility(View.GONE);
             holder.binding.minusQuantity.setVisibility(View.GONE);
-            holder.binding.feeEach.setVisibility(View.GONE);
         }
 
         holder.binding.addQuantity.setOnClickListener(v -> {
