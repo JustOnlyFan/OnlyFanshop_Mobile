@@ -306,7 +306,7 @@ public class CategoryFragment extends Fragment {
 
     private void setupBrandSpinner() {
         List<String> brandNames = new ArrayList<>();
-        brandNames.add("Tất cả");
+        brandNames.add("All");
         for (BrandDTO b : brandList) brandNames.add(b.getName());
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),

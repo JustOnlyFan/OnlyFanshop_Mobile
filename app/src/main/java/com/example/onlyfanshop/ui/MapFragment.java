@@ -285,7 +285,7 @@ public class MapFragment extends Fragment {
             routeStartLng = lng;
             routeStartAddress = String.format("Lat: %.5f, Lng: %.5f", lat, lng);
             showStartPin(lat, lng, routeStartAddress);
-            Toast.makeText(getContext(), "Đã chọn điểm bắt đầu", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Start point selected", Toast.LENGTH_SHORT).show();
             isGeocodingInProgress = false;
         });
     }
@@ -419,6 +419,7 @@ public class MapFragment extends Fragment {
 
             @Override
             public void onDirectionsClick(Attraction a) {
+<<<<<<< Updated upstream
                 if (routeStartLat != null && routeStartLng != null) {
                     // Đã có địa chỉ bắt đầu
                     vm.route(routeStartLat, routeStartLng, a.getLatitude(), a.getLongitude(), MapConfig.ROUTE_MAX_ALTERNATIVES);
@@ -437,6 +438,19 @@ public class MapFragment extends Fragment {
                         }
                     });
                 }
+=======
+                if (isGeocodingInProgress) {
+                    Toast.makeText(getContext(), "Please wait, getting start location...", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (routeStartLat == null || routeStartLng == null) {
+                    Toast.makeText(getContext(), "Please select a start point", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Log.d("ROUTE", "Routing from: " + routeStartLat + "," + routeStartLng +
+                        " to: " + a.getLatitude() + "," + a.getLongitude());
+                vm.route(routeStartLat, routeStartLng, a.getLatitude(), a.getLongitude(), MapConfig.ROUTE_MAX_ALTERNATIVES);
+>>>>>>> Stashed changes
             }
         });
         LinearLayoutManager lm = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
@@ -463,10 +477,11 @@ public class MapFragment extends Fragment {
             isGeocodingInProgress = false;
 
             if (results == null || results.isEmpty()) {
-                Toast.makeText(getContext(), "Không tìm thấy", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Not found", Toast.LENGTH_SHORT).show();
                 return;
             }
             GeocodeResult r = results.get(0);
+<<<<<<< Updated upstream
 
             // Nếu là vị trí thiết bị, hiện marker location, ngược lại marker start
             if (r.formattedAddress.equals("Your Location")) {
@@ -478,6 +493,10 @@ public class MapFragment extends Fragment {
             }
 
             etSearch.setText(r.formattedAddress);
+=======
+            etSearch.setText(r.formattedAddress); // Display address on search bar
+            showStartPin(r.lat, r.lng, r.formattedAddress);
+>>>>>>> Stashed changes
             mapProvider.moveCamera(r.lat, r.lng, 15);
 
             routeStartLat = r.lat;

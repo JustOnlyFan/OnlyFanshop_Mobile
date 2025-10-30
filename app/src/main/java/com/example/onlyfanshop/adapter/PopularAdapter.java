@@ -65,8 +65,8 @@ public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
         // Bind text
         h.b.textTitle.setText(p.getProductName() != null ? p.getProductName() : "");
         h.b.textPrice.setText(formatCurrencyVND(p.getPrice()));
-        h.b.textSold.setText("Đã bán 0");
-        h.b.textLocation.setText("Việt Nam");
+        h.b.textSold.setText("Sold 0");
+        h.b.textLocation.setText("Vietnam");
 
         // Load ảnh theo đúng XML: centerCrop, height cố định đã set ở layout
         String url = resolveImageUrl(p.getImageURL());

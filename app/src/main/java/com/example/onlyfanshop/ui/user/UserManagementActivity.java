@@ -75,7 +75,7 @@ public class UserManagementActivity extends AppCompatActivity {
         // Khởi tạo API
         userApi = ApiClient.getPrivateClient(this).create(UserApi.class);
 
-        // Thiết lập spinner tiêu chí tìm kiếm
+        // Setup search criteria spinner
         ArrayAdapter<CharSequence> searchTypeAdapter = ArrayAdapter.createFromResource(
                 this, R.array.user_filter_options, android.R.layout.simple_spinner_item);
         searchTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -91,8 +91,8 @@ public class UserManagementActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        // Thiết lập spinner role (ví dụ 3 loại)
-        String[] roles = {"Tất cả", "ADMIN", "CUSTOMER"};
+        // Setup role spinner (e.g. 3 types)
+        String[] roles = {"All", "ADMIN", "CUSTOMER"};
         ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, roles);
         roleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -102,7 +102,7 @@ public class UserManagementActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String role = parent.getItemAtPosition(position).toString();
-                selectedRole = role.equals("Tất cả") ? null : role;
+                selectedRole = role.equals("All") ? null : role;
                 currentPage = 0;
                 loadUsers(null, selectedRole, "username", "ASC");
             }
@@ -111,18 +111,18 @@ public class UserManagementActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        // Sự kiện tìm kiếm
+        // Search event
         btnSearchUser.setOnClickListener(v -> {
             String keyword = edtSearchUser.getText().toString().trim();
             if (keyword.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập từ khóa tìm kiếm", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter search keyword", Toast.LENGTH_SHORT).show();
                 return;
             }
             currentPage = 0;
             loadUsers(keyword, selectedRole, "username", "ASC");
         });
 
-        // Tải danh sách ban đầu
+        // Load initial list
         loadUsers(null, null, "username", "ASC");
     }
 
@@ -140,14 +140,14 @@ public class UserManagementActivity extends AppCompatActivity {
                             if (pageData != null) {
                                 List<UserDTO> userList = pageData.getContent();
 
-                                // Nếu chọn loại tìm kiếm, lọc thêm ở client
+                                // If search type selected, filter additionally on client
                                 if (keyword != null && !keyword.isEmpty()) {
                                     userList = filterBySearchType(userList, keyword, selectedSearchType);
                                 }
 
                                 adapter = new UserAdapter(UserManagementActivity.this, userList,
                                         user -> Toast.makeText(UserManagementActivity.this,
-                                                "Chọn: " + user.getUsername(), Toast.LENGTH_SHORT).show());
+                                                "Selected: " + user.getUsername(), Toast.LENGTH_SHORT).show());
                                 rcvUserList.setAdapter(adapter);
 
                                 totalPages = pageData.getTotalPages();

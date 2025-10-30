@@ -49,7 +49,7 @@ public class ProductDetailManageActivity extends AppCompatActivity {
         productId = getIntent().getIntExtra("productId", -1);
 
         if (productId == -1) {
-            Toast.makeText(this, "Không tìm thấy sản phẩm!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Product not found!", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }

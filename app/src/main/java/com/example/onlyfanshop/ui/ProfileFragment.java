@@ -1,5 +1,6 @@
 package com.example.onlyfanshop.ui;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,8 +30,16 @@ import com.example.onlyfanshop.ui.chat.ChatRoomActivity;
 import com.example.onlyfanshop.api.ChatApi;
 import com.example.onlyfanshop.service.ChatService;
 import com.example.onlyfanshop.utils.AppPreferences;
+
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import com.google.mlkit.nl.translate.TranslateLanguage;
+import com.google.mlkit.nl.translate.Translation;
+import com.google.mlkit.nl.translate.TranslatorOptions;
+import com.google.mlkit.common.model.RemoteModelManager; // Dùng để xóa mô hình
+import com.google.mlkit.nl.translate.TranslateRemoteModel; // Dùng để xác định mô hình xóa
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -39,12 +48,15 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
-    private View btnSupport, btnResetPassword, btnLogout, btnHistory, btnChatWithAdmin;
+    private View btnSupport, btnResetPassword, btnLogout, btnHistory, btnChatWithAdmin, btnLanguage;
     private SwitchCompat switchPushNotif, switchFaceId;
-
     private TextView tvProfileName, tvProfileEmail;
-
     private User currentUser;
+    private String currentSourceLangCode;
+    private String currentTargetLangCode;
+    private com.google.mlkit.nl.translate.Translator mlKitTranslator;
+    private TranslatorOptions currentTranslatorOptions;
+
 
     @Nullable
     @Override
@@ -62,14 +74,14 @@ public class ProfileFragment extends Fragment {
         initViews(view);
         setupClickListeners();
 
-        // 1. HIỂN THỊ NGAY TỪ SHARED PREFERENCES ĐỂ TRÁNH TRỄ
+        // 1. DISPLAY IMMEDIATELY FROM SHARED PREFERENCES TO AVOID DELAY
         SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
         String username = prefs.getString("username", "Guest");
         String email = prefs.getString("email", "");
         tvProfileName.setText(username);
         tvProfileEmail.setText(email);
 
-        // 2. GỌI API ĐỂ CẬP NHẬT THÔNG TIN MỚI NHẤT
+        // 2. CALL API TO UPDATE LATEST INFORMATION
         fetchUser();
 
         return view;
@@ -93,6 +105,8 @@ public class ProfileFragment extends Fragment {
 
         tvProfileName = view.findViewById(R.id.tvProfileName);
         tvProfileEmail = view.findViewById(R.id.tvProfileEmail);
+
+        btnLanguage = view.findViewById(R.id.btnLanguage);
     }
 
     private void setupClickListeners() {
@@ -119,9 +133,15 @@ public class ProfileFragment extends Fragment {
 
         switchFaceId.setOnCheckedChangeListener((buttonView, isChecked) ->
                 Toast.makeText(requireContext(), "Face ID: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
+
+        btnLanguage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showLanguageSelectionDialog();
+            }
+        });
     }
 
-    // GỌI API VÀ LƯU VÀO SHARED PREFERENCES ĐỂ LẦN SAU LOAD NHANH
     private void fetchUser() {
         ProfileApi api = ApiClient.getPrivateClient(requireContext()).create(ProfileApi.class);
         api.getUser().enqueue(new Callback<UserResponse>() {
@@ -145,16 +165,16 @@ public class ProfileFragment extends Fragment {
                         Toast.makeText(requireContext(), body.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 } else if (response.code() == 401) {
-                    Toast.makeText(requireContext(), "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireContext(), "Session expired. Please login again.", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(requireContext(), "Lỗi: " + response.code(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Error: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(), "Kết nối thất bại: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Connection failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -199,19 +219,19 @@ public class ProfileFragment extends Fragment {
         // ✅ Immediate response - navigate to chat room instantly
         String currentUserId = AppPreferences.getUserId(requireContext());
         String currentUsername = AppPreferences.getUsername(requireContext());
-        
+
         // Generate room ID immediately (same logic as backend)
         String roomId = "chatRoom_" + currentUsername + "_" + currentUserId;
-        
+
         // Navigate to chat room immediately
         Intent intent = new Intent(requireContext(), ChatRoomActivity.class);
         intent.putExtra("roomId", roomId);
         startActivity(intent);
-        
+
         // ✅ Background task - ensure room exists in Firebase (non-blocking)
         ChatApi chatApi = ApiClient.getPrivateClient(requireContext()).create(ChatApi.class);
         ChatService chatService = new ChatService(chatApi, requireContext());
-        
+
         // This runs in background, doesn't block UI
         chatService.getOrCreateCustomerRoom(new ChatService.RoomCallback() {
             @Override
@@ -226,5 +246,109 @@ public class ProfileFragment extends Fragment {
                 Log.e("ProfileFragment", "Background room creation failed: " + error);
             }
         });
+    }
+
+    //---------------------------------------------------------
+    // ML KIT TRANSLATION LOGIC
+    //---------------------------------------------------------
+
+    private void showLanguageSelectionDialog() {
+        // Target language list
+        final String[] languages = {"Vietnamese (vi)", "English (en)", "Japanese (ja)", "Spanish (es)"};
+        final String[] languageCodes = {"vi", "en", "ja", "es"};
+
+        // Default source language (assumed input is English)
+        final String sourceLangCode = TranslateLanguage.ENGLISH;
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Select Translation Language")
+                .setItems(languages, (dialog, which) -> {
+                    String targetLangCode = languageCodes[which];
+
+                    // 1. Initialize Translator with selected source/target language
+                    initializeTranslator(sourceLangCode, targetLangCode);
+
+                    // 2. Call translation function (user name)
+                    translateUserName(tvProfileName.getText().toString(), languages[which]);
+
+                    dialog.dismiss();
+                })
+                .show();
+    }
+
+    private void initializeTranslator(String sourceLangCode, String targetLangCode) {
+        if (mlKitTranslator != null) {
+            mlKitTranslator.close();
+        }
+
+        // ✅ Save language codes manually
+        currentSourceLangCode = sourceLangCode;
+        currentTargetLangCode = targetLangCode;
+
+        currentTranslatorOptions = new TranslatorOptions.Builder()
+                .setSourceLanguage(sourceLangCode)
+                .setTargetLanguage(targetLangCode)
+                .build();
+
+        mlKitTranslator = Translation.getClient(currentTranslatorOptions);
+
+        mlKitTranslator.downloadModelIfNeeded()
+                .addOnSuccessListener(v -> Log.d("MLKit", "Model has been downloaded/ready."))
+                .addOnFailureListener(e -> handleModelDownloadFailure(mlKitTranslator, e));
+    }
+
+    private void handleModelDownloadFailure(com.google.mlkit.nl.translate.Translator mlKitTranslator, Exception e) {
+        if (currentTargetLangCode == null || requireContext() == null) {
+            Toast.makeText(requireContext(), "Target language could not be determined.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        TranslateRemoteModel modelToDelete = new TranslateRemoteModel.Builder(currentTargetLangCode).build();
+
+        RemoteModelManager.getInstance()
+                .deleteDownloadedModel(modelToDelete)
+                .addOnSuccessListener(aVoid -> {
+                    Log.w("MLKit", "Old model has been deleted. Retrying download...");
+                    mlKitTranslator.downloadModelIfNeeded()
+                            .addOnSuccessListener(v -> Toast.makeText(requireContext(), "Model reloaded successfully.", Toast.LENGTH_LONG).show())
+                            .addOnFailureListener(re -> Toast.makeText(requireContext(), "Error reloading model: " + re.getMessage(), Toast.LENGTH_LONG).show());
+                })
+                .addOnFailureListener(delE -> {
+                    Toast.makeText(requireContext(), "Error deleting model: " + delE.getMessage(), Toast.LENGTH_LONG).show();
+                    Log.e("MLKit", "Error deleting model: " + delE.getMessage());
+                });
+    }
+
+    private void translateUserName(String textToTranslate, String targetLangName) {
+        if (mlKitTranslator == null) {
+            Toast.makeText(requireContext(), "Error: Translator not initialized.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Toast.makeText(requireContext(), "Translating to " + targetLangName + "...", Toast.LENGTH_SHORT).show();
+
+        mlKitTranslator.translate(textToTranslate)
+                .addOnSuccessListener(translatedText -> {
+                    // Success: Update TextView with translation
+                    tvProfileName.setText(translatedText);
+                    Toast.makeText(requireContext(), "Translation successful: " + translatedText, Toast.LENGTH_LONG).show();
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Failure: Handle error
+                        Log.e("MLKit", "Translation error: " + e.getMessage());
+                        Toast.makeText(requireContext(), "Translation error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Close translator to free memory
+        if (mlKitTranslator != null) {
+            mlKitTranslator.close();
+        }
     }
 }

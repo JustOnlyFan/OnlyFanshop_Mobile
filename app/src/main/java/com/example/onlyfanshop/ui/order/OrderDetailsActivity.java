@@ -33,12 +33,12 @@ public class OrderDetailsActivity extends AppCompatActivity {
 
         int orderId = getIntent().getIntExtra("orderId", -1);
         if (orderId == -1) {
-            Toast.makeText(this, "Không tìm thấy ID đơn hàng", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Order ID not found", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        // Cấu hình RecyclerView
+        // Configure RecyclerView
         binding.recyclerViewProducts.setLayoutManager(new LinearLayoutManager(this));
 
         // Gọi API lấy chi tiết đơn hàng
