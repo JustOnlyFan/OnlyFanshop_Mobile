@@ -31,3 +31,5 @@ public interface StoreLocationApi {
     Call<ApiResponse<Void>> deleteStoreLocation(@Path("id") Integer id);
 }
 
+
+

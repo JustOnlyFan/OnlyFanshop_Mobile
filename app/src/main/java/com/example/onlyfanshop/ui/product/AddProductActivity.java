@@ -55,7 +55,7 @@ public class AddProductActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_product);
 
-        // Ánh xạ view
+        // Map view
         edtName = findViewById(R.id.edtProductName);
         edtBrief = findViewById(R.id.edtBriefDescription);
         edtFull = findViewById(R.id.edtFullDescription);
@@ -67,17 +67,17 @@ public class AddProductActivity extends AppCompatActivity {
         btnChooseImage = findViewById(R.id.btnChooseImage);
         btnSubmit = findViewById(R.id.btnSubmitProduct);
 
-        // Load danh mục & thương hiệu
+        // Load categories & brands
         loadCategories();
         loadBrands();
 
-        // Chọn ảnh
+        // Select image
         btnChooseImage.setOnClickListener(v -> chooseImage());
 
-        // Nút thêm sản phẩm (upload ảnh + gửi dữ liệu)
+        // Add product button (upload image + send data)
         btnSubmit.setOnClickListener(v -> {
             if (selectedImageUri == null) {
-                Toast.makeText(this, "Vui lòng chọn ảnh sản phẩm!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please select product image!", Toast.LENGTH_SHORT).show();
                 return;
             }
             uploadImageAndAddProduct();
@@ -106,7 +106,7 @@ public class AddProductActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<CategoryDTO>> call, Throwable t) {
-                Toast.makeText(AddProductActivity.this, "Không thể tải danh mục!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AddProductActivity.this, "Could not load categories!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -132,12 +132,12 @@ public class AddProductActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<BrandDTO>> call, Throwable t) {
-                Toast.makeText(AddProductActivity.this, "Không thể tải thương hiệu!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AddProductActivity.this, "Could not load brands!", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // ==================== Chọn ảnh từ thư viện ====================
+    // ==================== Select image from gallery ====================
     private void chooseImage() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, PICK_IMAGE_REQUEST);
@@ -152,19 +152,19 @@ public class AddProductActivity extends AppCompatActivity {
         }
     }
 
-    // ==================== Upload ảnh + Thêm sản phẩm ====================
+    // ==================== Upload image + Add product ====================
     private void uploadImageAndAddProduct() {
         if (selectedImageUri == null) {
-            Toast.makeText(this, "Chưa chọn ảnh!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No image selected!", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
-            File file = getFileFromUri(selectedImageUri);  // Copy Uri sang file temp
+            File file = getFileFromUri(selectedImageUri);  // Copy Uri to temp file
             RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
             MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
             Log.d("AddProduct", "File path: " + file.getAbsolutePath() + ", size: " + file.length());
-            Toast.makeText(this, "Đang upload ảnh...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Uploading image...", Toast.LENGTH_SHORT).show();
             ProductApi api = ApiClient.getPrivateClient(this).create(ProductApi.class);
             api.uploadImageToFirebase(body).enqueue(new Callback<ApiResponse<String>>() {
                 @Override
@@ -178,18 +178,18 @@ public class AddProductActivity extends AppCompatActivity {
                         addProduct();
 
                     } else {
-                        Toast.makeText(AddProductActivity.this, "Upload ảnh thất bại!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(AddProductActivity.this, "Image upload failed!", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                    Toast.makeText(AddProductActivity.this, "Lỗi upload ảnh: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddProductActivity.this, "Error uploading image: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Không thể đọc file ảnh!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Could not read image file!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -237,28 +237,28 @@ public class AddProductActivity extends AppCompatActivity {
                     Log.d("AddProduct", "Response body: " + response.body());
 
                     if (response.isSuccessful() && response.body() != null) {
-                        Toast.makeText(AddProductActivity.this, "Thêm sản phẩm thành công!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(AddProductActivity.this, "Product added successfully!", Toast.LENGTH_SHORT).show();
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("addedProduct", true);
                         setResult(RESULT_OK, resultIntent);
 
                         finish();
                     } else {
-                        String errorMsg = "Lỗi khi thêm sản phẩm! (code " + response.code() + ")";
+                        String errorMsg = "Error adding product! (code " + response.code() + ")";
                         Toast.makeText(AddProductActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ApiResponse<ProductDTO>> call, Throwable t) {
-                    Log.e("AddProduct", "Lỗi kết nối: " + t.getMessage());
-                    Toast.makeText(AddProductActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e("AddProduct", "Connection error: " + t.getMessage());
+                    Toast.makeText(AddProductActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
 
         } catch (Exception e) {
-            Log.e("AddProduct", "Dữ liệu không hợp lệ: " + e.getMessage());
-            Toast.makeText(this, "Dữ liệu không hợp lệ!", Toast.LENGTH_SHORT).show();
+            Log.e("AddProduct", "Invalid data: " + e.getMessage());
+            Toast.makeText(this, "Invalid data!", Toast.LENGTH_SHORT).show();
         }
     }
 

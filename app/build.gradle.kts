@@ -116,4 +116,6 @@ dependencies {
     // Volley for FCM notifications
     implementation("com.android.volley:volley:1.2.1")
 
+    implementation("com.google.mlkit:translate:17.0.0")
+
 }

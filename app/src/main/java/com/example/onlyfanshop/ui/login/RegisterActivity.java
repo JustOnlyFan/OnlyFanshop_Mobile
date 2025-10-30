@@ -133,7 +133,7 @@ public class RegisterActivity extends AppCompatActivity {
                     intent.putExtra("address", address);
                     startActivity(intent);
                 } else {
-                    Toast.makeText(RegisterActivity.this, "Lỗi server khi kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, "Server error while checking account", Toast.LENGTH_SHORT).show();
                 }
             }
 

@@ -36,8 +36,8 @@ public class BadgeUtils {
                         badge.setNumber(totalQuantity);
                         com.example.onlyfanshop.utils.NotificationHelper.showNotification(
                                 context,
-                                "Giỏ hàng",
-                                "Bạn đang có " + totalQuantity + " sản phẩm trong giỏ hàng!"
+                                "Cart",
+                                "You have " + totalQuantity + " products in your cart!"
                         );
                         Log.d("BadgeUtils", "Updating badge with number: " + totalQuantity);
                     } else {
@@ -55,7 +55,7 @@ public class BadgeUtils {
     }
 
 
-    // Xóa badge khi người dùng checkout hoặc giỏ hàng rỗng
+    // Clear badge when user checkout or cart is empty
     public static void clearBadge(Context context) {
         try {
             ShortcutBadger.removeCount(context);
@@ -64,7 +64,7 @@ public class BadgeUtils {
         }
     }
 
-    // Xóa badge khi người dùng logout
+    // Clear badge when user logs out
     public void clearCartBadge(BottomNavigationView bottomNav) {
         bottomNav.removeBadge(R.id.nav_car); // hoặc id cart của bạn
     }
@@ -87,13 +87,13 @@ public class BadgeUtils {
                         badge.setVisible(false);
                     }
                 } else {
-                    Log.w("BadgeUtils", "Không thể tải số lượng thông báo chưa đọc");
+                    Log.w("BadgeUtils", "Could not load unread notification count");
                 }
             }
 
             @Override
             public void onFailure(Call<Long> call, Throwable t) {
-                Log.e("BadgeUtils", "Lỗi tải badge notification", t);
+                    Log.e("BadgeUtils", "Error loading notification badge", t);
             }
         });
     }

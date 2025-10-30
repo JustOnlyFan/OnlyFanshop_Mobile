@@ -301,7 +301,7 @@ public class ChatRoomActivity extends AppCompatActivity {
             // Add haptic feedback for better UX
             v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
 
-            // ✅ Clear input ngay lập tức để người dùng có thể gõ tin nhắn tiếp theo
+            // ✅ Clear input immediately so user can type next message
             messageInput.setText("");
 
             // ✅ Disable send button temporarily để tránh spam

@@ -98,7 +98,7 @@ public class UpdateProductActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     ProductDetailDTO product = response.body().getData();
 
-                    // Gán dữ liệu lên giao diện
+                    // Assign data to interface
                     edtName.setText(product.getProductName());
                     edtBrief.setText(product.getBriefDescription());
                     edtFull.setText(product.getFullDescription());
@@ -118,13 +118,13 @@ public class UpdateProductActivity extends AppCompatActivity {
                     selectSpinnerWhenReady(product);
 
                 } else {
-                    Toast.makeText(UpdateProductActivity.this, "Không tìm thấy sản phẩm!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UpdateProductActivity.this, "Product not found!", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<ProductDetailDTO>> call, Throwable t) {
-                Toast.makeText(UpdateProductActivity.this, "Lỗi khi tải sản phẩm: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(UpdateProductActivity.this, "Error loading product: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -159,20 +159,20 @@ public class UpdateProductActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ProductDetailDTO> call, Response<ProductDetailDTO> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(UpdateProductActivity.this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
-                    // Khi cập nhật thành công (ảnh hoặc thông tin)
+                    Toast.makeText(UpdateProductActivity.this, "Update successful!", Toast.LENGTH_SHORT).show();
+                    // When update successful (image or information)
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra("updatedProduct", true);
                     setResult(RESULT_OK, resultIntent);
-                    finish(); // Quay lại màn hình trước
+                    finish(); // Return to previous screen
                 } else {
-                    Toast.makeText(UpdateProductActivity.this, "Cập nhật thất bại! Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UpdateProductActivity.this, "Update failed! Code: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ProductDetailDTO> call, Throwable t) {
-                Toast.makeText(UpdateProductActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UpdateProductActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -198,7 +198,7 @@ public class UpdateProductActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<BrandDTO>> call, Throwable t) {
-                Toast.makeText(UpdateProductActivity.this, "Không thể tải thương hiệu!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(UpdateProductActivity.this, "Could not load brands!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -224,13 +224,13 @@ public class UpdateProductActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<CategoryDTO>> call, Throwable t) {
-                Toast.makeText(UpdateProductActivity.this, "Không thể tải danh mục!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(UpdateProductActivity.this, "Could not load categories!", Toast.LENGTH_SHORT).show();
             }
         });
     }
     private void selectSpinnerWhenReady(ProductDetailDTO product) {
         new Thread(() -> {
-            // Đợi cho tới khi danh sách brand/category được load xong
+            // Wait until brand/category list is loaded
             while (!isBrandLoaded || !isCategoryLoaded) {
                 try { Thread.sleep(100); } catch (InterruptedException ignored) {}
             }
@@ -257,7 +257,7 @@ public class UpdateProductActivity extends AppCompatActivity {
         }).start();
     }
     public void updateImage() {
-        // Mở thư viện để chọn ảnh
+        // Open gallery to select image
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, PICK_IMAGE_REQUEST);
     }
@@ -268,19 +268,19 @@ public class UpdateProductActivity extends AppCompatActivity {
 
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null) {
             selectedImageUri = data.getData();
-            imgPreview.setImageURI(selectedImageUri); // Hiển thị ảnh mới người dùng chọn
+            imgPreview.setImageURI(selectedImageUri); // Display new image selected by user
 
-            // Sau khi chọn ảnh thì gọi hàm upload
+            // After selecting image, call upload function
             uploadNewImage();
         }
     }
 
     private void uploadNewImage() {
         int productId = getIntent().getIntExtra("productToEdit", 0);
-        String oldUrl = uploadedImageUrl; // Ảnh cũ đã lưu khi fetchProduct()
+        String oldUrl = uploadedImageUrl; // Old image saved when fetchProduct()
 
         if (selectedImageUri == null) {
-            Toast.makeText(this, "Vui lòng chọn ảnh mới", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please select a new image", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -288,7 +288,7 @@ public class UpdateProductActivity extends AppCompatActivity {
         try {
             file = getFileFromUri(selectedImageUri);
         } catch (Exception e) {
-            Toast.makeText(this, "Không thể lấy đường dẫn ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Could not get image path: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -298,42 +298,42 @@ public class UpdateProductActivity extends AppCompatActivity {
 
         ProductApi apiService = ApiClient.getPrivateClient(this).create(ProductApi.class);
 
-        // 🧩 1. Gọi API đổi ảnh Firebase
+        // 🧩 1. Call Firebase image change API
         apiService.changeImage(filePart, oldUrlPart).enqueue(new Callback<ApiResponse<String>>() {
             @Override
             public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     String newImageUrl = response.body().getData();
 
-                    // 🧩 2. Cập nhật URL ảnh vào DB
+                    // 🧩 2. Update image URL in database
                     apiService.updateImage(productId, newImageUrl).enqueue(new Callback<ApiResponse<Void>>() {
                         @Override
                         public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response2) {
                             if (response2.isSuccessful()) {
                                 uploadedImageUrl = newImageUrl;
-                                // Khi cập nhật thành công (ảnh hoặc thông tin)
+                                // When update successful (image or information)
                                 Intent resultIntent = new Intent();
                                 resultIntent.putExtra("updatedProduct", true);
                                 setResult(RESULT_OK, resultIntent);
-                                Toast.makeText(UpdateProductActivity.this, "Ảnh đã được cập nhật!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(UpdateProductActivity.this, "Image has been updated!", Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(UpdateProductActivity.this, "Lỗi khi cập nhật ảnh trong DB", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(UpdateProductActivity.this, "Error updating image in database", Toast.LENGTH_SHORT).show();
                             }
                         }
 
                         @Override
                         public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
-                            Toast.makeText(UpdateProductActivity.this, "Lỗi DB: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(UpdateProductActivity.this, "Database error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     });
                 } else {
-                    Toast.makeText(UpdateProductActivity.this, "Lỗi upload ảnh mới", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UpdateProductActivity.this, "Error uploading new image", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                Toast.makeText(UpdateProductActivity.this, "Upload thất bại: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(UpdateProductActivity.this, "Upload failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

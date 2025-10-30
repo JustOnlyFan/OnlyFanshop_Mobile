@@ -85,16 +85,16 @@ public class AddUserActivity extends AppCompatActivity {
                     }
                     if (emailExists) {
 
-                        edtEmail.setError("Email đã tồn tại!");
+                        edtEmail.setError("Email already exists!");
                         return;
                     }
 
-                    // ✅ Nếu không trùng thì gọi API tạo người dùng
+                    // ✅ If not duplicate then call API to create user
                     RegisterRequest request = new RegisterRequest(username, password, confirmPassword, email, phone, address);
                     registerUser(request);
                 } else {
 
-                    Toast.makeText(AddUserActivity.this, "Không thể kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddUserActivity.this, "Could not check account", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -112,7 +112,7 @@ public class AddUserActivity extends AppCompatActivity {
             public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
 
                 if (response.isSuccessful()) {
-                    Toast.makeText(AddUserActivity.this, "✅ Thêm người dùng thành công", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddUserActivity.this, "✅ User added successfully", Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra("addedUser", true);
                     setResult(RESULT_OK, resultIntent);

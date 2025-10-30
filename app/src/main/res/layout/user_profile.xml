@@ -26,7 +26,7 @@
             android:id="@+id/name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chỉ Bán Quạt"
+            android:text="Fan Only Shop"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_marginTop="12dp"
@@ -45,7 +45,7 @@
             android:id="@+id/btn_edit_profile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chỉnh sửa hồ sơ"
+            android:text="Edit Profile"
             android:backgroundTint="@android:color/holo_blue_light"
             android:textColor="@color/white"
             android:layout_marginBottom="20dp" />
@@ -74,7 +74,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Giỏ hàng"
+                    android:text="Cart"
                     android:textSize="14sp"
                     android:textColor="#212121" />
             </LinearLayout>
@@ -96,7 +96,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Đang giao"
+                    android:text="Delivering"
                     android:textSize="14sp"
                     android:textColor="#212121" />
             </LinearLayout>
@@ -117,7 +117,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Đã giao"
+                    android:text="Delivered"
                     android:textSize="14sp"
                     android:textColor="#212121"/>
             </LinearLayout>
@@ -140,7 +140,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Lịch sử mua hàng"
+                android:text="Order History"
                 android:textSize="16sp"
                 android:padding="12dp"/>
 
@@ -164,7 +164,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Địa chỉ giao hàng"
+                android:text="Delivery Address"
                 android:textSize="16sp"
                 android:padding="12dp"/>
                 <ImageView
@@ -187,7 +187,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Cài đặt"
+                android:text="Settings"
                 android:textSize="16sp"
                 android:padding="12dp"/>
                 <ImageView
@@ -211,7 +211,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Đăng xuất"
+                android:text="Logout"
                 android:textSize="16sp"
                 android:padding="12dp"
                 android:textColor="#D32F2F"/>

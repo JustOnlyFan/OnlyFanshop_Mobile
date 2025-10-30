@@ -421,14 +421,14 @@ public class LoginActivity extends AppCompatActivity {
                     String errorMessage = "Không thể kết nối đến server";
                     if (response.code() == 400) {
                         // Email conflict - hiển thị Toast
-                        errorMessage = "Email đã tồn tại. Vui lòng sử dụng phương thức đăng nhập khác.";
+                        errorMessage = "Email already exists. Please use another login method.";
                         Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                     } else if (response.code() == 500) {
-                        errorMessage = "Lỗi server. Vui lòng thử lại sau.";
-                        showErrorDialog("Lỗi kết nối", errorMessage);
+                        errorMessage = "Server error. Please try again later.";
+                        showErrorDialog("Connection Error", errorMessage);
                     } else if (response.code() == 404) {
-                        errorMessage = "Không tìm thấy dịch vụ. Vui lòng kiểm tra kết nối.";
-                        showErrorDialog("Lỗi kết nối", errorMessage);
+                        errorMessage = "Service not found. Please check your connection.";
+                        showErrorDialog("Connection Error", errorMessage);
                     } else {
                         Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                     }

@@ -84,7 +84,7 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
         spinnerBrand = findViewById(R.id.spinnerBrand);
 
         List<String> categoryNames = new ArrayList<>();
-        categoryNames.add("Tất cả");
+        categoryNames.add("All");
         if (data.categories != null) {
             for (CategoryDTO c : data.categories) {
                 categoryNames.add(c.getCategoryName());
@@ -92,7 +92,7 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
         }
 
         List<String> brandNames = new ArrayList<>();
-        brandNames.add("Tất cả");
+        brandNames.add("All");
         if (data.brands != null) {
             for (BrandDTO b : data.brands) {
                 brandNames.add(b.getName());
@@ -209,13 +209,13 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
                         isSpinnerInitialized = true;
                     }
                 } else {
-                    Toast.makeText(ProductManagementActivity.this, "Không thể tải sản phẩm!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProductManagementActivity.this, "Could not load products!", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<HomePageData>> call, Throwable t) {
-                Toast.makeText(ProductManagementActivity.this, "Lỗi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProductManagementActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -251,7 +251,7 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
 
             @Override
             public void onFailure(Call<ApiResponse<Void>> call, Throwable throwable) {
-                Toast.makeText(ProductManagementActivity.this, "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProductManagementActivity.this, "Update failed", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -259,7 +259,7 @@ public class ProductManagementActivity extends AppCompatActivity implements Prod
     @Override
     public void onDelete(ProductDTO product) {
         Toast.makeText(this, "Delete: " + product.getProductName(), Toast.LENGTH_SHORT).show();
-        // TODO: gọi API delete sản phẩm
+        // TODO: call API to delete product
     }
 
     @Override

@@ -42,7 +42,7 @@ public class PaymentResultActivity extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 } else {
-                    Toast.makeText(this, "Không tìm thấy mã đơn hàng", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Order ID not found", Toast.LENGTH_SHORT).show();
                 }
             });
 

@@ -2,10 +2,10 @@
     <string name="app_name">OnlyFanshop</string>
     <string name="category">Category</string>
     <string name="_0">0VND</string>
-    <string name="productTotal">Tổng giá trị sản phẩm</string>
-    <string name="deliveryCost">Phí vận chuyển</string>
-    <string name="total">Tổng thanh toán</string>
-    <string name="checkOut">Thanh toán</string>
+    <string name="productTotal">Total Products Value</string>
+    <string name="deliveryCost">Shipping Fee</string>
+    <string name="total">Total Payment</string>
+    <string name="checkOut">Checkout</string>
 
     <!-- Google Sign-In Configuration -->
     <string name="default_web_client_id">328191492825-8iket64hs1nr651gn0jnb19js7aimj10.apps.googleusercontent.com</string>
@@ -14,10 +14,10 @@
     <string name="uilover">UILover</string>
     <string name="already_have_an_account_signin">Already have an account? <font color="#3DDC84">Sign In</font></string>
     <string name="cart">Cart</string>
-    <string name="danh_m_c">Danh mục</string>
+    <string name="danh_m_c">Category</string>
     <string name="home">Home</string>
     <string name="admin_uid">admin_uid</string>
-    <string name="sold_format">Đã bán %1$d</string>
+    <string name="sold_format">Sold %1$d</string>
     <string name="search">Search</string>
 
     <!-- New strings -->

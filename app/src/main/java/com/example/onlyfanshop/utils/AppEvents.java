@@ -4,13 +4,13 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 /**
- * Singleton dùng LiveData để phát/nhận các sự kiện toàn app.
+ * Singleton using LiveData to broadcast/receive app-wide events.
  */
 public class AppEvents {
 
     private static final AppEvents INSTANCE = new AppEvents();
 
-    // Sự kiện: giỏ hàng đã thay đổi (tăng/giảm/thêm/xóa)
+    // Event: cart has changed (increase/decrease/add/remove)
     private final MutableLiveData<Long> cartUpdated = new MutableLiveData<>();
 
     private AppEvents() {}

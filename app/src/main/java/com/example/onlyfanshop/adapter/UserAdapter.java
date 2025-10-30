@@ -21,7 +21,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     private List<UserDTO> userList;
     private OnUserClickListener listener;
 
-    // Interface để xử lý sự kiện click (ví dụ: xem chi tiết, sửa, xóa)
+    // Interface to handle click events (e.g.: view details, edit, delete)
     public interface OnUserClickListener {
         void onUserClick(UserDTO user);
     }
@@ -44,13 +44,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         UserDTO user = userList.get(position);
         if (user == null) return;
 
-        holder.tvUsername.setText("Tên người dùng: " + user.getUsername());
+        holder.tvUsername.setText("Username: " + user.getUsername());
         holder.tvEmail.setText("Email: " + user.getEmail());
-        holder.tvPhone.setText("SĐT: " + user.getPhoneNumber());
-        holder.tvAddress.setText("Địa chỉ: " + user.getAddress());
-        holder.tvRole.setText("Vai trò: " + user.getRole());
+        holder.tvPhone.setText("Phone: " + user.getPhoneNumber());
+        holder.tvAddress.setText("Address: " + user.getAddress());
+        holder.tvRole.setText("Role: " + user.getRole());
 
-        // Xử lý sự kiện click vào item
+        // Handle click event on item
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onUserClick(user);
@@ -77,7 +77,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         }
     }
 
-    // Hàm cập nhật danh sách người dùng (khi filter hoặc search)
+    // Function to update user list (when filter or search)
     public void updateUserList(List<UserDTO> newList) {
         this.userList = newList;
         notifyDataSetChanged();

@@ -1,5 +1,6 @@
 package com.example.onlyfanshop.activity;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +25,7 @@ import com.example.onlyfanshop.ui.MapFragment;
 import com.example.onlyfanshop.ui.ProfileFragment;
 import com.example.onlyfanshop.ui.cart.CartFragment;
 import com.example.onlyfanshop.utils.BadgeUtils;
+import com.example.onlyfanshop.utils.LocaleHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -254,5 +256,11 @@ public class DashboardActivity extends AppCompatActivity {
         outState.putInt(STATE_SELECTED_ITEM, currentSelectedId);
     }
 
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        // Apply stored language before Activity is created
+        String lang = LocaleHelper.getLanguage(newBase);
+        super.attachBaseContext(LocaleHelper.setLocale(newBase, lang));
+    }
 
 }
