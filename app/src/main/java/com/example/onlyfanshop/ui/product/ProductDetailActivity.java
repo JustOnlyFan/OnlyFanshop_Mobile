@@ -88,9 +88,9 @@ public class ProductDetailActivity extends AppCompatActivity {
         textBottomPrice = findViewById(R.id.textBottomPrice);
         textBrief = findViewById(R.id.textBrief);
         textFull = findViewById(R.id.textFull);
-        numberItem = findViewById(R.id.numberItem);
-        addQuantity = findViewById(R.id.addQuantity);
-        minusQuantity = findViewById(R.id.minusQuantity);
+//        numberItem = findViewById(R.id.numberItem);
+//        addQuantity = findViewById(R.id.addQuantity);
+//        minusQuantity = findViewById(R.id.minusQuantity);
         btnChat = findViewById(R.id.btnChat);
         btnCart = findViewById(R.id.btnCart);
         btnBuyNow = findViewById(R.id.btnBuyNow);

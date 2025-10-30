@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="4dp"
+    android:backgroundTint="@android:color/white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <!-- Tên thương hiệu -->
+        <TextView
+            android:id="@+id/brandName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Senko"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/switchActive" />
+
+        <!-- Switch kích hoạt -->
+        <Switch
+            android:id="@+id/switchActive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trạng thái"
+            android:textSize="13sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Quốc gia -->
+        <TextView
+            android:id="@+id/brandCountry"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Việt Nam"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@id/brandName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="4dp" />
+
+        <!-- Mô tả -->
+        <TextView
+            android:id="@+id/brandDes"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Hãng quạt phổ biến tại Việt Nam, nổi bật với độ bền, mẫu mã đa dạng và giá thành cạnh tranh."
+            android:textSize="13sp"
+            android:layout_marginTop="6dp"
+            app:layout_constraintTop_toBottomOf="@id/brandCountry"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnEdit"
+            android:ellipsize="end"
+            android:maxLines="4" />
+
+        <!-- Nút Sửa -->
+        <Button
+            android:id="@+id/btnEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="70dp"
+            android:text="Sửa"
+            android:textSize="14sp"
+            android:backgroundTint="#2196F3"
+            android:textColor="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Nút Xác nhận -->
+        <Button
+            android:id="@+id/btnConfirmEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="90dp"
+            android:text="Xác nhận"
+            android:textSize="14sp"
+            android:backgroundTint="#4CAF50"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Edit mode fields -->
+        <EditText
+            android:id="@+id/edtName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Tên thương hiệu"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnConfirmEdit" />
+
+        <EditText
+            android:id="@+id/edtCountry"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Quốc gia"
+            android:textSize="14sp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/edtName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnConfirmEdit" />
+
+        <EditText
+            android:id="@+id/edtDes"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Mô tả"
+            android:textSize="13sp"
+            android:visibility="gone"
+            android:minLines="2"
+            android:maxLines="4"
+            app:layout_constraintTop_toBottomOf="@id/edtCountry"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnConfirmEdit" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>
