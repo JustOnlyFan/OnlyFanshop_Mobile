@@ -22,6 +22,9 @@
         android:theme="@style/Theme.OnlyFanshop"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".ui.CategoryManagementActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.BrandManagementActivity"
             android:exported="false" />
         <activity

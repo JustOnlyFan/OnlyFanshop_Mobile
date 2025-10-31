@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,7 +22,6 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.BrandViewHol
     public BrandAdapter(Context context, List<BrandManagementDTO> listBrand) {
         this.context = context;
         this.listBrand = listBrand;
-        this.listener = listener;
     }
 
     public void setOnEditBrandListener(OnEditBrandListener listener) {
@@ -74,6 +74,8 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.BrandViewHol
                 holder.binding.edtCountry.setVisibility(View.GONE);
                 holder.binding.btnConfirmEdit.setVisibility(View.INVISIBLE);
                 holder.binding.btnEdit.setVisibility(View.VISIBLE);
+            } else {
+                Toast.makeText(context, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
             }
 
         });

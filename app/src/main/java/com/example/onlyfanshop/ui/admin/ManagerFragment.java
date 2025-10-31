@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.ui.BrandManagementActivity;
+import com.example.onlyfanshop.ui.CategoryManagementActivity;
 import com.example.onlyfanshop.ui.product.ProductManagementActivity;
 import com.example.onlyfanshop.ui.chat.ChatListActivity;
 import com.example.onlyfanshop.activity.StoreManagementActivity;
@@ -24,7 +25,7 @@ import com.example.onlyfanshop.activity.StoreManagementActivity;
  * create an instance of this fragment.
  */
 public class ManagerFragment extends Fragment {
-    private LinearLayout btnUserManagement, btnProductManagement, btnChatManagement, btnStoreManagement, btnBrandManagement;
+    private LinearLayout btnUserManagement, btnProductManagement, btnChatManagement, btnStoreManagement, btnBrandManagement,btnCategoryManagement;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -90,6 +91,12 @@ public class ManagerFragment extends Fragment {
         btnChatManagement = view.findViewById(R.id.btnChatManagement);
         btnStoreManagement = view.findViewById(R.id.btnStoreManagement);
         btnBrandManagement = view.findViewById(R.id.btnBrandManagement);
+        btnCategoryManagement = view.findViewById(R.id.btnCategoryManagement);
+
+        btnCategoryManagement.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), CategoryManagementActivity.class);
+            startActivity(intent);
+        });
 
         btnBrandManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), BrandManagementActivity.class);
