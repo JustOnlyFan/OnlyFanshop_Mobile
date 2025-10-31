@@ -100,7 +100,7 @@
             android:name=".activity.StoreManagementActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.AddEditStoreActivity"
+            android:name=".ui.store.AddEditStoreActivity"
             android:exported="false" />
         <activity
             android:name=".activity.LocationPickerActivity"

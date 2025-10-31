@@ -1,25 +1,28 @@
-package com.example.onlyfanshop.activity;
+package com.example.onlyfanshop.ui.store;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
-
+import android.widget.*;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.bumptech.glide.Glide;
 import com.example.onlyfanshop.R;
+import com.example.onlyfanshop.activity.LocationPickerActivity;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.StoreLocationApi;
 import com.example.onlyfanshop.model.StoreLocation;
 import com.example.onlyfanshop.model.response.ApiResponse;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -29,19 +32,23 @@ public class AddEditStoreActivity extends AppCompatActivity {
 
     public static final String EXTRA_STORE_LOCATION = "store_location";
     private static final int REQUEST_PICK_LOCATION = 100;
+    private static final int REQUEST_PICK_IMAGE = 200;
 
     private EditText etStoreName, etStoreDescription, etStorePhone, etStoreHours, etStoreImageUrl;
-    private TextView tvSelectedAddress, tvLatLng;
-    private Button btnPickLocation, btnSaveStore;
+    private TextView tvSelectedAddress, tvLatLng, tvImageSelected;
+    private Button btnPickLocation, btnSaveStore, btnChooseImage;
     private LinearLayout locationInfoLayout;
     private ProgressBar progressBar;
+    private ImageView imgPreview;
 
     private Double selectedLatitude;
     private Double selectedLongitude;
     private String selectedAddress;
+    private Uri selectedImageUri;
 
     private StoreLocation storeToEdit;
     private boolean isEditMode = false;
+    private boolean isImageUploaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +74,9 @@ public class AddEditStoreActivity extends AppCompatActivity {
         tvLatLng = findViewById(R.id.tvLatLng);
         btnPickLocation = findViewById(R.id.btnPickLocation);
         btnSaveStore = findViewById(R.id.btnSaveStore);
+        btnChooseImage = findViewById(R.id.btnChooseImage);
+        tvImageSelected = findViewById(R.id.tvImageSelected);
+        imgPreview = findViewById(R.id.imgPreview);
         locationInfoLayout = findViewById(R.id.locationInfoLayout);
         progressBar = findViewById(R.id.progressBar);
     }
@@ -95,12 +105,25 @@ public class AddEditStoreActivity extends AppCompatActivity {
         selectedLongitude = store.getLongitude();
         selectedAddress = store.getAddress();
 
+        if (!TextUtils.isEmpty(store.getImageUrl())) {
+            Glide.with(this).load(store.getImageUrl()).into(imgPreview);
+            tvImageSelected.setText("Image loaded from server");
+        }
+
         updateLocationDisplay();
     }
 
     private void setupListeners() {
         btnPickLocation.setOnClickListener(v -> openLocationPicker());
-        btnSaveStore.setOnClickListener(v -> saveStore());
+        btnSaveStore.setOnClickListener(v -> {
+            if (selectedImageUri != null && !isImageUploaded) {
+                uploadImageToFirebase();
+            } else {
+                saveStore();
+            }
+        });
+
+        btnChooseImage.setOnClickListener(v -> openImagePicker());
     }
 
     private void openLocationPicker() {
@@ -113,6 +136,12 @@ public class AddEditStoreActivity extends AppCompatActivity {
         startActivityForResult(intent, REQUEST_PICK_LOCATION);
     }
 
+    private void openImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, REQUEST_PICK_IMAGE);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -121,6 +150,15 @@ public class AddEditStoreActivity extends AppCompatActivity {
             selectedLongitude = data.getDoubleExtra(LocationPickerActivity.EXTRA_LONGITUDE, 0);
             selectedAddress = data.getStringExtra(LocationPickerActivity.EXTRA_ADDRESS);
             updateLocationDisplay();
+        }
+
+        if (requestCode == REQUEST_PICK_IMAGE && resultCode == Activity.RESULT_OK && data != null) {
+            selectedImageUri = data.getData();
+            if (selectedImageUri != null) {
+                imgPreview.setImageURI(selectedImageUri);
+                tvImageSelected.setText("Image selected");
+                isImageUploaded = false;
+            }
         }
     }
 
@@ -132,8 +170,36 @@ public class AddEditStoreActivity extends AppCompatActivity {
         }
     }
 
+    private void uploadImageToFirebase() {
+        if (selectedImageUri == null) {
+            Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+        btnSaveStore.setEnabled(false);
+
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference()
+                .child("stores/" + UUID.randomUUID().toString() + ".jpg");
+
+        storageRef.putFile(selectedImageUri)
+                .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String firebaseUrl = uri.toString();
+                    etStoreImageUrl.setText(firebaseUrl);
+                    isImageUploaded = true;
+                    progressBar.setVisibility(View.GONE);
+                    btnSaveStore.setEnabled(true);
+                    Toast.makeText(this, "Image uploaded", Toast.LENGTH_SHORT).show();
+                    saveStore();
+                }))
+                .addOnFailureListener(e -> {
+                    progressBar.setVisibility(View.GONE);
+                    btnSaveStore.setEnabled(true);
+                    Toast.makeText(this, "Upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
     private void saveStore() {
-        // Validate inputs
         String name = etStoreName.getText().toString().trim();
         String description = etStoreDescription.getText().toString().trim();
         String phone = etStorePhone.getText().toString().trim();
@@ -151,7 +217,6 @@ public class AddEditStoreActivity extends AppCompatActivity {
             return;
         }
 
-        // Create StoreLocation object
         StoreLocation storeLocation = new StoreLocation();
         if (isEditMode && storeToEdit != null) {
             storeLocation.setLocationID(storeToEdit.getLocationID());
@@ -165,7 +230,6 @@ public class AddEditStoreActivity extends AppCompatActivity {
         storeLocation.setLongitude(selectedLongitude);
         storeLocation.setAddress(selectedAddress);
 
-        // Save to server
         progressBar.setVisibility(View.VISIBLE);
         btnSaveStore.setEnabled(false);
 
@@ -180,14 +244,14 @@ public class AddEditStoreActivity extends AppCompatActivity {
 
         call.enqueue(new Callback<ApiResponse<StoreLocation>>() {
             @Override
-            public void onResponse(Call<ApiResponse<StoreLocation>> call, Response<ApiResponse<StoreLocation>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<StoreLocation>> call, @NonNull Response<ApiResponse<StoreLocation>> response) {
                 progressBar.setVisibility(View.GONE);
                 btnSaveStore.setEnabled(true);
 
                 if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(AddEditStoreActivity.this, 
-                        isEditMode ? "Store updated successfully" : "Store created successfully", 
-                        Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddEditStoreActivity.this,
+                            isEditMode ? "Store updated successfully" : "Store created successfully",
+                            Toast.LENGTH_SHORT).show();
                     setResult(RESULT_OK);
                     finish();
                 } else {
@@ -196,7 +260,7 @@ public class AddEditStoreActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<StoreLocation>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<StoreLocation>> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 btnSaveStore.setEnabled(true);
                 Toast.makeText(AddEditStoreActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
@@ -204,4 +268,3 @@ public class AddEditStoreActivity extends AppCompatActivity {
         });
     }
 }
-
