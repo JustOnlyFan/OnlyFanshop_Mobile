@@ -112,25 +112,60 @@
                 android:padding="8dp"
                 android:singleLine="true" />
 
-            <!-- Image URL -->
+            <!-- Store Image -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Image URL"
+                android:text="Store Image"
                 android:textColor="@color/black"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+
+                <Button
+                    android:id="@+id/btnChooseImage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:text="Select Image"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:fontFamily="sans-serif-medium"/>
+
+                <TextView
+                    android:id="@+id/tvImageSelected"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="No image selected"
+                    android:textColor="@color/grey"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/imgPreview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="8dp"
+                android:scaleType="centerCrop"
+                android:background="@drawable/stroke_bg"
+                android:contentDescription="Store Image Preview" />
+
+            <!-- Hidden field for Firebase URL -->
             <EditText
                 android:id="@+id/etStoreImageUrl"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/stroke_bg"
-                android:hint="Enter image URL"
-                android:padding="8dp"
-                android:singleLine="true" />
+                android:layout_height="0dp"
+                android:visibility="gone" />
+
 
             <!-- Location Section -->
             <TextView

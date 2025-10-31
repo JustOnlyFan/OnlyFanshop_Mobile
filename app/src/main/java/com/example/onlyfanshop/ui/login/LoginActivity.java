@@ -172,6 +172,19 @@ public class LoginActivity extends AppCompatActivity {
                         sharedPreferences.edit().putString("authProvider", user.getAuthProvider()).apply();
                         sharedPreferences.edit().putInt("userId", user.getUserID()).apply();
                         sharedPreferences.edit().putString("address", user.getAddress()).apply();
+
+                        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+                        if (firebaseAuth.getCurrentUser() == null) {
+                            firebaseAuth.signInAnonymously()
+                                    .addOnSuccessListener(authResult ->
+                                            Log.d("FirebaseAuth", "Signed in anonymously for image uploads"))
+                                    .addOnFailureListener(e ->
+                                            Log.e("FirebaseAuth", "Anonymous sign-in failed: " + e.getMessage()));
+                        } else {
+                            Log.d("FirebaseAuth", "Already signed in Firebase user: " +
+                                    firebaseAuth.getCurrentUser().getUid());
+                        }
+
                         Log.d("role", user.getRole());
                         if (user.getRole().equals("ADMIN")) {
                             Log.d("role", "qua trang admin");

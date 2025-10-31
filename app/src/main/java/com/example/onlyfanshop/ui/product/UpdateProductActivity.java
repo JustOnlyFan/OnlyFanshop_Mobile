@@ -14,9 +14,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
 import com.example.onlyfanshop.R;
@@ -24,11 +21,9 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ProductApi;
 import com.example.onlyfanshop.model.BrandDTO;
 import com.example.onlyfanshop.model.CategoryDTO;
-import com.example.onlyfanshop.model.ProductDTO;
 import com.example.onlyfanshop.model.ProductDetailDTO;
 import com.example.onlyfanshop.model.Request.ProductRequest;
 import com.example.onlyfanshop.model.response.ApiResponse;
-import com.example.onlyfanshop.utils.FileUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;

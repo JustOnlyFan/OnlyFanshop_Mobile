@@ -5,12 +5,15 @@ import com.example.onlyfanshop.model.response.ApiResponse;
 
 import java.util.List;
 
+import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 
 public interface StoreLocationApi {
@@ -29,7 +32,10 @@ public interface StoreLocationApi {
     
     @DELETE("store-locations/{id}")
     Call<ApiResponse<Void>> deleteStoreLocation(@Path("id") Integer id);
+
+    @Multipart
+    @POST("/api/upload/store-image")
+    Call<ApiResponse<String>> uploadStoreImage(
+            @Part MultipartBody.Part file
+    );
 }
-
-
-
