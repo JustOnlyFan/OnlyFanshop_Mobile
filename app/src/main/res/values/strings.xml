@@ -14,7 +14,7 @@
     <string name="uilover">UILover</string>
     <string name="already_have_an_account_signin">Already have an account? <font color="#3DDC84">Sign In</font></string>
     <string name="cart">Cart</string>
-    <string name="danh_m_c">Category</string>
+    <string name="product">Product</string>
     <string name="home">Home</string>
     <string name="admin_uid">admin_uid</string>
     <string name="sold_format">Sold %1$d</string>

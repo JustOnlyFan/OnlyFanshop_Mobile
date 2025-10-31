@@ -83,7 +83,7 @@ public class HomeFragment extends Fragment {
     private ProgressBar progressSearch;
     private SearchSuggestionAdapter suggestAdapter;
 
-    private ImageView btnNotif,btnChat ;
+    private ImageView btnNotif;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingSearch;
     private static final long SEARCH_DEBOUNCE_MS = 300L;
@@ -115,7 +115,6 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(v, savedInstanceState);
         btnNotif = v.findViewById(R.id.btnNotif);
-        btnChat = v.findViewById(R.id.btnChat);
         TextView tvNotifBadge = v.findViewById(R.id.tvNotifBadge);
         SharedPreferences prefs = requireContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         int userId = prefs.getInt("userId", -1);

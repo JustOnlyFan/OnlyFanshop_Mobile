@@ -10,19 +10,20 @@
     <FrameLayout
         android:id="@+id/mainFragmentContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent" >
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="#FFFFFF"
-        android:elevation="8dp"
-        app:itemIconTint="@color/bottom_nav_collor"
-        app:itemTextColor="@color/bottom_nav_collor"
-        app:itemIconSize="24dp"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/menu_bottom_nav_admin" />
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="#FFFFFF"
+            android:elevation="8dp"
+            app:itemIconSize="24dp"
+            app:itemIconTint="@color/bottom_nav_collor"
+            app:itemTextColor="@color/bottom_nav_collor"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/menu_bottom_nav_admin" />
+    </FrameLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

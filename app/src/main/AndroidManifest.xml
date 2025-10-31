@@ -97,6 +97,9 @@
             android:name=".ui.chat.ChatRoomActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.notification.NotificationListActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.chat.ChatListActivity"
             android:exported="false" />
         <activity

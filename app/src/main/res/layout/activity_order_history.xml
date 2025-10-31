@@ -5,11 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="12dp"
+    android:fitsSystemWindows="true"
     android:background="#F9F9F9">
 
     <LinearLayout
         android:id="@+id/btnBackMain"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="top|start"
@@ -27,31 +28,20 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_back"
-            app:tint="#1E88E5"
+            app:tint="#050505"
             android:contentDescription="Back icon"/>
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Back"
-            android:textColor="#1E88E5"
+            android:gravity="center"
+            android:text="Lịch sử đơn hàng"
+            android:textColor="#000"
             android:textSize="20sp"
-            android:layout_marginStart="8dp"
-            android:textAllCaps="false"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
     </LinearLayout>
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:text="Lịch sử đơn hàng"
-        android:textStyle="bold"
-        android:textSize="20sp"
-        android:layout_marginBottom="8dp"
-        android:textColor="#000"
-        android:gravity="center"
-        />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOrders"
