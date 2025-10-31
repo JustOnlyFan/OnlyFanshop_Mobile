@@ -23,8 +23,8 @@
             android:clipToPadding="false"
             android:elevation="4dp"
             android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp" />
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp" />
     </FrameLayout>
 
     <!-- Modern Search Bar -->
