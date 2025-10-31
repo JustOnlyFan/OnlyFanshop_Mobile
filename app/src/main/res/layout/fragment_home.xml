@@ -62,13 +62,6 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true">
 
-                <ImageView
-                    android:id="@+id/btnGift"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_chat"
-                    android:layout_marginEnd="16dp" />
-
                 <FrameLayout
                 android:id="@+id/notifContainer"
                 android:layout_width="wrap_content"
@@ -76,8 +69,8 @@
 
                 <ImageView
                     android:id="@+id/btnNotif"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_notification"
                     android:contentDescription="Thông báo" />
 
@@ -104,12 +97,15 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:background="@drawable/search_background"
-            android:padding="12dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp">
 
             <ImageView
                 android:id="@+id/searchIcon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:src="@drawable/ic_search"
                 android:layout_centerVertical="true" />
 
@@ -123,15 +119,16 @@
                 android:layout_marginEnd="12dp"
                 android:hint="Search..."
                 android:textColorHint="#B0B0B0"
-                android:textSize="14sp"
+                android:textSize="15sp"
+                android:textColor="@color/black"
                 android:background="@null"
                 android:singleLine="true"
                 android:layout_centerVertical="true" />
 
             <ImageView
                 android:id="@+id/imageViewFilter"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
                 android:src="@drawable/ic_filter"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true" />
@@ -167,7 +164,7 @@
             android:id="@+id/tvCashbackTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="100 cashback"
+            android:text="OnlyFan Shop"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/black"
