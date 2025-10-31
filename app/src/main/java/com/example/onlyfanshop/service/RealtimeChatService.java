@@ -106,18 +106,21 @@ public class RealtimeChatService {
         startChatRoomPolling();
     }
     
-    // ✅ Firebase listener
+    // ✅ Firebase listener - Improved for better real-time updates
     private void startFirebaseListener(String roomId) {
         try {
             Runnable attach = () -> {
                 try {
-            DatabaseReference messagesRef = FirebaseDatabase.getInstance()
-                    .getReference("Messages")
-                    .child(roomId);
+                    // ✅ Listen to Messages path - đây là path đúng trong Firebase
+                    DatabaseReference messagesRef = FirebaseDatabase.getInstance()
+                            .getReference("Messages")
+                            .child(roomId);
 
+                    // ✅ ChildEventListener để detect tin nhắn mới ngay lập tức
                     ChildEventListener childListener = new ChildEventListener() {
                         @Override
                         public void onChildAdded(DataSnapshot snapshot, String previousChildName) {
+                            Log.d(TAG, "New message detected via onChildAdded for room: " + roomId);
                             ChatMessage message = parseMessageFromSnapshot(snapshot, roomId);
                             if (message != null) {
                                 // Forward immediately; UI layer will deduplicate by messageId
@@ -136,9 +139,22 @@ public class RealtimeChatService {
                             }
                         }
 
-                        @Override public void onChildChanged(DataSnapshot s, String p) {}
+                        @Override 
+                        public void onChildChanged(DataSnapshot s, String p) {
+                            Log.d(TAG, "Message changed for room: " + roomId);
+                            // Process changed message as well
+                            ChatMessage message = parseMessageFromSnapshot(s, roomId);
+                            if (message != null) {
+                                OnNewMessageListener listener = messageListeners.get(roomId);
+                                if (listener != null) {
+                                    mainHandler.post(() -> listener.onNewMessage(message));
+                                }
+                            }
+                        }
+                        
                         @Override public void onChildRemoved(DataSnapshot s) {}
                         @Override public void onChildMoved(DataSnapshot s, String p) {}
+                        
                         @Override
                         public void onCancelled(DatabaseError error) {
                             Log.e(TAG, "Firebase child listener cancelled: " + error.getMessage());
@@ -147,9 +163,11 @@ public class RealtimeChatService {
                     messagesRef.addChildEventListener(childListener);
                     firebaseChildListeners.put(roomId, childListener);
 
+                    // ✅ ValueEventListener để detect bất kỳ thay đổi nào
                     ValueEventListener valueListener = new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot snapshot) {
+                            Log.d(TAG, "Messages data changed for room: " + roomId);
                             processFirebaseMessages(roomId, snapshot);
                         }
                         @Override
@@ -160,16 +178,18 @@ public class RealtimeChatService {
                     messagesRef.addValueEventListener(valueListener);
                     firebaseListeners.put(roomId, valueListener);
 
-                    // Also listen to lastMessageTime to nudge HTTP fetch when backend only updates metadata
+                    // ✅ Listen to Conversations/{roomId}/lastMessageTime để detect khi có tin nhắn mới
+                    // Đây là cách nhanh nhất để detect tin nhắn mới từ máy ảo khác
                     DatabaseReference lastMessageTimeRef = FirebaseDatabase.getInstance()
-                            .getReference("ChatRooms")
+                            .getReference("Conversations")
                             .child(roomId)
                             .child("lastMessageTime");
                     ValueEventListener metaListener = new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot snapshot) {
-                            // Trigger immediate fetch of latest messages
-                            Log.d(TAG, "lastMessageTime changed for room: " + roomId);
+                            // Trigger immediate fetch of latest messages khi lastMessageTime thay đổi
+                            Log.d(TAG, "lastMessageTime changed for room: " + roomId + ", value: " + snapshot.getValue());
+                            // ✅ Trigger immediate poll để fetch tin nhắn mới ngay lập tức
                             pollForNewMessages(roomId);
                         }
                         @Override
@@ -179,6 +199,27 @@ public class RealtimeChatService {
                     };
                     lastMessageTimeRef.addValueEventListener(metaListener);
                     roomMetaListeners.put(roomId, metaListener);
+                    
+                    // ✅ Listen to Conversations/{roomId}/lastMessage để detect tin nhắn mới
+                    DatabaseReference lastMessageRef = FirebaseDatabase.getInstance()
+                            .getReference("Conversations")
+                            .child(roomId)
+                            .child("lastMessage");
+                    ValueEventListener lastMessageListener = new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            Log.d(TAG, "lastMessage changed for room: " + roomId + ", message: " + snapshot.getValue());
+                            // Trigger immediate poll khi lastMessage thay đổi
+                            pollForNewMessages(roomId);
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e(TAG, "Last message listener cancelled: " + error.getMessage());
+                        }
+                    };
+                    lastMessageRef.addValueEventListener(lastMessageListener);
+                    roomMetaListeners.put(roomId + "_lastMessage", lastMessageListener);
+                    
                 } catch (Exception e) {
                     Log.e(TAG, "attach listeners error: " + e.getMessage());
                 }
@@ -204,22 +245,27 @@ public class RealtimeChatService {
         }
     }
     
-    // ✅ Process Firebase messages
+    // ✅ Process Firebase messages - Improved to prevent duplicates
     private void processFirebaseMessages(String roomId, DataSnapshot snapshot) {
         try {
             List<ChatMessage> newMessages = new ArrayList<>();
+            Long currentLastTime = lastMessageTimestamps.get(roomId);
             
             for (DataSnapshot messageSnapshot : snapshot.getChildren()) {
                 try {
                     ChatMessage message = parseMessageFromSnapshot(messageSnapshot, roomId);
                     if (message != null) {
-                        // Check if this is a new message
+                        // ✅ Check if this is a new message by comparing timestamp
                         Long messageTime = message.getOriginalTimestamp();
-                        Long lastTime = lastMessageTimestamps.get(roomId);
                         
-                        if (lastTime == null || messageTime > lastTime) {
+                        // ✅ Chỉ thêm tin nhắn mới hơn lastTime để tránh duplicate
+                        if (messageTime != null && (currentLastTime == null || messageTime > currentLastTime)) {
                             newMessages.add(message);
-                            lastMessageTimestamps.put(roomId, messageTime);
+                            // Update lastTime ngay lập tức để tránh duplicate
+                            if (currentLastTime == null || messageTime > currentLastTime) {
+                                currentLastTime = messageTime;
+                                lastMessageTimestamps.put(roomId, messageTime);
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -227,12 +273,13 @@ public class RealtimeChatService {
                 }
             }
             
-            // Notify listeners
+            // ✅ Notify listeners cho tin nhắn mới
             if (!newMessages.isEmpty()) {
                 OnNewMessageListener listener = messageListeners.get(roomId);
                 if (listener != null) {
                     for (ChatMessage message : newMessages) {
                         mainHandler.post(() -> listener.onNewMessage(message));
+                        Log.d(TAG, "Processed new message from Firebase: " + message.getMessage() + " at time: " + message.getOriginalTimestamp());
                     }
                 }
             }
@@ -262,41 +309,76 @@ public class RealtimeChatService {
         messagePollingFutures.put(roomId, future);
     }
     
-    // ✅ Poll for new messages
+    // ✅ Poll for new messages - Improved to prevent duplicates
     private void pollForNewMessages(String roomId) {
         try {
+            // ✅ Prevent concurrent polling for the same room
+            AtomicBoolean inFlight = messagePollInFlight.computeIfAbsent(roomId, k -> new AtomicBoolean(false));
+            if (!inFlight.compareAndSet(false, true)) {
+                Log.d(TAG, "Poll already in flight for room: " + roomId);
+                return;
+            }
+            
             // Get messages from API
             chatApi.getMessagesForRoom(roomId).enqueue(new retrofit2.Callback<com.example.onlyfanshop.model.response.ApiResponse<List<ChatMessage>>>() {
                 @Override
                 public void onResponse(retrofit2.Call<com.example.onlyfanshop.model.response.ApiResponse<List<ChatMessage>>> call, 
                                      retrofit2.Response<com.example.onlyfanshop.model.response.ApiResponse<List<ChatMessage>>> response) {
-                    if (response.isSuccessful() && response.body() != null && response.body().getStatusCode() == 200) {
-                        List<ChatMessage> messages = response.body().getData();
+                    try {
+                        inFlight.set(false); // Reset flag
                         
-                        // Process new messages
-                        for (ChatMessage message : messages) {
-                            Long messageTime = message.getOriginalTimestamp();
-                            Long lastTime = lastMessageTimestamps.get(roomId);
+                        if (response.isSuccessful() && response.body() != null && response.body().getStatusCode() == 200) {
+                            List<ChatMessage> messages = response.body().getData();
+                            if (messages == null || messages.isEmpty()) {
+                                return;
+                            }
                             
-                            if (lastTime == null || messageTime > lastTime) {
-                                lastMessageTimestamps.put(roomId, messageTime);
-                                
-                                OnNewMessageListener listener = messageListeners.get(roomId);
-                                if (listener != null) {
-                                    mainHandler.post(() -> listener.onNewMessage(message));
+                            Log.d(TAG, "Polled " + messages.size() + " messages for room: " + roomId);
+                            
+                            // ✅ Process new messages - chỉ xử lý tin nhắn mới hơn lastTime
+                            Long currentLastTime = lastMessageTimestamps.get(roomId);
+                            OnNewMessageListener listener = messageListeners.get(roomId);
+                            
+                            if (listener != null) {
+                                for (ChatMessage message : messages) {
+                                    Long messageTime = message.getOriginalTimestamp();
+                                    if (messageTime == null) continue;
+                                    
+                                    // ✅ Chỉ notify tin nhắn mới hơn lastTime để tránh duplicate
+                                    if (currentLastTime == null || messageTime > currentLastTime) {
+                                        // Update lastTime ngay lập tức để tránh duplicate trong lần poll tiếp theo
+                                        if (currentLastTime == null || messageTime > currentLastTime) {
+                                            lastMessageTimestamps.put(roomId, messageTime);
+                                            currentLastTime = messageTime;
+                                        }
+                                        // Notify listener
+                                        mainHandler.post(() -> listener.onNewMessage(message));
+                                        Log.d(TAG, "Notified new message: " + message.getMessage() + " at time: " + messageTime);
+                                    }
                                 }
                             }
                         }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing polled messages: " + e.getMessage());
+                        inFlight.set(false);
                     }
                 }
                 
                 @Override
                 public void onFailure(retrofit2.Call<com.example.onlyfanshop.model.response.ApiResponse<List<ChatMessage>>> call, Throwable t) {
                     Log.e(TAG, "Error polling messages: " + t.getMessage());
+                    AtomicBoolean inFlight = messagePollInFlight.get(roomId);
+                    if (inFlight != null) {
+                        inFlight.set(false);
+                    }
                 }
             });
         } catch (Exception e) {
             Log.e(TAG, "Error in pollForNewMessages: " + e.getMessage());
+            AtomicBoolean inFlight = messagePollInFlight.get(roomId);
+            if (inFlight != null) {
+                inFlight.set(false);
+            }
         }
     }
     
@@ -429,9 +511,8 @@ public class RealtimeChatService {
         if (child != null) {
             try {
                 DatabaseReference messagesRef = FirebaseDatabase.getInstance()
-                        .getReference("ChatRooms")
-                        .child(roomId)
-                        .child("messages");
+                        .getReference("Messages")
+                        .child(roomId);
                 messagesRef.removeEventListener(child);
             } catch (Exception e) {
                 Log.e(TAG, "Error removing Firebase child listener: " + e.getMessage());
@@ -442,7 +523,7 @@ public class RealtimeChatService {
         if (meta != null) {
             try {
                 DatabaseReference lastMessageTimeRef = FirebaseDatabase.getInstance()
-                        .getReference("ChatRooms")
+                        .getReference("Conversations")
                         .child(roomId)
                         .child("lastMessageTime");
                 lastMessageTimeRef.removeEventListener(meta);
@@ -450,6 +531,23 @@ public class RealtimeChatService {
                 Log.e(TAG, "Error removing room meta listener: " + e.getMessage());
             }
         }
+        
+        // ✅ Remove lastMessage listener
+        ValueEventListener lastMessage = roomMetaListeners.remove(roomId + "_lastMessage");
+        if (lastMessage != null) {
+            try {
+                DatabaseReference lastMessageRef = FirebaseDatabase.getInstance()
+                        .getReference("Conversations")
+                        .child(roomId)
+                        .child("lastMessage");
+                lastMessageRef.removeEventListener(lastMessage);
+            } catch (Exception e) {
+                Log.e(TAG, "Error removing lastMessage listener: " + e.getMessage());
+            }
+        }
+        
+        // ✅ Clear polling flag
+        messagePollInFlight.remove(roomId);
 
         // Cancel polling task for this room if exists
         ScheduledFuture<?> future = messagePollingFutures.remove(roomId);
@@ -480,14 +578,39 @@ public class RealtimeChatService {
         for (Map.Entry<String, ValueEventListener> entry : firebaseListeners.entrySet()) {
             try {
                 DatabaseReference messagesRef = FirebaseDatabase.getInstance()
-                        .getReference("ChatRooms")
-                        .child(entry.getKey())
-                        .child("messages");
+                        .getReference("Messages")
+                        .child(entry.getKey());
                 messagesRef.removeEventListener(entry.getValue());
             } catch (Exception e) {
                 Log.e(TAG, "Error removing Firebase listener: " + e.getMessage());
             }
         }
+        
+        // ✅ Remove all room meta listeners
+        for (Map.Entry<String, ValueEventListener> entry : roomMetaListeners.entrySet()) {
+            try {
+                String key = entry.getKey();
+                if (key.endsWith("_lastMessage")) {
+                    String roomId = key.replace("_lastMessage", "");
+                    DatabaseReference lastMessageRef = FirebaseDatabase.getInstance()
+                            .getReference("Conversations")
+                            .child(roomId)
+                            .child("lastMessage");
+                    lastMessageRef.removeEventListener(entry.getValue());
+                } else {
+                    DatabaseReference lastMessageTimeRef = FirebaseDatabase.getInstance()
+                            .getReference("Conversations")
+                            .child(key)
+                            .child("lastMessageTime");
+                    lastMessageTimeRef.removeEventListener(entry.getValue());
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error removing room meta listener: " + e.getMessage());
+            }
+        }
+        
+        // ✅ Clear all polling flags
+        messagePollInFlight.clear();
         
         firebaseListeners.clear();
         messageListeners.clear();
