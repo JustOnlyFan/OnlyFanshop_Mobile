@@ -43,7 +43,18 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<ChatRoomAdapter.ChatRo
     public void onBindViewHolder(@NonNull ChatRoomViewHolder holder, int position) {
         ChatRoom chatRoom = chatRooms.get(position);
         
-        holder.customerName.setText(chatRoom.getCustomerName());
+        // ✅ Fix: Luôn ưu tiên extract customerName từ roomId để đảm bảo hiển thị đúng
+        // RoomId là source of truth, không phụ thuộc vào database local
+        String customerName = extractCustomerNameFromRoomId(chatRoom.getRoomId());
+        if (customerName == null || customerName.isEmpty()) {
+            // Fallback về customerName từ API nếu không extract được từ roomId
+            customerName = chatRoom.getCustomerName();
+            if (customerName == null || customerName.isEmpty()) {
+                customerName = "Customer";
+            }
+        }
+        
+        holder.customerName.setText(customerName);
         holder.lastMessage.setText(chatRoom.getLastMessage());
         
         // Format time
@@ -86,6 +97,28 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<ChatRoomAdapter.ChatRo
     @Override
     public int getItemCount() {
         return chatRooms.size();
+    }
+    
+    // ✅ Extract customer name từ roomId
+    // Room ID format: chatRoom_username_userId (ví dụ: chatRoom_huy_4)
+    private String extractCustomerNameFromRoomId(String roomId) {
+        try {
+            if (roomId != null && roomId.startsWith("chatRoom_")) {
+                String[] parts = roomId.split("_");
+                // parts[0] = "chatRoom"
+                // parts[1] = username (e.g., "huy", "NTT")
+                // parts[2] = userId (e.g., "4")
+                if (parts.length >= 3) {
+                    return parts[1]; // Return username
+                } else if (parts.length == 2) {
+                    // Fallback for old format: chatRoom_userId
+                    return null; // Cannot extract username
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static class ChatRoomViewHolder extends RecyclerView.ViewHolder {
