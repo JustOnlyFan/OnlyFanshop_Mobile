@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="195dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    app:cardCornerRadius="10dp"
-    app:cardElevation="3dp"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
     android:clickable="true"
-    android:foreground="?attr/selectableItemBackground">
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
-        android:layout_width="210dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <!-- Ảnh -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:background="#F5F5F5">
+            android:layout_height="200dp"
+            android:background="#F8F8F8">
 
             <ImageView
                 android:id="@+id/imageProduct"
@@ -33,19 +35,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="12dp">
 
             <TextView
                 android:id="@+id/textTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Product name"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#212121"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:lineSpacingExtra="2dp"/>
+                android:lineSpacingExtra="3dp"
+                android:minHeight="40dp"/>
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -57,7 +60,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="₫99.000"
-                    android:textSize="14sp"
+                    android:textSize="15sp"
                     android:textColor="#EE4D2D"
                     android:textStyle="bold"
                     android:layout_alignParentStart="true" />
