@@ -401,7 +401,13 @@ public class LoginActivity extends AppCompatActivity {
                             Log.d("GoogleAuth", "JWT from backend: " + token);
                             SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
                             prefs.edit().putString("jwt_token", token).apply();
-                            Log.d("GoogleAuth", "Saved JWT token from Google login");
+                            prefs.edit().putString("username", userDTO.getUsername()).apply();
+                            prefs.edit().putString("email", userDTO.getEmail()).apply();
+                            prefs.edit().putString("role", userDTO.getRole()).apply();
+                            prefs.edit().putString("authProvider", userDTO.getAuthProvider()).apply();
+                            prefs.edit().putInt("userId", userDTO.getUserID()).apply();
+                            prefs.edit().putString("address", userDTO.getAddress()).apply();
+                            Log.d("GoogleAuth", "Saved user data from Google login");
                         }
 
                         // Log user information from backend
@@ -412,7 +418,15 @@ public class LoginActivity extends AppCompatActivity {
 
                         Toast.makeText(LoginActivity.this, "Welcome " + userDTO.getUsername(), Toast.LENGTH_SHORT).show();
 
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        // Check role to navigate to appropriate activity
+                        Intent intent;
+                        if (userDTO.getRole().equals("ADMIN")) {
+                            Log.d("GoogleAuth", "Admin detected, navigating to AdminActivity");
+                            intent = new Intent(LoginActivity.this, AdminActivity.class);
+                        } else {
+                            Log.d("GoogleAuth", "Customer detected, navigating to MainActivity");
+                            intent = new Intent(LoginActivity.this, MainActivity.class);
+                        }
                         intent.putExtra("user", userDTO);
                         startActivity(intent);
                         finish();
