@@ -9,42 +9,61 @@
     android:fitsSystemWindows="true"
     android:background="@color/white">
 
-    <!-- Thanh tìm kiếm -->
+    <!-- Thanh tìm kiếm và filter -->
     <LinearLayout
         android:id="@+id/searchBarContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp"
+        android:padding="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:background="@color/white">
 
-        <EditText
-            android:id="@+id/etSearchProduct"
+        <!-- Search bar -->
+        <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="46dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/stroke_bg"
-            android:drawableEnd="@drawable/ic_search"
-            android:drawablePadding="8dp"
-            android:hint="Search..."
-            android:padding="8dp"
-            android:singleLine="true"/>
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/search_background">
 
-        <Spinner
-            android:id="@+id/spinnerSort"
-            android:layout_width="wrap_content"
-            android:layout_height="46dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/stroke_bg"
-            android:padding="8dp"/>
+            <ImageView
+                android:id="@+id/searchIcon"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_search"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="16dp" />
 
-        <Spinner
-            android:id="@+id/spinnerBrand"
-            android:layout_width="wrap_content"
-            android:layout_height="46dp"
-            android:background="@drawable/stroke_bg"
-            android:padding="8dp"/>
+            <EditText
+                android:id="@+id/etSearchProduct"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/searchIcon"
+                android:layout_marginStart="12dp"
+                android:layout_centerVertical="true"
+                android:hint="Search..."
+                android:textColorHint="#B0B0B0"
+                android:textSize="15sp"
+                android:textColor="@color/black"
+                android:background="@null"
+                android:singleLine="true"
+                android:paddingEnd="16dp" />
+        </RelativeLayout>
+
+        <!-- Filter icon button -->
+        <ImageView
+            android:id="@+id/btnFilter"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_filter"
+            android:background="@drawable/search_background"
+            android:padding="12dp"
+            android:contentDescription="Filter"
+            android:clickable="true"
+            android:focusable="true" />
 
     </LinearLayout>
 

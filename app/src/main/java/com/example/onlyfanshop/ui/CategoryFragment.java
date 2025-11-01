@@ -10,11 +10,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -68,15 +66,13 @@ public class CategoryFragment extends Fragment {
     private final Handler debounceHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingSearch;
 
-    private Spinner spinnerSort, spinnerBrand;
+    private ImageView btnFilter;
+    private FilterBottomSheetDialog filterDialog;
     private String sortBy = "ProductID";
     private String sortOrder = "DESC";
     private Integer selectedBrandId = null;
     private final List<BrandDTO> brandList = new ArrayList<>();
-    private boolean spinnerSortInitialized = false;
-    private boolean spinnerBrandInitialized = false;
-    private int lastBrandPosition = 0; // Lưu lại lựa chọn brand
-    private int lastSortPosition = 0;  // Lưu lại lựa chọn sort
+    private final List<CategoryDTO> allCategoryList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -98,9 +94,7 @@ public class CategoryFragment extends Fragment {
         textEmptySearch = v.findViewById(R.id.textEmptySearch);
 
         etSearchProduct = v.findViewById(R.id.etSearchProduct);
-
-        spinnerSort = v.findViewById(R.id.spinnerSort);
-        spinnerBrand = v.findViewById(R.id.spinnerBrand);
+        btnFilter = v.findViewById(R.id.btnFilter);
 
         setupCategoryRecycler();
         setupProductRecycler();
@@ -108,8 +102,7 @@ public class CategoryFragment extends Fragment {
         productApi = ApiClient.getPrivateClient(requireContext()).create(ProductApi.class);
 
         setupSearch();
-        setupSortSpinner();
-        setupBrandSpinner();
+        setupFilterButton();
 
         fetchHomePage();
     }
@@ -194,30 +187,17 @@ public class CategoryFragment extends Fragment {
 
                 HomePageData data = response.body().getData();
 
-                // Cập nhật danh sách brand cho spinner (chỉ khi thay đổi thực sự)
-                boolean brandChanged = false;
+                // Cập nhật danh sách brand
                 if (data.brands != null) {
-                    if (brandList.size() != data.brands.size()) {
-                        brandChanged = true;
-                    } else {
-                        for (int i = 0; i < brandList.size(); i++) {
-                            if (!brandList.get(i).getBrandID().equals(data.brands.get(i).getBrandID())) {
-                                brandChanged = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (brandChanged) {
-                        brandList.clear();
-                        brandList.addAll(data.brands);
-                        spinnerBrandInitialized = false;
-                        setupBrandSpinner();
-                        spinnerBrand.setSelection(lastBrandPosition); // Restore lựa chọn gần nhất
-                    }
+                    brandList.clear();
+                    brandList.addAll(data.brands);
                 }
 
-                // Category logic giữ nguyên
+                // Category logic
                 List<CategoryDTO> categories = data.categories != null ? data.categories : new ArrayList<>();
+                allCategoryList.clear();
+                allCategoryList.addAll(categories);
+                
                 CategoryDTO all = new CategoryDTO();
                 all.setId(null);
                 all.setName("All");
@@ -275,59 +255,56 @@ public class CategoryFragment extends Fragment {
         textEmptySearch.setVisibility(View.VISIBLE);
     }
 
-    private void setupSortSpinner() {
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                requireContext(), R.array.sort_options, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerSort.setAdapter(adapter);
-
-        spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!spinnerSortInitialized) {
-                    spinnerSortInitialized = true;
-                    spinnerSort.setSelection(lastSortPosition);
-                    return;
-                }
-                lastSortPosition = position; // Lưu lại lựa chọn sort
-                switch (position) {
-                    case 0: // Mới nhất
-                        sortBy = "ProductID"; sortOrder = "DESC"; break;
-                    case 1: // Giá tăng dần
-                        sortBy = "Price"; sortOrder = "ASC"; break;
-                    case 2: // Giá giảm dần
-                        sortBy = "Price"; sortOrder = "DESC"; break;
-                }
-                fetchHomePage();
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
-        });
+    private void setupFilterButton() {
+        btnFilter.setOnClickListener(v -> showFilterDialog());
     }
 
-    private void setupBrandSpinner() {
-        List<String> brandNames = new ArrayList<>();
-        brandNames.add("All");
-        for (BrandDTO b : brandList) brandNames.add(b.getName());
+    private void showFilterDialog() {
+        if (filterDialog == null) {
+            filterDialog = FilterBottomSheetDialog.newInstance();
+        }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_spinner_item, brandNames);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerBrand.setAdapter(adapter);
+        // Set current filter values
+        String priceSort = sortBy.equals("Price") ? sortOrder : "None";
+        filterDialog.setCurrentFilters(priceSort, selectedBrandId, selectedCategoryId);
+        filterDialog.setBrandList(brandList);
+        filterDialog.setCategoryList(allCategoryList);
 
-        spinnerBrand.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        // Set listener
+        filterDialog.setFilterListener(new FilterBottomSheetDialog.FilterListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!spinnerBrandInitialized) {
-                    spinnerBrandInitialized = true;
-                    spinnerBrand.setSelection(lastBrandPosition);
-                    return;
+            public void onFilterApplied(String priceSort, Integer brandId, Integer categoryId, Float priceMin, Float priceMax) {
+                // Update sort by price
+                if ("None".equals(priceSort)) {
+                    sortBy = "ProductID";
+                    sortOrder = "DESC";
+                } else {
+                    sortBy = "Price";
+                    sortOrder = priceSort;
                 }
-                lastBrandPosition = position; // Lưu lại lựa chọn
-                selectedBrandId = (position == 0) ? null : brandList.get(position - 1).getBrandID();
+
+                selectedBrandId = brandId;
+                selectedCategoryId = categoryId;
+                
+                // Note: Price range filtering would need to be implemented on backend
+                // For now, we just store the values but don't use them in API call
+                // You can filter products client-side if needed
+
+                // Refresh products
                 fetchHomePage();
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
+
+            @Override
+            public void onFilterReset() {
+                sortBy = "ProductID";
+                sortOrder = "DESC";
+                selectedBrandId = null;
+                selectedCategoryId = null;
+                fetchHomePage();
+            }
         });
+
+        filterDialog.show(getParentFragmentManager(), "FilterBottomSheet");
     }
 
     private abstract static class SimpleTextWatcher implements TextWatcher {

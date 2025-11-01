@@ -11,4 +11,8 @@
         <item>email</item>
         <item>Phone</item>
     </string-array>
+    <array name="default_price_range">
+        <item>0</item>
+        <item>50000000</item>
+    </array>
 </resources>

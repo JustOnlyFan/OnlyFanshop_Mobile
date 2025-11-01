@@ -1,35 +1,221 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="wrap_content" android:padding="16dp">
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:maxHeight="600dp"
+    android:fillViewport="true">
 
-    <EditText
-        android:id="@+id/etBrand"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Thương hiệu" />
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:background="@color/white">
 
-    <EditText
-        android:id="@+id/etPriceMin"
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Filter"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnResetFilter"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thiết lập lại"
+                android:textSize="14sp"
+                android:textColor="#2196F3"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:layout_marginEnd="8dp"
+                app:cornerRadius="8dp" />
+
+            <ImageView
+                android:id="@+id/btnCloseFilter"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="8dp"
+                android:contentDescription="Close" />
+        </LinearLayout>
+
+        <!-- Price Range Slider -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Khoảng giá"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
+
+            <!-- Price Display Fields -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:id="@+id/tvPriceMin"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0.000₫"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:background="@drawable/stroke_bg" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-"
+                    android:textSize="18sp"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="12dp" />
+
+                <TextView
+                    android:id="@+id/tvPriceMax"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="195.000.000₫"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:background="@drawable/stroke_bg" />
+            </LinearLayout>
+
+            <!-- Range Slider -->
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/rangeSliderPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:valueFrom="0"
+                android:valueTo="195000000"
+                android:stepSize="100000"
+                app:thumbColor="#2196F3"
+                app:trackColorActive="#2196F3"
+                app:trackColorInactive="#E0E0E0"
+                app:labelBehavior="gone" />
+        </LinearLayout>
+
+    <!-- Sort by Price -->
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Giá từ" android:inputType="number"/>
+        android:text="Sort by Price"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginBottom="12dp" />
 
-    <EditText
-        android:id="@+id/etPriceMax"
+    <RadioGroup
+        android:id="@+id/rgPriceSort"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Giá đến" android:inputType="number"/>
+        android:orientation="vertical"
+        android:layout_marginBottom="24dp">
 
-    <EditText
-        android:id="@+id/etRating"
+        <RadioButton
+            android:id="@+id/rbPriceNone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="None"
+            android:textSize="14sp"
+            android:checked="true"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/rbPriceLow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Giá: Thấp đến Cao"
+            android:textSize="14sp"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/rbPriceHigh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Giá: Cao đến Thấp"
+            android:textSize="14sp"
+            android:padding="12dp" />
+    </RadioGroup>
+
+    <!-- Filter by Brand -->
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Đánh giá từ (sao)" android:inputType="number"/>
+        android:text="Filter by Brand"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginBottom="12dp" />
 
-    <Button
+    <Spinner
+        android:id="@+id/spinnerFilterBrand"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/stroke_bg"
+        android:padding="12dp"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Filter by Category -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Filter by Category"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginBottom="12dp" />
+
+    <Spinner
+        android:id="@+id/spinnerFilterCategory"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/stroke_bg"
+        android:padding="12dp"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Action Button -->
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnApplyFilter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Áp dụng" android:layout_marginTop="12dp"/>
-</LinearLayout>
+        android:text="Áp dụng"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:padding="14dp"
+        android:layout_marginTop="8dp"
+        app:cornerRadius="12dp"
+        app:backgroundTint="#2196F3" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

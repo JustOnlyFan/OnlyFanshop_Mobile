@@ -21,6 +21,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.CompositePageTransformer;
@@ -30,6 +31,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.adapter.BannerAdapter;
 import com.example.onlyfanshop.adapter.PopularAdapter;
+import com.example.onlyfanshop.adapter.ProductAdapter;
 import com.example.onlyfanshop.adapter.SearchSuggestionAdapter;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ProductApi;
@@ -41,11 +43,14 @@ import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.HomePageData;
 import com.example.onlyfanshop.model.response.UserResponse;
 import com.example.onlyfanshop.ui.product.ProductDetailActivity;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -73,6 +78,11 @@ public class HomeFragment extends Fragment {
     private ProgressBar progressBarPopular;
     private PopularAdapter popularAdapter;
     private ProductApi productApi;
+
+    // Products
+    private RecyclerView productsView;
+    private ProgressBar progressBarProducts;
+    private ProductAdapter productAdapter;
 
     // Welcome
     private TextView tvUserName;
@@ -207,6 +217,38 @@ public class HomeFragment extends Fragment {
         productApi = ApiClient.getPrivateClient(requireContext()).create(ProductApi.class);
         loadPopular();
 
+        // See all button - navigate to products tab
+        TextView tvSeeAll = v.findViewById(R.id.tvSeeAll);
+        if (tvSeeAll != null) {
+            tvSeeAll.setOnClickListener(view -> {
+                // Navigate to products tab (nav_search) in bottom navigation
+                if (getActivity() != null) {
+                    View bottomNavView = getActivity().findViewById(R.id.bottomNav);
+                    if (bottomNavView instanceof BottomNavigationView) {
+                        BottomNavigationView bottomNav = (BottomNavigationView) bottomNavView;
+                        bottomNav.setSelectedItemId(R.id.nav_search);
+                    }
+                }
+            });
+        }
+
+        // Products
+        productsView = v.findViewById(R.id.productsView);
+        progressBarProducts = v.findViewById(R.id.progressBarProducts);
+
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(requireContext(), 2);
+        productsView.setLayoutManager(gridLayoutManager);
+        productsView.setNestedScrollingEnabled(false);
+
+        productAdapter = new ProductAdapter(item -> {
+            Intent intent = new Intent(requireContext(), ProductDetailActivity.class);
+            intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_ID, item.getProductID());
+            startActivity(intent);
+        });
+        productsView.setAdapter(productAdapter);
+
+        loadProducts();
+
         // Search suggestions
         etSearch = v.findViewById(R.id.editTextText);
         recyclerSuggest = v.findViewById(R.id.recyclerSearchSuggest);
@@ -333,7 +375,8 @@ public class HomeFragment extends Fragment {
 
     private void loadPopular() {
         setPopularLoading(true);
-        productApi.getHomePagePost(1, 10, "ProductID", "DESC", null, null, null)
+        // Load more products to have enough for random selection (load 50 to ensure we have at least 15)
+        productApi.getHomePagePost(1, 50, "ProductID", "DESC", null, null, null)
                 .enqueue(new Callback<ApiResponse<HomePageData>>() {
                     @Override
                     public void onResponse(@NonNull Call<ApiResponse<HomePageData>> call,
@@ -345,13 +388,63 @@ public class HomeFragment extends Fragment {
                                 products = response.body().getData().products;
                             }
                         }
-                        popularAdapter.submitList(products);
+                        
+                        // Randomize and take 15 products
+                        List<ProductDTO> randomProducts = getRandomProducts(products, 15);
+                        popularAdapter.submitList(randomProducts);
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<ApiResponse<HomePageData>> call, @NonNull Throwable t) {
                         setPopularLoading(false);
                         popularAdapter.submitList(new ArrayList<>());
+                    }
+                });
+    }
+
+    // Helper method to get random products
+    private List<ProductDTO> getRandomProducts(List<ProductDTO> products, int count) {
+        if (products == null || products.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<ProductDTO> shuffled = new ArrayList<>(products);
+        Collections.shuffle(shuffled, new Random());
+        
+        int size = Math.min(count, shuffled.size());
+        return shuffled.subList(0, size);
+    }
+
+    // ---------------- Products ----------------
+    private void setProductsLoading(boolean loading) {
+        if (progressBarProducts != null) {
+            progressBarProducts.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void loadProducts() {
+        setProductsLoading(true);
+        // Load all products with a large page size (1000 should be enough for most cases)
+        // If you have pagination, you might want to implement loading more products
+        productApi.getHomePagePost(1, 1000, "ProductID", "ASC", null, null, null)
+                .enqueue(new Callback<ApiResponse<HomePageData>>() {
+                    @Override
+                    public void onResponse(@NonNull Call<ApiResponse<HomePageData>> call,
+                                           @NonNull Response<ApiResponse<HomePageData>> response) {
+                        setProductsLoading(false);
+                        List<ProductDTO> products = new ArrayList<>();
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            if (response.body().getData().products != null) {
+                                products = response.body().getData().products;
+                            }
+                        }
+                        productAdapter.submitList(products);
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<ApiResponse<HomePageData>> call, @NonNull Throwable t) {
+                        setProductsLoading(false);
+                        productAdapter.submitList(new ArrayList<>());
                     }
                 });
     }
