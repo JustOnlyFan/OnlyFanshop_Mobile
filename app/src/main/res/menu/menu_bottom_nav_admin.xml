@@ -11,7 +11,7 @@
         android:title="Store" />
     <item
         android:id="@+id/nav_order"
-        android:icon="@drawable/ic_profile"
+        android:icon="@drawable/ic_empty_list"
         android:title="Order" />
     <item
         android:id="@+id/nav_profile"

@@ -58,9 +58,6 @@
             android:name=".ui.payment.PaymentWebViewActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.cart.CartActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.login.ResetPasswordActivity"
             android:exported="false" />
         <activity
@@ -111,6 +108,13 @@
         <activity
             android:name=".activity.LocationPickerActivity"
             android:exported="false" /> <!-- FCM Service -->
+        <activity
+            android:name=".ui.user.UserManagementActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.user.AddUserActivity"
+            android:exported="false" />
+
         <service
             android:name=".service.FCMService"
             android:exported="false">

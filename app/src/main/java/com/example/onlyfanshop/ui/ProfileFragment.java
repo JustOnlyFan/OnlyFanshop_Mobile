@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.widget.TextView;
 
@@ -50,12 +51,15 @@ public class ProfileFragment extends Fragment {
     private CardView btnEditProfile;
     private View btnSupport, btnResetPassword, btnLogout, btnHistory, btnChatWithAdmin, btnLanguage;
     private SwitchCompat switchPushNotif, switchFaceId;
-    private TextView tvProfileName, tvProfileEmail;
+    private TextView tvProfileName, tvProfileEmail, tvSeeAllOrders;
     private User currentUser;
     private String currentSourceLangCode;
     private String currentTargetLangCode;
     private com.google.mlkit.nl.translate.Translator mlKitTranslator;
     private TranslatorOptions currentTranslatorOptions;
+
+    private LinearLayout btnPendingConfirm, btnReadyToShip, btnShipping;
+
 
 
     @Nullable
@@ -97,7 +101,7 @@ public class ProfileFragment extends Fragment {
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnSupport = view.findViewById(R.id.btnSupport);
         btnChatWithAdmin = view.findViewById(R.id.btnChatWithAdmin);
-        btnHistory = view.findViewById(R.id.History);
+        tvSeeAllOrders = view.findViewById(R.id.tvSeeAllOrders);
         btnResetPassword = view.findViewById(R.id.btnResetPassword);
         btnLogout = view.findViewById(R.id.btnLogout);
         switchPushNotif = view.findViewById(R.id.switchPushNotif);
@@ -107,6 +111,10 @@ public class ProfileFragment extends Fragment {
         tvProfileEmail = view.findViewById(R.id.tvProfileEmail);
 
         btnLanguage = view.findViewById(R.id.btnLanguage);
+
+        btnPendingConfirm = view.findViewById(R.id.btnPendingConfirm);
+        btnReadyToShip = view.findViewById(R.id.btnReadyToShip);
+        btnShipping = view.findViewById(R.id.btnShipping);
     }
 
     private void setupClickListeners() {
@@ -127,7 +135,7 @@ public class ProfileFragment extends Fragment {
         btnChatWithAdmin.setOnClickListener(v -> openChatWithAdmin());
         btnResetPassword.setOnClickListener(v -> startActivity(new Intent(requireContext(), ChangePasswordActivity.class)));
         btnLogout.setOnClickListener(v -> showLogoutDialog());
-        btnHistory.setOnClickListener(v -> startActivity(new Intent(requireContext(), OrderHistoryActivity.class)));
+        tvSeeAllOrders.setOnClickListener(v -> startActivity(new Intent(requireContext(), OrderHistoryActivity.class)));
         switchPushNotif.setOnCheckedChangeListener((buttonView, isChecked) ->
                 Toast.makeText(requireContext(), "Push notifications: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
 
@@ -140,6 +148,10 @@ public class ProfileFragment extends Fragment {
                 showLanguageSelectionDialog();
             }
         });
+        btnPendingConfirm.setOnClickListener(v -> openOrderHistory("PENDING"));
+        btnReadyToShip.setOnClickListener(v -> openOrderHistory("READY_TO_SHIP"));
+        btnShipping.setOnClickListener(v -> openOrderHistory("SHIPPING"));
+
     }
 
     private void fetchUser() {
@@ -351,4 +363,10 @@ public class ProfileFragment extends Fragment {
             mlKitTranslator.close();
         }
     }
+    private void openOrderHistory(String status) {
+        Intent intent = new Intent(requireContext(), OrderHistoryActivity.class);
+        intent.putExtra("status", status);
+        startActivity(intent);
+    }
+
 }
