@@ -2,6 +2,7 @@ package com.example.onlyfanshop.ui.order;
 
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -46,15 +47,28 @@ public class OrderHistoryActivity extends AppCompatActivity {
 
     private void loadOrders() {
         OrderApi api = ApiClient.getPrivateClient(this).create(OrderApi.class);
-        api.getOrders().enqueue(new Callback<ApiResponse<List<OrderDTO>>>() {
+        String status = getIntent().getStringExtra("status");
+
+        RecyclerView recyclerView = findViewById(R.id.rvOrders);
+        LinearLayout layoutEmpty = findViewById(R.id.layoutEmpty);
+
+        api.getOrders(status).enqueue(new Callback<ApiResponse<List<OrderDTO>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<OrderDTO>>> call, Response<ApiResponse<List<OrderDTO>>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<OrderDTO> orders = response.body().getData();
-                    orderAdapter = new OrderAdapter(orders);
-                    recyclerView.setAdapter(orderAdapter);
+                    if (orders == null || orders.isEmpty()) {
+                        layoutEmpty.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
+                    } else {
+                        layoutEmpty.setVisibility(View.GONE);
+                        recyclerView.setVisibility(View.VISIBLE);
+
+                        orderAdapter = new OrderAdapter(orders);
+                        recyclerView.setAdapter(orderAdapter);
+                    }
                 } else {
-                    Toast.makeText(OrderHistoryActivity.this, "Không tải được lịch sử đơn hàng", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(OrderHistoryActivity.this, "Không có lịch sử đơn hàng", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -64,4 +78,5 @@ public class OrderHistoryActivity extends AppCompatActivity {
             }
         });
     }
+
 }

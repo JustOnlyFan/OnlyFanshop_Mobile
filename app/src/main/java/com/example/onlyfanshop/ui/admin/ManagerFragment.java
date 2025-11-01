@@ -18,6 +18,7 @@ import com.example.onlyfanshop.ui.CategoryManagementActivity;
 import com.example.onlyfanshop.ui.product.ProductManagementActivity;
 import com.example.onlyfanshop.ui.chat.ChatListActivity;
 import com.example.onlyfanshop.activity.StoreManagementActivity;
+import com.example.onlyfanshop.ui.user.UserManagementActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -115,6 +116,11 @@ public class ManagerFragment extends Fragment {
 
         btnStoreManagement.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), StoreManagementActivity.class);
+            startActivity(intent);
+        });
+
+        btnUserManagement.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), UserManagementActivity.class);
             startActivity(intent);
         });
 
