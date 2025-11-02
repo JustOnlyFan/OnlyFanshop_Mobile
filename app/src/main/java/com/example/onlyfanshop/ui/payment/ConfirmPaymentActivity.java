@@ -48,6 +48,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     private ActivityConfirmPaymentBinding binding;
     private CartAdapter cartAdapter;
     private List<CartItemDTO> cartItems;
+    List<CartItemDTO> subList = new ArrayList<>();
     private SharedPreferences sharedPreferences;
     private VietnamAddressApi vietnamAddressApi;
     private List<VietnamProvince> provinces;
@@ -63,7 +64,6 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
 
         // Get cart items and total price from intent
         cartItems = (List<CartItemDTO>) getIntent().getSerializableExtra("cartItems");
-        List<CartItemDTO> subList = new ArrayList<>();
         for (CartItemDTO item : cartItems) {
             if(item.isChecked()){
                 subList.add(item);
