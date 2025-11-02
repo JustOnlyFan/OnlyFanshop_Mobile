@@ -1,38 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    app:cardCornerRadius="10dp"
-    app:cardElevation="4dp"
-    android:foreground="?attr/selectableItemBackground">
+    android:orientation="vertical"
+    android:background="@color/white">
 
     <LinearLayout
-        android:orientation="vertical"
-        android:padding="12dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical">
 
-        <!-- 🔹 Nội dung thông báo -->
+    <!-- Icon Container -->
+    <RelativeLayout
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="12dp">
+
+        <!-- Main Notification Icon with background -->
+        <RelativeLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_icon_circle"
+            android:padding="8dp">
+            
+            <ImageView
+                android:id="@+id/ivNotificationIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/ic_badge_star"
+                android:scaleType="centerInside" />
+        </RelativeLayout>
+
+        <!-- Badge Icon overlay (for special notifications) -->
+        <ImageView
+            android:id="@+id/ivBadgeIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="-4dp"
+            android:layout_marginTop="-4dp"
+            android:src="@drawable/badge_background"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+    <!-- Content -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
         <TextView
             android:id="@+id/tvMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Bạn vừa thanh toán đơn hàng thành công!"
-            android:textSize="16sp"
-            android:textColor="@color/black"
-            android:layout_marginBottom="4dp" />
+            android:text="Chúc mừng! Quý khách vừa nhận được 200 FGold"
+            android:textSize="15sp"
+            android:textColor="#212121"
+            android:lineSpacingExtra="3dp"
+            android:lineSpacingMultiplier="1.1"
+            android:maxLines="3"
+            android:ellipsize="end" />
 
-        <!-- 🔹 Thời gian -->
         <TextView
             android:id="@+id/tvCreatedAt"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2025-10-28 20:33"
+            android:layout_marginTop="8dp"
+            android:text="19:43 - 02/11/2025"
             android:textSize="13sp"
-            />
+            android:textColor="#999999" />
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F0F0F0"
+        android:layout_marginStart="76dp" />
+
+</LinearLayout>
