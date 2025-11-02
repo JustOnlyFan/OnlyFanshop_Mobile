@@ -12,11 +12,14 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.widget.TextView;
+import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.cardview.widget.CardView;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.onlyfanshop.R;
@@ -60,8 +63,6 @@ public class ProfileFragment extends Fragment {
 
     private LinearLayout btnPendingConfirm, btnReadyToShip, btnShipping;
 
-
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -77,6 +78,9 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         initViews(view);
         setupClickListeners();
+
+        // Áp dụng padding đáy động theo system insets + chiều cao BottomNavigationView
+        applyBottomInsetPadding(view);
 
         // 1. DISPLAY IMMEDIATELY FROM SHARED PREFERENCES TO AVOID DELAY
         SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
@@ -369,4 +373,39 @@ public class ProfileFragment extends Fragment {
         startActivity(intent);
     }
 
+    // ====== NEW: Handle bottom insets + BottomNavigationView height to avoid overlap when scrolling ======
+    private void applyBottomInsetPadding(View root) {
+        // Ensure ScrollView can scroll into padding
+        if (root instanceof ScrollView) {
+            ((ScrollView) root).setClipToPadding(false);
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            int systemBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+
+            int bottomNavHeight = 0;
+            BottomNavigationView bottomNav = requireActivity().findViewById(R.id.bottomNav);
+            if (bottomNav != null) {
+                bottomNavHeight = bottomNav.getHeight();
+
+                // If height is not ready yet, post an update after layout
+                if (bottomNavHeight == 0) {
+                    bottomNav.post(() -> {
+                        int h = bottomNav.getHeight();
+                        int desiredBottom = systemBottom + h;
+                        v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), desiredBottom);
+                    });
+                }
+            }
+
+            int desiredBottom = systemBottom + bottomNavHeight;
+            // Preserve existing paddings for L/T/R
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), desiredBottom);
+
+            return insets;
+        });
+
+        // Request to apply insets immediately
+        ViewCompat.requestApplyInsets(root);
+    }
 }
