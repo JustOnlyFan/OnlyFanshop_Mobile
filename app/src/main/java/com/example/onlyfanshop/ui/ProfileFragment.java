@@ -30,6 +30,7 @@ import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
 import com.example.onlyfanshop.model.response.UserResponse;
 import com.example.onlyfanshop.ui.order.OrderHistoryActivity;
+import com.example.onlyfanshop.ui.order.UserOrderFragment;
 import com.example.onlyfanshop.ui.chat.ChatRoomActivity;
 import com.example.onlyfanshop.api.ChatApi;
 import com.example.onlyfanshop.service.ChatService;
@@ -368,9 +369,19 @@ public class ProfileFragment extends Fragment {
         }
     }
     private void openOrderHistory(String status) {
-        Intent intent = new Intent(requireContext(), OrderHistoryActivity.class);
-        intent.putExtra("status", status);
-        startActivity(intent);
+        // Navigate to UserOrderFragment with status filter
+        UserOrderFragment fragment = UserOrderFragment.newInstance(status);
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .setCustomAnimations(
+                        android.R.anim.fade_in,
+                        android.R.anim.fade_out,
+                        android.R.anim.fade_in,
+                        android.R.anim.fade_out
+                )
+                .replace(R.id.mainFragmentContainer, fragment, "USER_ORDER_FRAGMENT")
+                .addToBackStack("USER_ORDER_FRAGMENT")
+                .commit();
     }
 
     // ====== NEW: Handle bottom insets + BottomNavigationView height to avoid overlap when scrolling ======

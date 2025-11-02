@@ -181,7 +181,7 @@ public class CartFragment extends Fragment {
                             totalPrice += item.getPrice();
                             }
                         }
-                        binding.productTotal.setText(totalPrice + " VND");
+
                         binding.totalPrice.setText(totalPrice + " VND");
 
                         // Cập nhật badge ngay sau khi dữ liệu giỏ hàng đã được làm mới

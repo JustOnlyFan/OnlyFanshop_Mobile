@@ -9,18 +9,37 @@
     android:clipToPadding="false"
     android:fitsSystemWindows="true">
 
-    <!-- Tiêu đề -->
-    <TextView
-        android:id="@+id/tvTitle"
+    <!-- Header với back button và title -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="All Orders"
-        android:textColor="#000"
-        android:textSize="20sp"
-        android:textStyle="bold"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="12dp"/>
+        android:layout_marginBottom="12dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:padding="12dp"
+            app:tint="@android:color/black" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Đơn hàng của tôi"
+            android:textColor="#000"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
 
     <!-- Thanh trạng thái -->
     <HorizontalScrollView
@@ -33,16 +52,6 @@
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/btnAll"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="All"
-                android:textSize="13sp"
-                android:backgroundTint="@color/colorPrimary"
-                android:textColor="@android:color/white"
-                android:layout_marginEnd="8dp"/>
 
             <Button
                 android:id="@+id/btnPending"
@@ -68,11 +77,11 @@
                 android:id="@+id/btnShipping"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Shipping"
-                android:textSize="13sp"
+                android:layout_marginEnd="8dp"
                 android:backgroundTint="@color/gray"
+                android:text="Shipping"
                 android:textColor="@android:color/white"
-                android:layout_marginEnd="8dp"/>
+                android:textSize="13sp" />
 
             <Button
                 android:id="@+id/btnCompleted"
