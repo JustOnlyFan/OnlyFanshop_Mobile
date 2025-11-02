@@ -22,4 +22,5 @@
     <color name="nav_unselected">#9E9E9E</color>
     <color name="nav_background">#FFFFFF</color>
     <color name="app_background">#F5F5F5</color>
+    <color name="text_gray">#666666</color>
 </resources>
