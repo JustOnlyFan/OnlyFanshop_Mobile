@@ -54,6 +54,9 @@ public class OrderDetailsActivity extends AppCompatActivity {
         // Setup cancel button click listener
         binding.btnCancelOrder.setOnClickListener(v -> showCancelOrderDialog());
 
+        // Setup approve button click listener (for admin)
+        binding.btnApproveOrder.setOnClickListener(v -> showApproveOrderDialog());
+
         // Gọi API lấy chi tiết đơn hàng
         loadOrderDetails(orderId);
     }
@@ -176,10 +179,14 @@ public class OrderDetailsActivity extends AppCompatActivity {
             binding.tvTotalPrice.setText(formatter.format(order.getTotalPrice()));
         }
 
-        // Show/Hide Cancel Button based on status
-        if ("PENDING".equalsIgnoreCase(order.getOrderStatus())) {
+        // Show/Hide buttons based on status
+        String status = order.getOrderStatus();
+        if ("PENDING".equalsIgnoreCase(status)) {
+            // Admin can approve pending orders
+            binding.btnApproveOrder.setVisibility(View.VISIBLE);
             binding.btnCancelOrder.setVisibility(View.VISIBLE);
         } else {
+            binding.btnApproveOrder.setVisibility(View.GONE);
             binding.btnCancelOrder.setVisibility(View.GONE);
         }
 
@@ -191,15 +198,15 @@ public class OrderDetailsActivity extends AppCompatActivity {
         if (status == null) return "Không xác định";
         switch (status.toUpperCase()) {
             case "PENDING":
-                return "Chờ Người bán gửi hàng";
-            case "APPROVED":
-                return "Chờ Người bán gửi hàng";
-            case "SHIPPED":
+                return "Chờ duyệt";
+            case "PICKING":
+                return "Chờ lấy hàng";
+            case "SHIPPING":
                 return "Đang giao hàng";
             case "DELIVERED":
                 return "Đã giao hàng";
-            case "COMPLETED":
-                return "Hoàn thành";
+            case "RETURNS_REFUNDS":
+                return "Hoàn trả/Hoàn tiền";
             case "CANCELLED":
                 return "Đã hủy";
             default:
@@ -211,14 +218,15 @@ public class OrderDetailsActivity extends AppCompatActivity {
         if (status == null) return 0xFF4CAF50;
         switch (status.toUpperCase()) {
             case "PENDING":
-                return 0xFF4CAF50; // Green
-            case "APPROVED":
+                return 0xFFFFC107; // Yellow/Amber
+            case "PICKING":
                 return 0xFF2196F3; // Blue
-            case "SHIPPED":
+            case "SHIPPING":
                 return 0xFFFF9800; // Orange
             case "DELIVERED":
-            case "COMPLETED":
                 return 0xFF4CAF50; // Green
+            case "RETURNS_REFUNDS":
+                return 0xFFFF6B00; // Orange
             case "CANCELLED":
                 return 0xFFF44336; // Red
             default:
@@ -274,6 +282,49 @@ public class OrderDetailsActivity extends AppCompatActivity {
             public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
                 Toast.makeText(OrderDetailsActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 Log.e("OrderDetail", "Error canceling order: ", t);
+            }
+        });
+    }
+
+    private void showApproveOrderDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Xác nhận duyệt đơn hàng")
+                .setMessage("Bạn có chắc chắn muốn duyệt đơn hàng này? Đơn hàng sẽ chuyển sang trạng thái 'Chờ lấy hàng'.")
+                .setPositiveButton("Duyệt", (dialog, which) -> approveOrder())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    private void approveOrder() {
+        orderApi.setOrderStatus(orderId, "PICKING").enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<Void> apiResponse = response.body();
+                    if (apiResponse.getStatusCode() == 200) {
+                        Toast.makeText(OrderDetailsActivity.this, "Đã duyệt đơn hàng thành công", Toast.LENGTH_SHORT).show();
+                        // Reload order details to update UI
+                        loadOrderDetails(orderId);
+                    } else {
+                        // Handle error response
+                        String message = apiResponse.getMessage() != null ? apiResponse.getMessage() : "Không thể duyệt đơn hàng";
+                        Toast.makeText(OrderDetailsActivity.this, message, Toast.LENGTH_LONG).show();
+                        Log.e("OrderDetail", "Error approving order: " + message + " (Status code: " + apiResponse.getStatusCode() + ")");
+                    }
+                } else {
+                    String errorMessage = "Không thể duyệt đơn hàng";
+                    if (response.body() != null && response.body().getMessage() != null) {
+                        errorMessage = response.body().getMessage();
+                    }
+                    Toast.makeText(OrderDetailsActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    Log.e("OrderDetail", "Error response code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                Toast.makeText(OrderDetailsActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("OrderDetail", "Error approving order: ", t);
             }
         });
     }

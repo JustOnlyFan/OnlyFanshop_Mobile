@@ -43,7 +43,7 @@ public class UserOrderFragment extends Fragment {
     private OrderApi orderApi;
     private Button currentSelectedButton;
 
-    private Button btnPending, btnConfirmed, btnShipping, btnCompleted;
+    private Button btnPending, btnPicking, btnShipping, btnDelivered;
 
     public static UserOrderFragment newInstance(String status) {
         UserOrderFragment fragment = new UserOrderFragment();
@@ -63,9 +63,17 @@ public class UserOrderFragment extends Fragment {
         tvTitle = view.findViewById(R.id.tvTitle);
         btnBack = view.findViewById(R.id.btnBack);
         btnPending = view.findViewById(R.id.btnPending);
-        btnConfirmed = view.findViewById(R.id.btnConfirmed);
+        btnPicking = view.findViewById(R.id.btnPicking);
         btnShipping = view.findViewById(R.id.btnShipping);
-        btnCompleted = view.findViewById(R.id.btnCompleted);
+        btnDelivered = view.findViewById(R.id.btnDelivered);
+
+        // Hide admin-only buttons (All, Returns/Refunds, Cancelled) for regular users
+        Button btnAll = view.findViewById(R.id.btnAll);
+        Button btnReturnsRefunds = view.findViewById(R.id.btnReturnsRefunds);
+        Button btnCancelled = view.findViewById(R.id.btnCancelled);
+        if (btnAll != null) btnAll.setVisibility(View.GONE);
+        if (btnReturnsRefunds != null) btnReturnsRefunds.setVisibility(View.GONE);
+        if (btnCancelled != null) btnCancelled.setVisibility(View.GONE);
 
         // Setup back button
         btnBack.setOnClickListener(v -> {
@@ -95,17 +103,17 @@ public class UserOrderFragment extends Fragment {
             selectButton(btnPending);
             loadOrdersPending();
         });
-        btnConfirmed.setOnClickListener(v -> {
-            selectButton(btnConfirmed);
-            loadOrdersConfirmed();
+        btnPicking.setOnClickListener(v -> {
+            selectButton(btnPicking);
+            loadOrdersByStatus("PICKING");
         });
         btnShipping.setOnClickListener(v -> {
             selectButton(btnShipping);
             loadOrdersShipping();
         });
-        btnCompleted.setOnClickListener(v -> {
-            selectButton(btnCompleted);
-            loadOrdersCompleted();
+        btnDelivered.setOnClickListener(v -> {
+            selectButton(btnDelivered);
+            loadOrdersByStatus("DELIVERED");
         });
 
         // Load orders with initial status and select corresponding button
@@ -166,9 +174,11 @@ public class UserOrderFragment extends Fragment {
             case "PENDING":
                 return "PENDING";
             case "READY_TO_SHIP":
-                return "APPROVED"; // Ready to ship = Approved in backend
+                return "PICKING"; // Ready to ship = Picking in backend
             case "SHIPPING":
-                return "SHIPPED";
+                return "SHIPPING";
+            case "DELIVERED":
+                return "DELIVERED";
             default:
                 return null;
         }
@@ -180,14 +190,14 @@ public class UserOrderFragment extends Fragment {
             case "PENDING":
                 buttonToSelect = btnPending;
                 break;
-            case "APPROVED":
-                buttonToSelect = btnConfirmed;
+            case "PICKING":
+                buttonToSelect = btnPicking;
                 break;
-            case "SHIPPED":
+            case "SHIPPING":
                 buttonToSelect = btnShipping;
                 break;
-            case "COMPLETED":
-                buttonToSelect = btnCompleted;
+            case "DELIVERED":
+                buttonToSelect = btnDelivered;
                 break;
             default:
                 buttonToSelect = btnPending;
@@ -303,6 +313,32 @@ public class UserOrderFragment extends Fragment {
 
     private void loadOrdersCompleted() {
         Call<ApiResponse<List<OrderDTO>>> call = orderApi.getOrdersCompleted();
+        call.enqueue(new Callback<ApiResponse<List<OrderDTO>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<OrderDTO>>> call, Response<ApiResponse<List<OrderDTO>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<OrderDTO> orders = response.body().getData();
+                    if (orders == null || orders.isEmpty()) {
+                        showEmptyState(true);
+                    } else {
+                        showEmptyState(false);
+                        orderAdapter.setOrderList(orders);
+                    }
+                } else {
+                    showEmptyState(true);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
+                showEmptyState(true);
+                Toast.makeText(requireContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadOrdersByStatus(String status) {
+        Call<ApiResponse<List<OrderDTO>>> call = orderApi.getOrders(status);
         call.enqueue(new Callback<ApiResponse<List<OrderDTO>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<OrderDTO>>> call, Response<ApiResponse<List<OrderDTO>>> response) {

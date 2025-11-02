@@ -475,13 +475,25 @@
             android:layout_height="1dp"
             android:background="#E0E0E0" />
 
-        <!-- Cancel Order Button -->
+        <!-- Cancel Order Button / Approve Button -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp"
             android:background="#FFFFFF">
+
+            <Button
+                android:id="@+id/btnApproveOrder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Duyệt đơn hàng"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:backgroundTint="#4CAF50"
+                android:padding="12dp"
+                android:minHeight="48dp"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnCancelOrder"
@@ -494,7 +506,9 @@
                 android:padding="12dp"
                 android:minHeight="48dp"
                 android:stateListAnimator="@null"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_marginTop="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 
