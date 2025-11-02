@@ -244,6 +244,16 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     com.example.onlyfanshop.model.User user = response.body().getData();
+                    
+                    // Save user info to SharedPreferences for fallback
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("username", user.getUsername());
+                    editor.putString("email", user.getEmail());
+                    if (user.getPhoneNumber() != null) {
+                        editor.putString("phoneNumber", user.getPhoneNumber());
+                    }
+                    editor.apply();
+                    
                     displayUserInfo(user);
                 } else {
                     Log.w(TAG, "getUser failed: code=" + response.code());
@@ -289,6 +299,8 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         
         if (username != null && !username.isEmpty()) {
             binding.tvUsername.setText(username);
+            // Auto-fill recipient name field
+            binding.edtRecipientName.setText(username);
         }
         
         if (email != null && !email.isEmpty()) {
@@ -299,6 +311,8 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         if (phoneNumber != null && !phoneNumber.isEmpty()) {
             binding.layoutPhone.setVisibility(View.VISIBLE);
             binding.tvPhoneNumber.setText(phoneNumber);
+            // Auto-fill recipient phone field
+            binding.edtRecipientPhone.setText(phoneNumber);
         } else {
             binding.layoutPhone.setVisibility(View.GONE);
         }

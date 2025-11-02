@@ -38,7 +38,7 @@ public class OrderFragment extends Fragment {
     private OrderApi orderApi;
     private Button currentSelectedButton; // lưu nút đang được chọn
 
-    private Button btnAll, btnPending, btnConfirmed, btnShipping, btnCompleted;
+    private Button btnAll, btnPending, btnPicking, btnShipping, btnDelivered, btnReturnsRefunds, btnCancelled;
 
     @Nullable
     @Override
@@ -47,10 +47,13 @@ public class OrderFragment extends Fragment {
 
         rvOrders = view.findViewById(R.id.rvOrders);
         layoutEmpty = view.findViewById(R.id.layoutEmpty);
+        btnAll = view.findViewById(R.id.btnAll);
         btnPending = view.findViewById(R.id.btnPending);
-        btnConfirmed = view.findViewById(R.id.btnConfirmed);
+        btnPicking = view.findViewById(R.id.btnPicking);
         btnShipping = view.findViewById(R.id.btnShipping);
-        btnCompleted = view.findViewById(R.id.btnCompleted);
+        btnDelivered = view.findViewById(R.id.btnDelivered);
+        btnReturnsRefunds = view.findViewById(R.id.btnReturnsRefunds);
+        btnCancelled = view.findViewById(R.id.btnCancelled);
 
         rvOrders.setLayoutManager(new LinearLayoutManager(getContext()));
         orderAdapter = new OrderAdapterAdmin(null);
@@ -71,17 +74,25 @@ public class OrderFragment extends Fragment {
             selectButton(btnPending);
             loadOrdersPending();
         });
-        btnConfirmed.setOnClickListener(v -> {
-            selectButton(btnConfirmed);
-            loadOrdersConfirmed();
+        btnPicking.setOnClickListener(v -> {
+            selectButton(btnPicking);
+            loadOrdersByStatus("PICKING");
         });
         btnShipping.setOnClickListener(v -> {
             selectButton(btnShipping);
             loadOrdersShipping();
         });
-        btnCompleted.setOnClickListener(v -> {
-            selectButton(btnCompleted);
-            loadOrdersCompleted();
+        btnDelivered.setOnClickListener(v -> {
+            selectButton(btnDelivered);
+            loadOrdersByStatus("DELIVERED");
+        });
+        btnReturnsRefunds.setOnClickListener(v -> {
+            selectButton(btnReturnsRefunds);
+            loadOrdersByStatus("RETURNS_REFUNDS");
+        });
+        btnCancelled.setOnClickListener(v -> {
+            selectButton(btnCancelled);
+            loadOrdersByStatus("CANCELLED");
         });
 
         return view;
@@ -212,6 +223,31 @@ public class OrderFragment extends Fragment {
         });
     }
 
+    private void loadOrdersByStatus(String status) {
+        Call<ApiResponse<List<OrderDTO>>> call = orderApi.getOrders(status);
+        call.enqueue(new Callback<ApiResponse<List<OrderDTO>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<OrderDTO>>> call, Response<ApiResponse<List<OrderDTO>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<OrderDTO> orders = response.body().getData();
+                    if (orders == null || orders.isEmpty()) {
+                        showEmptyState(true);
+                    } else {
+                        showEmptyState(false);
+                        orderAdapter.setOrderList(orders);
+                    }
+                } else {
+                    showEmptyState(true);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
+                showEmptyState(true);
+            }
+        });
+    }
+
     private void showEmptyState(boolean isEmpty) {
         if (isEmpty) {
             layoutEmpty.setVisibility(View.VISIBLE);
@@ -222,6 +258,11 @@ public class OrderFragment extends Fragment {
         }
     }
     private void selectButton(Button selectedButton) {
+        // Kiểm tra null để tránh crash
+        if (selectedButton == null) {
+            return;
+        }
+
         // Reset nút trước
         if (currentSelectedButton != null) {
             currentSelectedButton.setBackgroundTintList(

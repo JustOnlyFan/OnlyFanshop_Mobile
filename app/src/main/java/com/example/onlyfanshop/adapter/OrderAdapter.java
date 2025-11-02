@@ -127,16 +127,23 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         switch (status.toUpperCase()) {
             case "PENDING":
                 return "Chờ xác nhận";
+            case "PICKING":
+                return "Chờ lấy hàng";
+            case "SHIPPING":
+                return "Đang vận chuyển";
+            case "DELIVERED":
+                return "Đã giao hàng";
+            case "RETURNS_REFUNDS":
+                return "Hoàn trả/Hoàn tiền";
+            case "CANCELLED":
+                return "Đã hủy";
+            // Backward compatibility with old statuses
             case "APPROVED":
                 return "Chờ lấy hàng";
             case "SHIPPED":
                 return "Đang vận chuyển";
-            case "DELIVERED":
-                return "Đã giao hàng";
             case "COMPLETED":
-                return "Hoàn thành";
-            case "CANCELLED":
-                return "Đã hủy";
+                return "Đã giao hàng";
             default:
                 return "Chờ xác nhận";
         }
