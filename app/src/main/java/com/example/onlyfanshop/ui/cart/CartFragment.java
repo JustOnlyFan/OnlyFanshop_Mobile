@@ -1,6 +1,8 @@
 package com.example.onlyfanshop.ui.cart;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -99,7 +101,9 @@ public class CartFragment extends Fragment {
 
         binding.checkoutBtn.setOnClickListener(v -> {
             if(totalPrice>0){
-            confirmCheckout();
+                SharedPreferences sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                sharedPreferences.edit().putString("buyMethod", "ByCart").apply();
+                confirmCheckout();
             }
         });
         binding.clearAllBtn.setOnClickListener(v -> clear(USERNAME));
