@@ -315,6 +315,7 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         Log.d("GoogleAuth", "Firebase authentication with Google successful");
                         FirebaseUser user = mAuth.getCurrentUser();
+
                         Log.d("GoogleAuth", "About to call handleSuccessfulLogin");
                         if (pendingLinkCredential != null && user != null) {
                             user.linkWithCredential(pendingLinkCredential)
@@ -410,6 +411,8 @@ public class LoginActivity extends AppCompatActivity {
                             prefs.edit().putString("authProvider", userDTO.getAuthProvider()).apply();
                             prefs.edit().putInt("userId", userDTO.getUserID()).apply();
                             prefs.edit().putString("address", userDTO.getAddress()).apply();
+                            Intent serviceIntent = new Intent(LoginActivity.this, NotificationListenerService.class);
+                            startService(serviceIntent);
                             Log.d("GoogleAuth", "Saved user data from Google login");
                         }
 
