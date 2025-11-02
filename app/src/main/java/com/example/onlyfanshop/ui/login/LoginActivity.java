@@ -26,6 +26,7 @@ import com.example.onlyfanshop.api.UserApi;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.Request.LoginRequest;
 import com.example.onlyfanshop.model.UserDTO;
+import com.example.onlyfanshop.service.NotificationListenerService;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -172,6 +173,8 @@ public class LoginActivity extends AppCompatActivity {
                         sharedPreferences.edit().putString("authProvider", user.getAuthProvider()).apply();
                         sharedPreferences.edit().putInt("userId", user.getUserID()).apply();
                         sharedPreferences.edit().putString("address", user.getAddress()).apply();
+                        Intent serviceIntent = new Intent(LoginActivity.this, NotificationListenerService.class);
+                        startService(serviceIntent);
 
                         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
                         if (firebaseAuth.getCurrentUser() == null) {
