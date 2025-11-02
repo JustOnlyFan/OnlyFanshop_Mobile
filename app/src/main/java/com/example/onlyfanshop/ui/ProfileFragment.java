@@ -147,8 +147,8 @@ public class ProfileFragment extends Fragment {
             }
         });
         btnPendingConfirm.setOnClickListener(v -> openOrderHistory("PENDING"));
-        btnReadyToShip.setOnClickListener(v -> openOrderHistory("CONFIRMED"));
-        btnShipping.setOnClickListener(v -> openOrderHistory("SHIPPING"));
+        btnReadyToShip.setOnClickListener(v -> openOrderHistory("APPROVED"));
+        btnShipping.setOnClickListener(v -> openOrderHistory("SHIPPED"));
 
     }
 
