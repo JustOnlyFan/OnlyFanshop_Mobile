@@ -44,10 +44,16 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         binding = ActivityConfirmPaymentBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         cartItems = (List<CartItemDTO>) getIntent().getSerializableExtra("cartItems");
+        List<CartItemDTO> subList = new ArrayList<>();
+        for (CartItemDTO item : cartItems) {
+            if(item.isChecked()){
+                subList.add(item);
+            }
+        }
         double totalPrice = getIntent().getDoubleExtra("totalPrice", 0.0);
         binding.totalPrice.setText(totalPrice + " VND");
         binding.rclViewCart.setLayoutManager(new LinearLayoutManager(this));
-        cartAdapter = new CartAdapter(this, cartItems, false);
+        cartAdapter = new CartAdapter(this, subList, false);
         binding.rclViewCart.setAdapter(cartAdapter);
         binding.btnCancle.setOnClickListener(v -> finish());
         SharedPreferences sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);

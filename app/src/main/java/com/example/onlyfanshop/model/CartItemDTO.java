@@ -11,9 +11,19 @@ public class CartItemDTO implements Serializable {
     private Integer quantity;
     @SerializedName("price")
     private Double price;
+
+    @SerializedName("checked")
+    private boolean isChecked;
     @SerializedName("product")
     private ProductDTO productDTO;
 
+    public boolean isChecked() {
+        return isChecked;
+    }
+
+    public void setChecked(boolean checked) {
+        isChecked = checked;
+    }
 
     public CartItemDTO() {
     }

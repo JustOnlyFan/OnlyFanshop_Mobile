@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Khi được chọn -->
+    <item android:state_checked="true" android:drawable="@drawable/ic_check_24" />
+
+    <!-- Khi chưa chọn (trống) -->
+    <item android:drawable="@drawable/ic_checkbox_unchecked" />
+</selector>

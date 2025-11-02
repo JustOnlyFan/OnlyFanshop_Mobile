@@ -88,10 +88,40 @@ public class CartFragment extends Fragment {
             }
         });
 
+        cartAdapter.setOnCheckItem(new CartAdapter.OnCheckItem() {
+            @Override
+            public void onCheckItem(CartItemDTO cartItem) {
+                    onCheck(cartItem);
+            }
+        });
+
         getCartItems(USERNAME);
 
-        binding.checkoutBtn.setOnClickListener(v -> confirmCheckout());
+        binding.checkoutBtn.setOnClickListener(v -> {
+            if(totalPrice>0){
+            confirmCheckout();
+            }
+        });
         binding.clearAllBtn.setOnClickListener(v -> clear(USERNAME));
+    }
+
+    private void onCheck(CartItemDTO cartItem){
+        CartItemApi api = ApiClient.getPrivateClient(requireContext()).create(CartItemApi.class);
+        api.onCheck(cartItem.getCartItemID()).enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                if (response.isSuccessful()){
+                    getCartItems(USERNAME);
+                } else{
+                    Toast.makeText(requireContext(), "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                Toast.makeText(requireContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void confirmCheckout() {
@@ -140,14 +170,16 @@ public class CartFragment extends Fragment {
                             binding.textEmpty.setVisibility(View.VISIBLE);
                             binding.checkoutBtn.setVisibility(View.GONE);
                             binding.clearAllBtn.setVisibility(View.GONE);
+                            binding.bottomSummary.setVisibility(View.GONE);
                         } else {
                             binding.textEmpty.setVisibility(View.GONE);
                             binding.checkoutBtn.setVisibility(View.VISIBLE);
                             binding.clearAllBtn.setVisibility(View.VISIBLE);
                         }
-
                         for (CartItemDTO item : cartItems) {
+                            if(item.isChecked()){
                             totalPrice += item.getPrice();
+                            }
                         }
                         binding.productTotal.setText(totalPrice + " VND");
                         binding.totalPrice.setText(totalPrice + " VND");

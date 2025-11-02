@@ -29,7 +29,9 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
 
     private Context context;
     private List<CartItemDTO> cartItems;
+    private List<CartItemDTO> subList;
     private OnQuantityChangeListener listener;
+    private OnCheckItem checkListener;
     private boolean cartView;
 
     public CartAdapter(Context context,List<CartItemDTO> cartItems,boolean cartView) {
@@ -41,6 +43,10 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
     public void setOnQuantityChangeListener(OnQuantityChangeListener listener) {
         this.listener = listener;
     }
+    public void setOnCheckItem(OnCheckItem checkListener) {
+        this.checkListener = checkListener;
+    }
+
 
 
     @NonNull
@@ -55,6 +61,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
     public void onBindViewHolder(@NonNull CartViewholder holder, int position) {
 
             CartItemDTO item = cartItems.get(position);
+            holder.binding.checkBox.setChecked(item.isChecked());
             holder.binding.feeEach.setText(item.getProductDTO().getPrice()+" VND");
             holder.binding.productName.setText(item.getProductDTO().getProductName());
             holder.binding.numberItem.setText(item.getQuantity()+"");
@@ -69,6 +76,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
         if(!cartView){
             holder.binding.addQuantity.setVisibility(View.GONE);
             holder.binding.minusQuantity.setVisibility(View.GONE);
+            holder.binding.checkBox.setVisibility(View.GONE);
         }
 
         holder.binding.addQuantity.setOnClickListener(v -> {
@@ -77,6 +85,10 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
         holder.binding.minusQuantity.setOnClickListener(v -> {
             if (listener != null) listener.onDecrease(item.getProductDTO().getProductID());
         });
+        holder.binding.checkBox.setOnClickListener(v -> {
+            if (checkListener != null) checkListener.onCheckItem(item);
+        });
+
     }
 
     @Override
@@ -100,6 +112,10 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
             super(binding.getRoot());
             this.binding = binding;
         }
+    }
+
+    public interface OnCheckItem{
+        void onCheckItem(CartItemDTO cartItem);
     }
 
     public interface OnQuantityChangeListener {
