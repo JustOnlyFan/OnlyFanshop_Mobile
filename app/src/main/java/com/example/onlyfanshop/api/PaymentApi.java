@@ -11,6 +11,7 @@ public interface PaymentApi {
     Call<ApiResponse<PaymentDTO>> createPayment(
             @Query("amount") double amount,
             @Query("bankCode") String bankCode,
-            @Query("address") String address
+            @Query("address") String address,
+            @Query("buyMethod") String buyMethod
     );
 }

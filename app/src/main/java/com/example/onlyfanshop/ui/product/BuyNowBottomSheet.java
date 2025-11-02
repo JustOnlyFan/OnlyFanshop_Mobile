@@ -112,6 +112,7 @@ public class BuyNowBottomSheet extends BottomSheetDialogFragment {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         String username = sharedPreferences.getString("username", "");
         String token = sharedPreferences.getString("jwt_token", "");
+        sharedPreferences.edit().putString("buyMethod", "Instant").apply();
 
 
         if (username == null || username.trim().isEmpty() || token == null || token.trim().isEmpty()) {

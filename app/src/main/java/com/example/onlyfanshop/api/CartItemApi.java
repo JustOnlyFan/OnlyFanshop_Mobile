@@ -9,6 +9,7 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.Field;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
@@ -42,7 +43,6 @@ public interface CartItemApi {
     @POST("/cart/instantBuy")
     Call<ApiResponse<Void>> instantBuy(@Body AddToCartRequest request);
 
-
     @GET("/cart/{userId}")
     Call<ApiResponse<CartDTO>> getCart(@Path("userId") int userId);
 
@@ -51,6 +51,9 @@ public interface CartItemApi {
 
     @PUT("cartItem/onCheck")
     Call<ApiResponse<Void>> onCheck(@Query("cartItemID") Integer cartItemID);
+
+    @DELETE("cart/deleteInstantCart")
+    Call<ApiResponse<Void>> deleteInstantCart(@Query("userID") Integer userID);
 
 
 
