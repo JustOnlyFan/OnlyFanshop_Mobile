@@ -440,26 +440,6 @@
                                     style="@style/RoundedInputText" />
                             </com.google.android.material.textfield.TextInputLayout>
 
-                            <!-- Phường/Xã -->
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Phường/Xã"
-                                style="@style/LabelText" />
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="12dp"
-                                app:endIconMode="dropdown_menu"
-                                app:hintEnabled="false"
-                                style="@style/RoundedInputLayout">
-                                <AutoCompleteTextView
-                                    android:id="@+id/spinnerHomeWard"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="50dp"
-                                    style="@style/RoundedInputText" />
-                            </com.google.android.material.textfield.TextInputLayout>
-
                             <!-- Địa chỉ nhà -->
                             <TextView
                                 android:layout_width="wrap_content"
