@@ -13,5 +13,6 @@ public interface PaymentApi {
             @Query("bankCode") String bankCode,
             @Query("address") String address,
             @Query("buyMethod") String buyMethod
+            @Query("recipientPhoneNumber") String recipientPhoneNumber
     );
 }

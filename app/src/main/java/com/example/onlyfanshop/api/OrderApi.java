@@ -26,5 +26,21 @@ public interface OrderApi {
             @Query("orderId") int orderId,
             @Query("status") String status
     );
+    @PUT("/order/cancelOrder")
+    Call<ApiResponse<Void>> cancelOrder(
+            @Query("orderId") int orderId
+    );
+
+    @GET("/order/getOrdersPending")
+    Call<ApiResponse<List<OrderDTO>>> getOrdersPending();
+
+    @GET("/order/getOrdersConfirmed")
+    Call<ApiResponse<List<OrderDTO>>> getOrdersConfirmed();
+
+    @GET("/order/getOrdersShipping")
+    Call<ApiResponse<List<OrderDTO>>> getOrdersShipping();
+
+    @GET("/order/getOrdersCompleted")
+    Call<ApiResponse<List<OrderDTO>>> getOrdersCompleted();
 
 }

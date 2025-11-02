@@ -33,7 +33,6 @@ import retrofit2.Response;
 public class OrderAdapterAdmin extends RecyclerView.Adapter<OrderAdapterAdmin.OrderViewHolder> {
 
     private List<OrderDTO> orderList;
-    private final String[] statuses = {"PENDING", "CONFIRMED", "SHIPPING", "COMPLETED"};
 
     public OrderAdapterAdmin(List<OrderDTO> orderList) {
         this.orderList = orderList;
@@ -63,31 +62,12 @@ public class OrderAdapterAdmin extends RecyclerView.Adapter<OrderAdapterAdmin.Or
         holder.tvTotalPrice.setText("Tổng: " + formatter.format(order.getTotalPrice()));
 
         String status = order.getOrderStatus();
-        holder.tvOrderStatus.setText(status);
+        holder.tvOrderStatus.setText(formatStatusText(status));
         holder.updateStatusDisplay(status);
 
-        // Lấy index hiện tại của status
-        final int[] currentIndex = {getStatusIndex(status)};
-
-        holder.btnNextStatus.setOnClickListener(v -> {
-            if (currentIndex[0] < statuses.length - 1) {
-                currentIndex[0]++;
-                String newStatus = statuses[currentIndex[0]];
-                order.setOrderStatus(newStatus); // cập nhật vào model
-                holder.updateStatusDisplay(newStatus);
-                updateOrderStatus(v.getContext(), order.getOrderID(), newStatus);
-            }
-        });
-
-        holder.btnPrevStatus.setOnClickListener(v -> {
-            if (currentIndex[0] > 0) {
-                currentIndex[0]--;
-                String newStatus = statuses[currentIndex[0]];
-                order.setOrderStatus(newStatus);
-                holder.updateStatusDisplay(newStatus);
-                updateOrderStatus(v.getContext(), order.getOrderID(), newStatus);
-            }
-        });
+        // Ẩn nút prev/next status vì chỉ xem chi tiết để approve
+        holder.btnPrevStatus.setVisibility(View.GONE);
+        holder.btnNextStatus.setVisibility(View.GONE);
 
         holder.btnViewDetails.setOnClickListener(v -> {
             Context context = v.getContext();
@@ -97,11 +77,24 @@ public class OrderAdapterAdmin extends RecyclerView.Adapter<OrderAdapterAdmin.Or
         });
     }
 
-    private int getStatusIndex(String status) {
-        for (int i = 0; i < statuses.length; i++) {
-            if (statuses[i].equalsIgnoreCase(status)) return i;
+    private String formatStatusText(String status) {
+        if (status == null) return "Unknown";
+        switch (status.toUpperCase()) {
+            case "PENDING":
+                return "Pending";
+            case "PICKING":
+                return "Picking";
+            case "SHIPPING":
+                return "Shipping";
+            case "DELIVERED":
+                return "Delivered";
+            case "RETURNS_REFUNDS":
+                return "Returns/Refunds";
+            case "CANCELLED":
+                return "Cancelled";
+            default:
+                return status;
         }
-        return 0; // mặc định Pending
     }
 
     @Override
@@ -127,23 +120,36 @@ public class OrderAdapterAdmin extends RecyclerView.Adapter<OrderAdapterAdmin.Or
         }
 
         public void updateStatusDisplay(String status) {
-            tvOrderStatus.setText(status);
-            switch (status.toLowerCase()) {
-                case "pending":
+            if (status == null) {
+                tvOrderStatus.setBackground(null);
+                tvOrderStatus.setTextColor(Color.BLACK);
+                return;
+            }
+            
+            switch (status.toUpperCase()) {
+                case "PENDING":
                     tvOrderStatus.setBackgroundResource(R.drawable.bg_status_pending);
                     tvOrderStatus.setTextColor(Color.parseColor("#856404"));
                     break;
-                case "confirmed":
+                case "PICKING":
                     tvOrderStatus.setBackgroundResource(R.drawable.bg_status_confirmed);
                     tvOrderStatus.setTextColor(Color.parseColor("#0C5460"));
                     break;
-                case "shipping":
+                case "SHIPPING":
                     tvOrderStatus.setBackgroundResource(R.drawable.bg_status_shipping);
                     tvOrderStatus.setTextColor(Color.parseColor("#004085"));
                     break;
-                case "completed":
+                case "DELIVERED":
                     tvOrderStatus.setBackgroundResource(R.drawable.bg_status_completed);
                     tvOrderStatus.setTextColor(Color.parseColor("#155724"));
+                    break;
+                case "RETURNS_REFUNDS":
+                    tvOrderStatus.setBackgroundResource(R.drawable.bg_status_pending);
+                    tvOrderStatus.setTextColor(Color.parseColor("#FF6B00"));
+                    break;
+                case "CANCELLED":
+                    tvOrderStatus.setBackgroundResource(R.drawable.bg_status_pending);
+                    tvOrderStatus.setTextColor(Color.parseColor("#DC3545"));
                     break;
                 default:
                     tvOrderStatus.setBackground(null);

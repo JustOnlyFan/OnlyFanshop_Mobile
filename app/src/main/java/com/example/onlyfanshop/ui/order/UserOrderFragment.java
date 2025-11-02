@@ -1,11 +1,14 @@
-package com.example.onlyfanshop.ui.admin;
+package com.example.onlyfanshop.ui.order;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,14 +18,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.onlyfanshop.R;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.onlyfanshop.adapter.OrderAdapter;
-import com.example.onlyfanshop.adapter.OrderAdapterAdmin;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.OrderApi;
-
 import com.example.onlyfanshop.model.OrderDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
-
 
 import java.util.List;
 
@@ -30,15 +31,27 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class OrderFragment extends Fragment {
+public class UserOrderFragment extends Fragment {
+
+    private static final String ARG_STATUS = "status";
 
     private RecyclerView rvOrders;
     private LinearLayout layoutEmpty;
-    private OrderAdapterAdmin orderAdapter;
+    private TextView tvTitle;
+    private ImageButton btnBack;
+    private OrderAdapter orderAdapter;
     private OrderApi orderApi;
-    private Button currentSelectedButton; // lưu nút đang được chọn
+    private Button currentSelectedButton;
 
-    private Button btnAll, btnPending, btnPicking, btnShipping, btnDelivered, btnReturnsRefunds, btnCancelled;
+    private Button btnPending, btnPicking, btnShipping, btnDelivered;
+
+    public static UserOrderFragment newInstance(String status) {
+        UserOrderFragment fragment = new UserOrderFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_STATUS, status);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Nullable
     @Override
@@ -47,29 +60,45 @@ public class OrderFragment extends Fragment {
 
         rvOrders = view.findViewById(R.id.rvOrders);
         layoutEmpty = view.findViewById(R.id.layoutEmpty);
-        btnAll = view.findViewById(R.id.btnAll);
+        tvTitle = view.findViewById(R.id.tvTitle);
+        btnBack = view.findViewById(R.id.btnBack);
         btnPending = view.findViewById(R.id.btnPending);
         btnPicking = view.findViewById(R.id.btnPicking);
         btnShipping = view.findViewById(R.id.btnShipping);
         btnDelivered = view.findViewById(R.id.btnDelivered);
-        btnReturnsRefunds = view.findViewById(R.id.btnReturnsRefunds);
-        btnCancelled = view.findViewById(R.id.btnCancelled);
+
+        // Hide admin-only buttons (All, Returns/Refunds, Cancelled) for regular users
+        Button btnAll = view.findViewById(R.id.btnAll);
+        Button btnReturnsRefunds = view.findViewById(R.id.btnReturnsRefunds);
+        Button btnCancelled = view.findViewById(R.id.btnCancelled);
+        if (btnAll != null) btnAll.setVisibility(View.GONE);
+        if (btnReturnsRefunds != null) btnReturnsRefunds.setVisibility(View.GONE);
+        if (btnCancelled != null) btnCancelled.setVisibility(View.GONE);
+
+        // Setup back button
+        btnBack.setOnClickListener(v -> {
+            if (getActivity() != null) {
+                getActivity().onBackPressed();
+            }
+        });
 
         rvOrders.setLayoutManager(new LinearLayoutManager(getContext()));
-        orderAdapter = new OrderAdapterAdmin(null);
+        orderAdapter = new OrderAdapter(null);
         rvOrders.setAdapter(orderAdapter);
 
         orderApi = ApiClient.getPrivateClient(requireContext()).create(OrderApi.class);
 
+        // Get status from arguments
+        String initialStatus = null;
+        if (getArguments() != null) {
+            String statusArg = getArguments().getString(ARG_STATUS);
+            if (statusArg != null) {
+                // Map status from ProfileFragment to API status
+                initialStatus = mapStatusToApi(statusArg);
+            }
+        }
 
-        selectButton(btnAll);
-        loadOrders(null);
-
-        // Xử lý click nút lọc
-        btnAll.setOnClickListener(v -> {
-            selectButton(btnAll);
-            loadOrders(null);
-        });
+        // Setup button click listeners (no "All" button)
         btnPending.setOnClickListener(v -> {
             selectButton(btnPending);
             loadOrdersPending();
@@ -86,16 +115,96 @@ public class OrderFragment extends Fragment {
             selectButton(btnDelivered);
             loadOrdersByStatus("DELIVERED");
         });
-        btnReturnsRefunds.setOnClickListener(v -> {
-            selectButton(btnReturnsRefunds);
-            loadOrdersByStatus("RETURNS_REFUNDS");
-        });
-        btnCancelled.setOnClickListener(v -> {
-            selectButton(btnCancelled);
-            loadOrdersByStatus("CANCELLED");
-        });
+
+        // Load orders with initial status and select corresponding button
+        if (initialStatus != null) {
+            selectButtonByStatus(initialStatus);
+            loadOrders(initialStatus);
+        } else {
+            // Default to Pending
+            selectButton(btnPending);
+            loadOrdersPending();
+        }
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Ẩn bottom navigation khi fragment được hiển thị
+        hideBottomNavigation();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Hiện lại bottom navigation khi fragment bị pause
+        showBottomNavigation();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Đảm bảo hiện lại bottom navigation khi fragment bị destroy
+        showBottomNavigation();
+    }
+
+    private void hideBottomNavigation() {
+        if (getActivity() != null) {
+            View bottomNavView = getActivity().findViewById(R.id.bottomNav);
+            if (bottomNavView != null) {
+                bottomNavView.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void showBottomNavigation() {
+        if (getActivity() != null) {
+            View bottomNavView = getActivity().findViewById(R.id.bottomNav);
+            if (bottomNavView != null) {
+                bottomNavView.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private String mapStatusToApi(String statusFromProfile) {
+        // Map status from ProfileFragment buttons to API status
+        switch (statusFromProfile) {
+            case "PENDING":
+                return "PENDING";
+            case "READY_TO_SHIP":
+                return "PICKING"; // Ready to ship = Picking in backend
+            case "SHIPPING":
+                return "SHIPPING";
+            case "DELIVERED":
+                return "DELIVERED";
+            default:
+                return null;
+        }
+    }
+
+    private void selectButtonByStatus(String status) {
+        Button buttonToSelect = null;
+        switch (status) {
+            case "PENDING":
+                buttonToSelect = btnPending;
+                break;
+            case "PICKING":
+                buttonToSelect = btnPicking;
+                break;
+            case "SHIPPING":
+                buttonToSelect = btnShipping;
+                break;
+            case "DELIVERED":
+                buttonToSelect = btnDelivered;
+                break;
+            default:
+                buttonToSelect = btnPending;
+        }
+        if (buttonToSelect != null) {
+            selectButton(buttonToSelect);
+        }
     }
 
     private void loadOrders(String status) {
@@ -119,6 +228,7 @@ public class OrderFragment extends Fragment {
             @Override
             public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
                 showEmptyState(true);
+                Toast.makeText(requireContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -144,6 +254,7 @@ public class OrderFragment extends Fragment {
             @Override
             public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
                 showEmptyState(true);
+                Toast.makeText(requireContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -169,6 +280,7 @@ public class OrderFragment extends Fragment {
             @Override
             public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
                 showEmptyState(true);
+                Toast.makeText(requireContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -194,6 +306,7 @@ public class OrderFragment extends Fragment {
             @Override
             public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
                 showEmptyState(true);
+                Toast.makeText(requireContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -219,6 +332,7 @@ public class OrderFragment extends Fragment {
             @Override
             public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
                 showEmptyState(true);
+                Toast.makeText(requireContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -244,6 +358,7 @@ public class OrderFragment extends Fragment {
             @Override
             public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
                 showEmptyState(true);
+                Toast.makeText(requireContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -257,25 +372,22 @@ public class OrderFragment extends Fragment {
             rvOrders.setVisibility(View.VISIBLE);
         }
     }
-    private void selectButton(Button selectedButton) {
-        // Kiểm tra null để tránh crash
-        if (selectedButton == null) {
-            return;
-        }
 
-        // Reset nút trước
+    private void selectButton(Button selectedButton) {
+        // Reset previous button
         if (currentSelectedButton != null) {
             currentSelectedButton.setBackgroundTintList(
                     ContextCompat.getColorStateList(requireContext(), R.color.gray));
-            currentSelectedButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.black));
+            currentSelectedButton.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.black));
         }
 
-        // Gán nút hiện tại
+        // Set current button
         currentSelectedButton = selectedButton;
 
-        // Đổi màu nút hiện tại sang primary
+        // Highlight current button
         currentSelectedButton.setBackgroundTintList(
                 ContextCompat.getColorStateList(requireContext(), R.color.colorPrimary));
         currentSelectedButton.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
     }
 }
+

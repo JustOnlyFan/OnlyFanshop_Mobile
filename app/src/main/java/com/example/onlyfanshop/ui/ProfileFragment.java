@@ -29,7 +29,9 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
 import com.example.onlyfanshop.model.response.UserResponse;
+import com.example.onlyfanshop.service.NotificationListenerService;
 import com.example.onlyfanshop.ui.order.OrderHistoryActivity;
+import com.example.onlyfanshop.ui.order.UserOrderFragment;
 import com.example.onlyfanshop.ui.chat.ChatRoomActivity;
 import com.example.onlyfanshop.api.ChatApi;
 import com.example.onlyfanshop.service.ChatService;
@@ -52,8 +54,8 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
-    private View btnSupport, btnResetPassword, btnLogout, btnHistory, btnChatWithAdmin, btnLanguage;
-    private SwitchCompat switchPushNotif, switchFaceId;
+    private View btnSupport, btnResetPassword, btnLogout, btnChatWithAdmin, btnLanguage;
+    private SwitchCompat switchPushNotif;
     private TextView tvProfileName, tvProfileEmail, tvSeeAllOrders;
     private User currentUser;
     private String currentSourceLangCode;
@@ -109,7 +111,6 @@ public class ProfileFragment extends Fragment {
         btnResetPassword = view.findViewById(R.id.btnResetPassword);
         btnLogout = view.findViewById(R.id.btnLogout);
         switchPushNotif = view.findViewById(R.id.switchPushNotif);
-        switchFaceId = view.findViewById(R.id.switchFaceId);
 
         tvProfileName = view.findViewById(R.id.tvProfileName);
         tvProfileEmail = view.findViewById(R.id.tvProfileEmail);
@@ -143,8 +144,6 @@ public class ProfileFragment extends Fragment {
         switchPushNotif.setOnCheckedChangeListener((buttonView, isChecked) ->
                 Toast.makeText(requireContext(), "Push notifications: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
 
-        switchFaceId.setOnCheckedChangeListener((buttonView, isChecked) ->
-                Toast.makeText(requireContext(), "Face ID: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
 
         btnLanguage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -153,8 +152,8 @@ public class ProfileFragment extends Fragment {
             }
         });
         btnPendingConfirm.setOnClickListener(v -> openOrderHistory("PENDING"));
-        btnReadyToShip.setOnClickListener(v -> openOrderHistory("READY_TO_SHIP"));
-        btnShipping.setOnClickListener(v -> openOrderHistory("SHIPPING"));
+        btnReadyToShip.setOnClickListener(v -> openOrderHistory("APPROVED"));
+        btnShipping.setOnClickListener(v -> openOrderHistory("SHIPPED"));
 
     }
 
@@ -215,6 +214,8 @@ public class ProfileFragment extends Fragment {
                         DashboardActivity dashboard = (DashboardActivity) requireActivity();
                         dashboard.updateCartBadgeNow();
                         BottomNavigationView bottomNav = dashboard.findViewById(R.id.bottomNav);
+                        Intent serviceIntent = new Intent(requireContext(), NotificationListenerService.class);
+                        requireContext().stopService(serviceIntent);
                         if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_home);
                         dashboard.getSupportFragmentManager()
                                 .beginTransaction()
@@ -368,9 +369,19 @@ public class ProfileFragment extends Fragment {
         }
     }
     private void openOrderHistory(String status) {
-        Intent intent = new Intent(requireContext(), OrderHistoryActivity.class);
-        intent.putExtra("status", status);
-        startActivity(intent);
+        // Navigate to UserOrderFragment with status filter
+        UserOrderFragment fragment = UserOrderFragment.newInstance(status);
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .setCustomAnimations(
+                        android.R.anim.fade_in,
+                        android.R.anim.fade_out,
+                        android.R.anim.fade_in,
+                        android.R.anim.fade_out
+                )
+                .replace(R.id.mainFragmentContainer, fragment, "USER_ORDER_FRAGMENT")
+                .addToBackStack("USER_ORDER_FRAGMENT")
+                .commit();
     }
 
     // ====== NEW: Handle bottom insets + BottomNavigationView height to avoid overlap when scrolling ======

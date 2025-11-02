@@ -264,6 +264,16 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     com.example.onlyfanshop.model.User user = response.body().getData();
+                    
+                    // Save user info to SharedPreferences for fallback
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("username", user.getUsername());
+                    editor.putString("email", user.getEmail());
+                    if (user.getPhoneNumber() != null) {
+                        editor.putString("phoneNumber", user.getPhoneNumber());
+                    }
+                    editor.apply();
+                    
                     displayUserInfo(user);
                 } else {
                     Log.w(TAG, "getUser failed: code=" + response.code());
@@ -309,6 +319,8 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         
         if (username != null && !username.isEmpty()) {
             binding.tvUsername.setText(username);
+            // Auto-fill recipient name field
+            binding.edtRecipientName.setText(username);
         }
         
         if (email != null && !email.isEmpty()) {
@@ -319,6 +331,8 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         if (phoneNumber != null && !phoneNumber.isEmpty()) {
             binding.layoutPhone.setVisibility(View.VISIBLE);
             binding.tvPhoneNumber.setText(phoneNumber);
+            // Auto-fill recipient phone field
+            binding.edtRecipientPhone.setText(phoneNumber);
         } else {
             binding.layoutPhone.setVisibility(View.GONE);
         }
@@ -381,15 +395,15 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             
             if (isNewAddress) {
                 String province = binding.spinnerHomeProvince.getText().toString().trim();
-                String district = binding.spinnerHomeDistrict.getText().toString().trim();
-                String ward = binding.spinnerHomeWard.getText().toString().trim();
+                String district = binding.spinnerHomeDistrict.getText().toString().trim(); // This is actually ward in API v2
                 String street = binding.edtHomeStreet.getText().toString().trim();
                 
-                if (province.isEmpty() || district.isEmpty() || ward.isEmpty() || street.isEmpty()) {
+                if (province.isEmpty() || district.isEmpty() || street.isEmpty()) {
                     return null;
                 }
                 
-                return String.format("%s, %s, %s, %s", street, ward, district, province);
+                // Format: street, district (ward), province
+                return String.format("%s, %s, %s", street, district, province);
             } else {
                 // Use default address
                 String defaultAddress = binding.tvDefaultAddress.getText().toString().trim();
@@ -412,9 +426,19 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     private void handleVNPayPayment(double totalPrice, String address) {
         showLoading(true);
         
+        // Get recipient phone number from input
+        String recipientPhoneNumber = "";
+        if (binding.edtRecipientPhone != null) {
+            recipientPhoneNumber = binding.edtRecipientPhone.getText().toString().trim();
+        }
+        // If empty, use default phone number from user
+        if (recipientPhoneNumber.isEmpty()) {
+            recipientPhoneNumber = binding.tvPhoneNumber.getText().toString().trim();
+        }
+        
         String bankCode = "NCB";
         PaymentApi api = ApiClient.getPrivateClient(this).create(PaymentApi.class);
-        api.createPayment(totalPrice, bankCode, address, sharedPreferences.getString("buyMethod", "")).enqueue(new Callback<ApiResponse<PaymentDTO>>() {
+        api.createPayment(totalPrice, bankCode, address, sharedPreferences.getString("buyMethod", ""),recipientPhoneNumber).enqueue(new Callback<ApiResponse<PaymentDTO>>() {
             @Override
             public void onResponse(Call<ApiResponse<PaymentDTO>> call, Response<ApiResponse<PaymentDTO>> response) {
                 showLoading(false);
@@ -555,22 +579,13 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
                 Log.d(TAG, "Selected ward: " + selectedWardName + ", code: " + selectedWard.getCode());
             });
         } else {
-            // Home delivery: wards go to district dropdown, ward dropdown can be used for sub-filtering if needed
+            // Home delivery: wards go to district dropdown (API v2 uses wards directly, no separate district/ward)
             binding.spinnerHomeDistrict.setAdapter(wardAdapter);
             binding.spinnerHomeDistrict.setOnItemClickListener((parent, view, position, id) -> {
                 String selectedWardName = wardNames.get(position);
                 VietnamWard selectedWard = wards.get(position);
                 Log.d(TAG, "Selected ward: " + selectedWardName + ", code: " + selectedWard.getCode());
             });
-            // Also setup ward dropdown for home delivery if needed
-            if (binding.spinnerHomeWard != null) {
-                binding.spinnerHomeWard.setAdapter(wardAdapter);
-                binding.spinnerHomeWard.setOnItemClickListener((parent, view, position, id) -> {
-                    String selectedWardName = wardNames.get(position);
-                    VietnamWard selectedWard = wards.get(position);
-                    Log.d(TAG, "Selected ward: " + selectedWardName + ", code: " + selectedWard.getCode());
-                });
-            }
         }
     }
 }

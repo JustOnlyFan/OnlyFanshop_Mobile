@@ -26,6 +26,7 @@ import com.example.onlyfanshop.api.UserApi;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.Request.LoginRequest;
 import com.example.onlyfanshop.model.UserDTO;
+import com.example.onlyfanshop.service.NotificationListenerService;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -172,6 +173,8 @@ public class LoginActivity extends AppCompatActivity {
                         sharedPreferences.edit().putString("authProvider", user.getAuthProvider()).apply();
                         sharedPreferences.edit().putInt("userId", user.getUserID()).apply();
                         sharedPreferences.edit().putString("address", user.getAddress()).apply();
+                        Intent serviceIntent = new Intent(LoginActivity.this, NotificationListenerService.class);
+                        startService(serviceIntent);
 
                         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
                         if (firebaseAuth.getCurrentUser() == null) {
@@ -312,6 +315,7 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         Log.d("GoogleAuth", "Firebase authentication with Google successful");
                         FirebaseUser user = mAuth.getCurrentUser();
+
                         Log.d("GoogleAuth", "About to call handleSuccessfulLogin");
                         if (pendingLinkCredential != null && user != null) {
                             user.linkWithCredential(pendingLinkCredential)
@@ -407,6 +411,8 @@ public class LoginActivity extends AppCompatActivity {
                             prefs.edit().putString("authProvider", userDTO.getAuthProvider()).apply();
                             prefs.edit().putInt("userId", userDTO.getUserID()).apply();
                             prefs.edit().putString("address", userDTO.getAddress()).apply();
+                            Intent serviceIntent = new Intent(LoginActivity.this, NotificationListenerService.class);
+                            startService(serviceIntent);
                             Log.d("GoogleAuth", "Saved user data from Google login");
                         }
 
