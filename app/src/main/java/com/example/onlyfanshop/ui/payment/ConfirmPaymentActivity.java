@@ -63,6 +63,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
 
         // Get cart items and total price from intent
         cartItems = (List<CartItemDTO>) getIntent().getSerializableExtra("cartItems");
+        List<CartItemDTO> subList = new ArrayList<>();
+        for (CartItemDTO item : cartItems) {
+            if(item.isChecked()){
+                subList.add(item);
+            }
+        }
         double totalPrice = getIntent().getDoubleExtra("totalPrice", 0.0);
         
         sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
@@ -89,7 +95,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     private void setupUI(double totalPrice) {
         // Setup cart recycler view
         binding.rclViewCart.setLayoutManager(new LinearLayoutManager(this));
-        cartAdapter = new CartAdapter(this, cartItems, false);
+        cartAdapter = new CartAdapter(this, subList, false);
         binding.rclViewCart.setAdapter(cartAdapter);
         
         // Format and display total price
