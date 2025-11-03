@@ -151,6 +151,7 @@ public class CartFragment extends Fragment {
         Intent intent = new Intent(requireContext(), ConfirmPaymentActivity.class);
         intent.putExtra("totalPrice", totalPrice);
         intent.putExtra("cartItems", (Serializable) cartItems);
+
         startActivity(intent);
     }
     private void clear(String username){

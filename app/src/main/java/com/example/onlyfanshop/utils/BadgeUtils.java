@@ -20,6 +20,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class BadgeUtils {
+    private static int lastCartQuantity = -1;
+
     public void updateCartBadge(Context context, BottomNavigationView bottomNavigationView, int userId) {
         CartItemApi api = ApiClient.getPrivateClient(context).create(CartItemApi.class);
         Log.d("BadgeUtils", "Fetching cart for user ID: " + userId);
@@ -34,18 +36,30 @@ public class BadgeUtils {
                     if (totalQuantity > 0) {
                         badge.setVisible(true);
                         badge.setNumber(totalQuantity);
-                        com.example.onlyfanshop.utils.NotificationHelper.showNotification(
-                                context,
-                                "Cart",
-                                "You have " + totalQuantity + " products in your cart!"
-                        );
-                        Log.d("BadgeUtils", "Updating badge with number: " + totalQuantity);
+
+                        // ✅ Chỉ gửi thông báo nếu số lượng thay đổi
+                        if (totalQuantity != lastCartQuantity) {
+                            com.example.onlyfanshop.utils.NotificationHelper.showCartNotification(
+                                    context,
+                                    "Cart",
+                                    "You have " + totalQuantity + " products in your cart!"
+                            );
+                            lastCartQuantity = totalQuantity; // Cập nhật giá trị cũ
+                            Log.d("BadgeUtils", "Updating badge with number: " + totalQuantity);
+                        }
+
                     } else {
                         badge.clearNumber();
                         badge.setVisible(false);
+                        lastCartQuantity = 0;
+                        androidx.core.app.NotificationManagerCompat notificationManager =
+                                androidx.core.app.NotificationManagerCompat.from(context);
+                        notificationManager.cancel(NotificationHelper.CART_NOTIFICATION_ID); // dùng ID giống trong NotificationHelper
+                        Log.d("BadgeUtils", "Cart is empty → notification cancelled");
                     }
                 }
             }
+
 
             @Override
             public void onFailure(Call<ApiResponse<CartDTO>> call, Throwable t) {

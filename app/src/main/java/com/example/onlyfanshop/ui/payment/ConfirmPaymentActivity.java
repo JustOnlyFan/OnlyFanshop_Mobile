@@ -649,7 +649,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         
         String bankCode = "NCB";
         PaymentApi api = ApiClient.getPrivateClient(this).create(PaymentApi.class);
-        api.createPayment(totalPrice, bankCode, address, sharedPreferences.getString("buyMethod", ""),recipientPhoneNumber).enqueue(new Callback<ApiResponse<PaymentDTO>>() {
+        api.createPayment(totalPrice, bankCode, address, sharedPreferences.getString("buyMethod", "ByCart"),recipientPhoneNumber).enqueue(new Callback<ApiResponse<PaymentDTO>>() {
             @Override
             public void onResponse(Call<ApiResponse<PaymentDTO>> call, Response<ApiResponse<PaymentDTO>> response) {
                 showLoading(false);
