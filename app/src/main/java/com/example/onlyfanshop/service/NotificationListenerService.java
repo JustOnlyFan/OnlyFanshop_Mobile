@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.onlyfanshop.ui.notification.NotificationListActivity;
 import com.example.onlyfanshop.utils.NotificationHelper;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.ChildEventListener;
@@ -57,11 +58,23 @@ public class NotificationListenerService extends Service {
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 Log.d(TAG, "onChildAdded() triggered. Snapshot key: " + snapshot.getKey());
                 String message = snapshot.child("message").getValue(String.class);
+
                 if (message != null) {
                     Log.d(TAG, "New notification received: " + message);
-                    NotificationHelper.showNotification(getApplicationContext(), "Thông báo mới", message);
+
+                    // 👉 Intent mở NotificationListActivity
+                    Intent intent = new Intent(getApplicationContext(), NotificationListActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                    NotificationHelper.showOrderNotification(
+                            getApplicationContext(),
+                            "Thông báo mới",
+                            message,
+                            intent
+                    );
                 }
             }
+
 
             @Override public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
             @Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
