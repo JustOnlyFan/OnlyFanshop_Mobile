@@ -16,7 +16,6 @@ import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.cardview.widget.CardView;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -55,7 +54,6 @@ public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
     private View btnSupport, btnResetPassword, btnLogout, btnChatWithAdmin, btnLanguage;
-    private SwitchCompat switchPushNotif;
     private TextView tvProfileName, tvProfileEmail, tvSeeAllOrders;
     private User currentUser;
     private String currentSourceLangCode;
@@ -82,7 +80,7 @@ public class ProfileFragment extends Fragment {
         setupClickListeners();
 
         // Áp dụng padding đáy động theo system insets + chiều cao BottomNavigationView
-        applyBottomInsetPadding(view);
+        applySystemInsetsPadding(view);
 
         // 1. DISPLAY IMMEDIATELY FROM SHARED PREFERENCES TO AVOID DELAY
         SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
@@ -110,7 +108,6 @@ public class ProfileFragment extends Fragment {
         tvSeeAllOrders = view.findViewById(R.id.tvSeeAllOrders);
         btnResetPassword = view.findViewById(R.id.btnResetPassword);
         btnLogout = view.findViewById(R.id.btnLogout);
-        switchPushNotif = view.findViewById(R.id.switchPushNotif);
 
         tvProfileName = view.findViewById(R.id.tvProfileName);
         tvProfileEmail = view.findViewById(R.id.tvProfileEmail);
@@ -141,8 +138,7 @@ public class ProfileFragment extends Fragment {
         btnResetPassword.setOnClickListener(v -> startActivity(new Intent(requireContext(), ChangePasswordActivity.class)));
         btnLogout.setOnClickListener(v -> showLogoutDialog());
         tvSeeAllOrders.setOnClickListener(v -> startActivity(new Intent(requireContext(), OrderHistoryActivity.class)));
-        switchPushNotif.setOnCheckedChangeListener((buttonView, isChecked) ->
-                Toast.makeText(requireContext(), "Push notifications: " + (isChecked ? "ON" : "OFF"), Toast.LENGTH_SHORT).show());
+        
 
 
         btnLanguage.setOnClickListener(new View.OnClickListener() {
@@ -384,14 +380,15 @@ public class ProfileFragment extends Fragment {
                 .commit();
     }
 
-    // ====== NEW: Handle bottom insets + BottomNavigationView height to avoid overlap when scrolling ======
-    private void applyBottomInsetPadding(View root) {
+    // Handle status bar (top) and navigation/bottom bar + BottomNavigationView (bottom)
+    private void applySystemInsetsPadding(View root) {
         // Ensure ScrollView can scroll into padding
         if (root instanceof ScrollView) {
             ((ScrollView) root).setClipToPadding(false);
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            int systemTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
             int systemBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
 
             int bottomNavHeight = 0;
@@ -410,8 +407,8 @@ public class ProfileFragment extends Fragment {
             }
 
             int desiredBottom = systemBottom + bottomNavHeight;
-            // Preserve existing paddings for L/T/R
-            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), desiredBottom);
+            // Apply top inset to push content below status bar, preserve existing L/R paddings
+            v.setPadding(v.getPaddingLeft(), systemTop, v.getPaddingRight(), desiredBottom);
 
             return insets;
         });

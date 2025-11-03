@@ -89,6 +89,10 @@ public class UserOrderFragment extends Fragment {
         });
 
         rvOrders.setLayoutManager(new LinearLayoutManager(getContext()));
+        // Tối ưu scroll performance
+        rvOrders.setHasFixedSize(true);
+        rvOrders.setItemViewCacheSize(10);
+        rvOrders.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
         orderAdapter = new OrderAdapter(null);
         rvOrders.setAdapter(orderAdapter);
 

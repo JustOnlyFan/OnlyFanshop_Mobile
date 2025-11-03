@@ -227,24 +227,27 @@ public class DashboardActivity extends AppCompatActivity {
     private void showFragment(Fragment fragmentToShow, boolean forward) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-        // CHỈ sử dụng slide in/out theo hướng, không dùng fade để tránh chồng hiệu ứng
+        // Slide transitions với animation nhanh hơn (150ms đã tối ưu ở XML)
         if (forward) {
             // Sang phải (target nằm bên phải current)
             transaction.setCustomAnimations(
-                    R.anim.slide_in_right,  // enter
-                    R.anim.slide_out_left,  // exit
+                    R.anim.slide_in_right,  // enter (150ms)
+                    R.anim.slide_out_left,  // exit (150ms)
                     R.anim.slide_in_left,   // popEnter (khi backstack pop)
                     R.anim.slide_out_right  // popExit
             );
         } else {
             // Sang trái (target nằm bên trái current)
             transaction.setCustomAnimations(
-                    R.anim.slide_in_left,   // enter
-                    R.anim.slide_out_right, // exit
+                    R.anim.slide_in_left,   // enter (150ms)
+                    R.anim.slide_out_right, // exit (150ms)
                     R.anim.slide_in_right,  // popEnter
                     R.anim.slide_out_left   // popExit
             );
         }
+        
+        // Sử dụng setReorderingAllowed để tối ưu performance
+        transaction.setReorderingAllowed(true);
 
         // Hide all fragments if they are added
         if (homeFragment.isAdded()) transaction.hide(homeFragment);

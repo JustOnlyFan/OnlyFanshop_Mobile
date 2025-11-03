@@ -11,9 +11,14 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.example.onlyfanshop.R;
+import com.bumptech.glide.load.model.GlideUrl;
+import com.bumptech.glide.load.model.LazyHeaders;
+import android.content.SharedPreferences;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.OrderApi;
 import com.example.onlyfanshop.databinding.ActivityOrderDetailsBinding;
+import com.example.onlyfanshop.adapter.OrderItemsAdapter;
 import com.example.onlyfanshop.model.CartItemDTO;
 import com.example.onlyfanshop.model.OrderDetailsDTO;
 import com.example.onlyfanshop.model.ProductDTO;
@@ -33,6 +38,7 @@ public class OrderDetailsActivity extends AppCompatActivity {
     private OrderApi orderApi;
     private int orderId;
     private NumberFormat formatter;
+    private OrderItemsAdapter itemsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +56,10 @@ public class OrderDetailsActivity extends AppCompatActivity {
         formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
         // Setup back button
-        binding.btnBack.setOnClickListener(v -> finish());
+        binding.btnBack.setOnClickListener(v -> {
+            finish();
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
 
         // Setup cancel button click listener
         binding.btnCancelOrder.setOnClickListener(v -> showCancelOrderDialog());
@@ -60,6 +69,17 @@ public class OrderDetailsActivity extends AppCompatActivity {
 
         // Gọi API lấy chi tiết đơn hàng
         loadOrderDetails(orderId);
+    }
+
+    private String resolveImageUrl(String raw) {
+        if (raw == null) return null;
+        String u = raw.trim();
+        if (u.isEmpty()) return null;
+        u = u.replace("http://localhost:", "http://10.0.2.2:")
+             .replace("http://127.0.0.1:", "http://10.0.2.2:");
+        if (u.startsWith("http://") || u.startsWith("https://")) return u;
+        if (u.startsWith("/")) return "http://10.0.2.2:8080" + u;
+        return "http://10.0.2.2:8080/" + u;
     }
 
     private void loadOrderDetails(int orderId) {
@@ -84,6 +104,26 @@ public class OrderDetailsActivity extends AppCompatActivity {
                 Log.e("OrderDetail", "Error: ", t);
             }
         });
+    }
+
+    private String formatCurrencyVND(double value) {
+        try {
+            return formatter.format(value);
+        } catch (Exception e) {
+            NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+            return nf.format(value);
+        }
+    }
+
+    private Object buildGlideModel(String url) {
+        if (url == null) return null;
+        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        String token = prefs.getString("jwt_token", null);
+        if (token == null || token.isEmpty()) return url;
+        LazyHeaders headers = new LazyHeaders.Builder()
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+        return new GlideUrl(url, headers);
     }
 
     private void showOrderDetails(OrderDetailsDTO order) {
@@ -125,68 +165,50 @@ public class OrderDetailsActivity extends AppCompatActivity {
             }
         }
 
-        // Product Info (take first item from cart)
-        if (order.getCartDTO() != null && order.getCartDTO().getItems() != null && !order.getCartDTO().getItems().isEmpty()) {
-            CartItemDTO firstItem = order.getCartDTO().getItems().get(0);
-            ProductDTO product = firstItem.getProductDTO();
-            
-            Log.d("OrderDetail", "CartDTO items count: " + order.getCartDTO().getItems().size());
-            Log.d("OrderDetail", "First item: " + firstItem);
-            Log.d("OrderDetail", "Product: " + product);
-            
-            if (product != null) {
-                Log.d("OrderDetail", "Product imageURL: " + product.getImageURL());
-                // Product Image
-                if (product.getImageURL() != null && !product.getImageURL().isEmpty()) {
-                    Glide.with(this)
-                            .load(product.getImageURL())
-                            .placeholder(android.R.drawable.ic_menu_gallery)
-                            .error(android.R.drawable.ic_menu_gallery)
-                            .into(binding.imgProduct);
-                    Log.d("OrderDetail", "Loaded image: " + product.getImageURL());
-                } else {
-                    Log.e("OrderDetail", "Product imageURL is null or empty");
-                }
-
-                // Product Name
-                if (product.getProductName() != null && !product.getProductName().isEmpty()) {
-                    binding.tvProductName.setText(product.getProductName());
-                }
-
-                // Product Quantity
-                if (firstItem.getQuantity() != null) {
-                    binding.tvProductQuantity.setText("x" + firstItem.getQuantity());
-                }
-
-                // Prices
-                double itemPrice = firstItem.getPrice() != null ? firstItem.getPrice() : 0;
-                double quantity = firstItem.getQuantity() != null ? firstItem.getQuantity() : 1;
-                double subtotal = itemPrice * quantity;
-
-                // Show original price if different (strikethrough)
-                if (product.getPrice() != null && product.getPrice() > itemPrice) {
-                    String originalPriceText = formatter.format(product.getPrice() * quantity);
-                    SpannableString spannableOriginal = new SpannableString(originalPriceText);
-                    spannableOriginal.setSpan(new StrikethroughSpan(), 0, originalPriceText.length(), 0);
-                    binding.tvOriginalPrice.setText(spannableOriginal);
-                    binding.tvOriginalPrice.setVisibility(View.VISIBLE);
-                } else {
-                    binding.tvOriginalPrice.setVisibility(View.GONE);
-                }
-
-                // Discounted/Current Price
-                binding.tvDiscountedPrice.setText(formatter.format(itemPrice * quantity));
-
-                // Subtotal
-                String subtotalText = "Thành tiền: " + formatter.format(subtotal);
-                binding.tvSubtotalLabel.setText(subtotalText);
+        double computedTotal = 0d;
+        // Product Info (take first item from cart) and compute total from ALL items
+        List<CartItemDTO> allItems = null;
+        if (order.getItemsLite() != null && !order.getItemsLite().isEmpty()) {
+            // Prefer lite list if server provides it
+            allItems = new java.util.ArrayList<>();
+            for (com.example.onlyfanshop.model.OrderItemLiteDTO l : order.getItemsLite()) {
+                CartItemDTO ci = new CartItemDTO();
+                ci.setQuantity(l.getQuantity());
+                ci.setPrice(l.getPrice());
+                ProductDTO p = new ProductDTO();
+                p.setProductName(l.getProductName());
+                p.setImageURL(l.getImageURL());
+                ci.setProductDTO(p);
+                allItems.add(ci);
             }
+        } else if (order.getCartDTO() != null && order.getCartDTO().getItems() != null && !order.getCartDTO().getItems().isEmpty()) {
+            allItems = order.getCartDTO().getItems();
+        }
+        if (allItems != null && !allItems.isEmpty()) {
+            // setup recycler if needed
+            if (itemsAdapter == null) {
+                itemsAdapter = new OrderItemsAdapter();
+                binding.recyclerOrderItems.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+                // Tối ưu scroll performance
+                binding.recyclerOrderItems.setHasFixedSize(true);
+                binding.recyclerOrderItems.setItemViewCacheSize(10);
+                binding.recyclerOrderItems.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
+                binding.recyclerOrderItems.setAdapter(itemsAdapter);
+            }
+            itemsAdapter.submitList(allItems);
+            for (CartItemDTO it : allItems) {
+                double p = it.getPrice() != null ? it.getPrice() : 0d;
+                double q = it.getQuantity() != null ? it.getQuantity() : 0d;
+                computedTotal += p * q;
+                Log.d("OrderDetail", "Sum item price=" + p + " qty=" + q + " -> lineTotal=" + (p*q));
+            }
+            Log.d("OrderDetail", "Items count: " + allItems.size());
         }
 
-        // Total Price
-        if (order.getTotalPrice() != null) {
-            binding.tvTotalPrice.setText(formatter.format(order.getTotalPrice()));
-        }
+        // Total Price: use computed sum from items to avoid backend mismatch
+        double finalTotal = computedTotal > 0 ? computedTotal : (order.getTotalPrice() != null ? order.getTotalPrice() : 0d);
+        Log.d("OrderDetail", "computedTotal=" + computedTotal + ", apiTotal=" + order.getTotalPrice() + ", finalTotal=" + finalTotal);
+        binding.tvTotalPrice.setText(formatCurrencyVND(finalTotal));
 
         // Show/Hide buttons based on status and user role
         String status = order.getOrderStatus();

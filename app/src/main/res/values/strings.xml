@@ -19,6 +19,7 @@
     <string name="admin_uid">admin_uid</string>
     <string name="sold_format">Sold %1$d</string>
     <string name="search">Search</string>
+    <string name="see_all">See all</string>
 
     <!-- New strings -->
     <string name="shop">Shop</string>

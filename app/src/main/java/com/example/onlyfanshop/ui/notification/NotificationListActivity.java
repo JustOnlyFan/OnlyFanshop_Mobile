@@ -67,6 +67,7 @@ public class NotificationListActivity extends AppCompatActivity {
             Toast.makeText(this, "Vui lòng đăng nhập để xem thông báo", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, LoginActivity.class));
             finish();
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         } else {
             fetchNotifications(userId);
         }
@@ -81,7 +82,10 @@ public class NotificationListActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         btnSettings = findViewById(R.id.btnSettings);
         
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> {
+            finish();
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
         btnSettings.setOnClickListener(v -> {
             // TODO: Open notification settings
             Toast.makeText(this, "Cài đặt thông báo", Toast.LENGTH_SHORT).show();

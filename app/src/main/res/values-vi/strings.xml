@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">OnlyFanshop</string>
+    <string name="category">Danh mục</string>
+    <string name="_0">0₫</string>
+    <string name="productTotal">Tổng giá trị sản phẩm</string>
+    <string name="deliveryCost">Phí vận chuyển</string>
+    <string name="total">Tổng thanh toán</string>
+    <string name="checkOut">Thanh toán</string>
+    <string name="splash_title">PHONG CÁCH\nCỦA BẠN\nSẼ NÓI\nVỀ BẠN</string>
+    <string name="let_s_get_started">Bắt đầu</string>
+    <string name="uilover">UILover</string>
+    <string name="already_have_an_account_signin">Đã có tài khoản? <font color="#3DDC84">Đăng nhập</font></string>
+    <string name="cart">Giỏ hàng</string>
+    <string name="product">Sản phẩm</string>
+    <string name="home">Trang chủ</string>
+    <string name="sold_format">Đã bán %1$d</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="shop">Cửa hàng</string>
+    <string name="favorites">Yêu thích</string>
+    <string name="profile">Hồ sơ</string>
+    <string name="hello_blank_fragment">Xin chào</string>
+    <string name="avatar">Ảnh đại diện</string>
+    <string name="see_all">Xem tất cả</string>
+ </resources>

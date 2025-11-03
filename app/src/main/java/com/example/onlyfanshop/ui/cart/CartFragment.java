@@ -82,6 +82,10 @@ public class CartFragment extends Fragment {
         }
 
         binding.rclViewCart.setLayoutManager(new LinearLayoutManager(requireContext()));
+        // Tối ưu scroll performance
+        binding.rclViewCart.setHasFixedSize(true);
+        binding.rclViewCart.setItemViewCacheSize(10);
+        binding.rclViewCart.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
         cartAdapter = new CartAdapter(requireContext(), cartItems, true);
         binding.rclViewCart.setAdapter(cartAdapter);
 

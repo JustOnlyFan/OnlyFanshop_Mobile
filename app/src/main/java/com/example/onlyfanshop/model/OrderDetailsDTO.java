@@ -18,6 +18,7 @@ public class OrderDetailsDTO {
     private String phone;
 
     private CartDTO cartDTO; // chứa danh sách sản phẩm
+    private java.util.List<OrderItemLiteDTO> itemsLite; // danh sách nhẹ từ server
 
     // Getter và Setter
     public Integer getOrderID() { return orderID; }
@@ -52,5 +53,6 @@ public class OrderDetailsDTO {
 
     public CartDTO getCartDTO() { return cartDTO; }
     public void setCartDTO(CartDTO cartDTO) { this.cartDTO = cartDTO; }
+    public java.util.List<OrderItemLiteDTO> getItemsLite() { return itemsLite; }
 }
 

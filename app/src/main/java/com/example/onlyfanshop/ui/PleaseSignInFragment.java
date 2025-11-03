@@ -23,6 +23,7 @@ public class PleaseSignInFragment extends Fragment {
         btnLogin.setOnClickListener(v -> {
             startActivity(new Intent(requireContext(), LoginActivity.class));
             requireActivity().finish();
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
         return view;
     }

@@ -328,50 +328,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Push Notifications -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="16dp">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_notification"
-                        app:tint="#333"/>
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Push notifications"
-                        android:textSize="15sp"
-                        android:textColor="@color/black"
-                        android:layout_marginStart="12dp"/>
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switchPushNotif"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true"
-                        app:thumbTint="@color/white"
-                        app:trackTint="@color/green"/>
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#F0F0F0"
-                    android:layout_marginHorizontal="16dp"/>
-
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#F0F0F0"
-                    android:layout_marginHorizontal="16dp"/>
+                
 
                 <!-- PIN Code -->
                 <LinearLayout
