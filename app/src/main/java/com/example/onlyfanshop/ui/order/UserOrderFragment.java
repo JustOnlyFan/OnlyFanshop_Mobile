@@ -13,6 +13,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -66,6 +69,9 @@ public class UserOrderFragment extends Fragment {
         btnPicking = view.findViewById(R.id.btnPicking);
         btnShipping = view.findViewById(R.id.btnShipping);
         btnDelivered = view.findViewById(R.id.btnDelivered);
+        
+        // Setup edge-to-edge insets handling AFTER views are initialized
+        setupWindowInsets(view);
 
         // Hide admin-only buttons (All, Returns/Refunds, Cancelled) for regular users
         Button btnAll = view.findViewById(R.id.btnAll);
@@ -388,6 +394,30 @@ public class UserOrderFragment extends Fragment {
         currentSelectedButton.setBackgroundTintList(
                 ContextCompat.getColorStateList(requireContext(), R.color.colorPrimary));
         currentSelectedButton.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+    }
+
+    private void setupWindowInsets(View root) {
+        // Convert dp to pixels for the 12dp padding defined in XML
+        float density = getResources().getDisplayMetrics().density;
+        int padding12dp = (int) (12 * density);
+        
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            
+            // Set padding for root view: preserve XML padding (12dp) + add system insets
+            int bottomPadding = padding12dp + systemBars.bottom + 32; // Add 32dp extra for safety
+            v.setPadding(
+                    padding12dp + systemBars.left, 
+                    padding12dp + systemBars.top, 
+                    padding12dp + systemBars.right, 
+                    bottomPadding
+            );
+            
+            return insets;
+        });
+        
+        // Request to apply insets immediately
+        ViewCompat.requestApplyInsets(root);
     }
 }
 

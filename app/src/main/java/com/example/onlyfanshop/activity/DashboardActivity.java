@@ -126,7 +126,7 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void adjustContainerBottomPadding() {
         if (fragmentContainer == null || bottomNav == null) return;
-        int offset = bottomNav.getHeight();
+        int offset = (bottomNav.getVisibility() == View.VISIBLE) ? bottomNav.getHeight() : 0;
         fragmentContainer.setPadding(
                 fragmentContainer.getPaddingLeft(),
                 fragmentContainer.getPaddingTop(),

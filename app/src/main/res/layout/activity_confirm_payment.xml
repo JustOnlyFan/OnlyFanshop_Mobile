@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:fitsSystemWindows="true"
     android:layout_height="match_parent"
     android:background="#F9FAFB">
 
@@ -532,13 +531,15 @@
                             android:text="COD (Thanh toán khi nhận hàng)"
                             android:textSize="16sp"
                             android:textColor="#111111"
+                            android:textStyle="bold"
                             android:checked="false"
-                            android:drawableEnd="@drawable/ic_cash"
+                            android:drawableStart="@drawable/ic_cash"
                             android:drawablePadding="8dp"
-                            android:drawableTint="#198754"
-                            android:padding="12dp"
+                            android:drawableTint="#FF9800"
+                            android:padding="16dp"
+                            android:layout_marginBottom="8dp"
                             android:background="?attr/selectableItemBackground"
-                            android:backgroundTint="#F0F9F0" />
+                            android:backgroundTint="#FFF3E0" />
 
                         <!-- VNPay Option -->
                         <RadioButton
@@ -548,24 +549,40 @@
                             android:text="VNPay"
                             android:textSize="16sp"
                             android:textColor="#111111"
+                            android:textStyle="bold"
                             android:checked="false"
-                            android:drawableEnd="@drawable/ic_credit_card"
+                            android:drawableStart="@drawable/ic_credit_card"
                             android:drawablePadding="8dp"
                             android:drawableTint="#1976D2"
-                            android:padding="12dp"
+                            android:padding="16dp"
                             android:background="?attr/selectableItemBackground"
-                            android:backgroundTint="#F9FAFB" />
+                            android:backgroundTint="#E3F2FD" />
 
                     </RadioGroup>
 
+                    <!-- COD Description -->
                     <TextView
+                        android:id="@+id/tvCODDescription"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thanh toán bằng tiền mặt khi nhận hàng, kiểm tra hàng trước khi thanh toán"
+                        android:textSize="13sp"
+                        android:textColor="#666666"
+                        android:layout_marginStart="48dp"
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone" />
+
+                    <!-- VNPay Description -->
+                    <TextView
+                        android:id="@+id/tvVNPayDescription"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Thanh toán qua VNPay (ATM, Visa, Mastercard)"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="#666666"
                         android:layout_marginStart="48dp"
-                        android:layout_marginTop="8dp" />
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

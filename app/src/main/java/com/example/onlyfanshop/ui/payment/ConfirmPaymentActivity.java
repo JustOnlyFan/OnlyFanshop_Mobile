@@ -1,18 +1,28 @@
 package com.example.onlyfanshop.ui.payment;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.onlyfanshop.R;
@@ -24,6 +34,7 @@ import com.example.onlyfanshop.api.UserApi;
 import com.example.onlyfanshop.api.VietnamAddressApi;
 import com.example.onlyfanshop.api.VietnamAddressApiClient;
 import com.example.onlyfanshop.databinding.ActivityConfirmPaymentBinding;
+import com.example.onlyfanshop.ui.order.OrderDetailsActivity;
 import com.example.onlyfanshop.model.CartItemDTO;
 import com.example.onlyfanshop.model.PaymentDTO;
 import com.example.onlyfanshop.model.UserDTO;
@@ -82,6 +93,13 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         // Setup toolbar
         binding.toolbar.setNavigationOnClickListener(v -> finish());
         
+        // Setup edge-to-edge insets to prevent content from going under status bar
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+        
         // Setup UI
         setupUI(totalPrice);
         
@@ -93,10 +111,13 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     }
 
     private void setupUI(double totalPrice) {
-        // Setup cart recycler view
+        // Setup cart recycler view with animation
         binding.rclViewCart.setLayoutManager(new LinearLayoutManager(this));
         cartAdapter = new CartAdapter(this, subList, false);
         binding.rclViewCart.setAdapter(cartAdapter);
+        
+        // Animate cart items appearance
+        animateCartItems();
         
         // Format and display total price
         String totalPriceText = formatPrice(totalPrice) + " VND";
@@ -107,18 +128,50 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         setupDeliveryTabs();
         
         // Setup checkout button with dynamic text based on payment method
-        binding.checkoutBtn.setOnClickListener(v -> processPayment(totalPrice));
+        binding.checkoutBtn.setOnClickListener(v -> {
+            // Add click animation
+            v.animate()
+                    .scaleX(0.95f)
+                    .scaleY(0.95f)
+                    .setDuration(100)
+                    .withEndAction(() -> {
+                        v.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(100)
+                                .setInterpolator(new OvershootInterpolator())
+                                .start();
+                        processPayment(totalPrice);
+                    })
+                    .start();
+        });
         
         // Add listener to update button text based on payment method
         binding.radioBtnCOD.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 binding.checkoutBtn.setText("Xác nhận đơn hàng");
+                // Show COD description with animation
+                binding.tvVNPayDescription.setVisibility(View.GONE);
+                animateDescriptionShow(binding.tvCODDescription);
+                
+                // Add bounce animation to COD radio button
+                animateRadioButtonSelection(binding.radioBtnCOD);
+            } else {
+                binding.tvCODDescription.setVisibility(View.GONE);
             }
         });
         
         binding.radioBtnVnPay.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 binding.checkoutBtn.setText("Thanh toán");
+                // Show VNPay description with animation
+                binding.tvCODDescription.setVisibility(View.GONE);
+                animateDescriptionShow(binding.tvVNPayDescription);
+                
+                // Add bounce animation to VNPay radio button
+                animateRadioButtonSelection(binding.radioBtnVnPay);
+            } else {
+                binding.tvVNPayDescription.setVisibility(View.GONE);
             }
         });
         
@@ -350,10 +403,79 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         }
         
         if (isCOD) {
-            handleCODPayment(totalPrice, deliveryAddress);
+            showCODConfirmationDialog(totalPrice, deliveryAddress);
         } else {
             handleVNPayPayment(totalPrice, deliveryAddress);
         }
+    }
+    
+    private void showCODConfirmationDialog(double totalPrice, String address) {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Xác nhận đặt hàng COD")
+                .setMessage("Bạn đang đặt hàng với phương thức thanh toán khi nhận hàng (COD).\n\nLưu ý:\n• Thanh toán khi nhận hàng\n• Vui lòng kiểm tra hàng trước khi thanh toán\n• Đơn hàng sẽ được xử lý trong 24h")
+                .setPositiveButton("Xác nhận", (d, which) -> handleCODPayment(totalPrice, address))
+                .setNegativeButton("Hủy", null)
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .create();
+        
+        dialog.setOnShowListener(d -> {
+            // Animate dialog appearance
+            View v = dialog.getWindow().getDecorView();
+            v.setAlpha(0f);
+            v.setScaleX(0.9f);
+            v.setScaleY(0.9f);
+            v.animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(250)
+                    .setInterpolator(new OvershootInterpolator())
+                    .start();
+        });
+        
+        dialog.show();
+    }
+    
+    private void showCODSuccessDialog(Integer orderId) {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("✓ Đặt hàng thành công!")
+                .setMessage("Đơn hàng COD #" + orderId + " đã được tạo thành công.\n\nBạn sẽ nhận được thông báo khi đơn hàng được xử lý.")
+                .setPositiveButton("Xem đơn hàng", (d, which) -> {
+                    // Navigate to order details with orderId
+                    Intent intent = new Intent(ConfirmPaymentActivity.this, OrderDetailsActivity.class);
+                    intent.putExtra("orderId", orderId);
+                    startActivity(intent);
+                    finish(); // Close payment activity after navigating
+                })
+                .setNegativeButton("Đóng", (d, which) -> {
+                    finish();
+                })
+                .setIcon(android.R.drawable.checkbox_on_background)
+                .setCancelable(false)
+                .create();
+        
+        dialog.setOnShowListener(d -> {
+            // Animate success dialog with bounce
+            View v = dialog.getWindow().getDecorView();
+            v.setAlpha(0f);
+            v.setScaleX(0.5f);
+            v.setScaleY(0.5f);
+            v.animate()
+                    .alpha(1f)
+                    .scaleX(1.1f)
+                    .scaleY(1.1f)
+                    .setDuration(300)
+                    .withEndAction(() -> v.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(150)
+                            .setInterpolator(new OvershootInterpolator(1.5f))
+                            .start())
+                    .setInterpolator(new OvershootInterpolator())
+                    .start();
+        });
+        
+        dialog.show();
     }
     
     private String buildDeliveryAddress(boolean isPickupStore, boolean isHomeDelivery) {
@@ -397,10 +519,59 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     }
     
     private void handleCODPayment(double totalPrice, String address) {
-        // TODO: Implement COD payment logic
-        // This would typically create an order with COD payment method
-        Toast.makeText(this, "COD payment will be implemented soon", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "COD payment: " + totalPrice + " VND, Address: " + address);
+        showLoading(true);
+        
+        // Get recipient phone number from input
+        String recipientPhoneNumber = "";
+        if (binding.edtRecipientPhone != null) {
+            recipientPhoneNumber = binding.edtRecipientPhone.getText().toString().trim();
+        }
+        // If empty, use default phone number from user
+        if (recipientPhoneNumber.isEmpty()) {
+            recipientPhoneNumber = binding.tvPhoneNumber.getText().toString().trim();
+        }
+        
+        // Determine delivery type and storeId
+        int selectedTab = binding.tabDeliveryType.getSelectedTabPosition();
+        String deliveryType = (selectedTab == 0) ? "IN_STORE_PICKUP" : "HOME_DELIVERY";
+        Integer storeId = null;
+        
+        // For now, buyMethod defaults to "ByCart" since it's not passed in intent
+        // This should be updated to pass buyMethod from CartFragment/BuyNowBottomSheet
+        String buyMethod = "ByCart";
+        
+        PaymentApi api = ApiClient.getPrivateClient(this).create(PaymentApi.class);
+        api.createCODOrder(totalPrice, address, buyMethod, recipientPhoneNumber, deliveryType, storeId)
+                .enqueue(new Callback<ApiResponse<Integer>>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse<Integer>> call, Response<ApiResponse<Integer>> response) {
+                        showLoading(false);
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            Integer orderId = response.body().getData();
+                            Log.d(TAG, "COD Order created: " + orderId);
+                            
+                            // Show success dialog
+                            showCODSuccessDialog(orderId);
+                        } else {
+                            String errorMsg = "Không thể tạo đơn hàng COD. Vui lòng thử lại.";
+                            if (response.errorBody() != null) {
+                                try {
+                                    Log.e(TAG, "COD Order error: " + response.errorBody().string());
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error reading error body", e);
+                                }
+                            }
+                            showError(errorMsg);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse<Integer>> call, Throwable t) {
+                        showLoading(false);
+                        Log.e(TAG, "Network error: " + t.getMessage(), t);
+                        showError("Lỗi kết nối: " + t.getMessage());
+                    }
+                });
     }
     
     private void handleVNPayPayment(double totalPrice, String address) {
@@ -452,17 +623,131 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     }
 
     private void showLoading(boolean show) {
-        binding.progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (show) {
+            // Animate loading in
+            binding.progressBar.setAlpha(0f);
+            binding.progressBar.setVisibility(View.VISIBLE);
+            binding.progressBar.animate()
+                    .alpha(1f)
+                    .setDuration(200)
+                    .start();
+            
+            // Animate button out
+            binding.checkoutBtn.animate()
+                    .alpha(0.5f)
+                    .scaleX(0.98f)
+                    .scaleY(0.98f)
+                    .setDuration(150)
+                    .start();
+        } else {
+            // Animate loading out
+            binding.progressBar.animate()
+                    .alpha(0f)
+                    .setDuration(150)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            binding.progressBar.setVisibility(View.GONE);
+                        }
+                    })
+                    .start();
+            
+            // Animate button back in
+            binding.checkoutBtn.animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(200)
+                    .setInterpolator(new OvershootInterpolator())
+                    .start();
+        }
         binding.checkoutBtn.setEnabled(!show);
     }
 
     private void showError(String message) {
         binding.tvError.setText(message);
-        binding.tvError.setVisibility(View.VISIBLE);
+        
+        // Animate error message
+        if (binding.tvError.getVisibility() != View.VISIBLE) {
+            binding.tvError.setAlpha(0f);
+            binding.tvError.setTranslationY(-20f);
+            binding.tvError.setVisibility(View.VISIBLE);
+            
+            binding.tvError.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(300)
+                    .setInterpolator(new OvershootInterpolator())
+                    .start();
+        } else {
+            // Shake animation for repeated errors
+            binding.tvError.animate()
+                    .translationX(-10f)
+                    .setDuration(50)
+                    .withEndAction(() -> binding.tvError.animate()
+                            .translationX(10f)
+                            .setDuration(50)
+                            .withEndAction(() -> binding.tvError.animate()
+                                    .translationX(-10f)
+                                    .setDuration(50)
+                                    .withEndAction(() -> binding.tvError.animate()
+                                            .translationX(0f)
+                                            .setDuration(50)
+                                            .start())
+                                    .start())
+                            .start())
+                    .start();
+        }
     }
 
     private String formatPrice(double price) {
         return String.format("%.0f", price);
+    }
+    
+    private void animateDescriptionShow(View descriptionView) {
+        descriptionView.setAlpha(0f);
+        descriptionView.setTranslationY(-10f);
+        descriptionView.setVisibility(View.VISIBLE);
+        
+        descriptionView.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(250)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+    }
+    
+    private void animateRadioButtonSelection(View radioButton) {
+        radioButton.animate()
+                .scaleX(1.05f)
+                .scaleY(1.05f)
+                .setDuration(100)
+                .withEndAction(() -> radioButton.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(150)
+                        .setInterpolator(new OvershootInterpolator())
+                        .start())
+                .start();
+    }
+    
+    private void animateCartItems() {
+        // Animate cart items appearance with stagger
+        for (int i = 0; i < binding.rclViewCart.getChildCount(); i++) {
+            View child = binding.rclViewCart.getChildAt(i);
+            if (child != null) {
+                child.setAlpha(0f);
+                child.setTranslationY(30f);
+                
+                child.animate()
+                        .alpha(1f)
+                        .translationY(0f)
+                        .setStartDelay(i * 80)
+                        .setDuration(300)
+                        .setInterpolator(new DecelerateInterpolator())
+                        .start();
+            }
+        }
     }
     
     private void loadProvinces() {
