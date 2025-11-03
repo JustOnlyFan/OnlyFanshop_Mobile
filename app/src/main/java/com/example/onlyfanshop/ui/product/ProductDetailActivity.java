@@ -46,6 +46,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -256,7 +258,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     private void bindProductData(ProductDetailDTO product) {
         textBrand.setText(product.getBrand() != null ? product.getBrand().getName() : "");
         textProductName.setText(product.getProductName());
-        textBottomPrice.setText(String.format("$%.2f", product.getPrice() != null ? product.getPrice() : 0));
+        textBottomPrice.setText(formatCurrencyVND(product.getPrice() != null ? product.getPrice() : 0));
         textBrief.setText(product.getBriefDescription() != null ? product.getBriefDescription() : "");
         textFull.setText(product.getFullDescription() != null ? product.getFullDescription() : "");
 
@@ -361,5 +363,10 @@ public class ProductDetailActivity extends AppCompatActivity {
             }
         });
         totalSet.start();
+    }
+    
+    private String formatCurrencyVND(double value) {
+        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        return nf.format(value).replace("₫", "₫");
     }
 }

@@ -47,9 +47,11 @@ import com.example.onlyfanshop.model.response.UserResponse;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -140,7 +142,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         animateCartItems();
         
         // Format and display total price
-        String totalPriceText = formatPrice(totalPrice) + " VND";
+        String totalPriceText = formatCurrencyVND(totalPrice);
         binding.totalPrice.setText(totalPriceText);
         binding.tvSubtotal.setText(totalPriceText);
         
@@ -430,13 +432,24 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     }
     
     private void showCODConfirmationDialog(double totalPrice, String address) {
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Xác nhận đặt hàng COD")
-                .setMessage("Bạn đang đặt hàng với phương thức thanh toán khi nhận hàng (COD).\n\nLưu ý:\n• Thanh toán khi nhận hàng\n• Vui lòng kiểm tra hàng trước khi thanh toán\n• Đơn hàng sẽ được xử lý trong 24h")
-                .setPositiveButton("Xác nhận", (d, which) -> handleCODPayment(totalPrice, address))
-                .setNegativeButton("Hủy", null)
-                .setIcon(android.R.drawable.ic_dialog_info)
-                .create();
+        // Create custom dialog
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_cod_confirmation, null);
+        builder.setView(dialogView);
+        
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.setCancelable(true);
+        
+        // Setup buttons
+        android.widget.Button btnConfirm = dialogView.findViewById(R.id.btnConfirm);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+        
+        btnConfirm.setOnClickListener(v -> {
+            dialog.dismiss();
+            handleCODPayment(totalPrice, address);
+        });
+        
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
         
         dialog.setOnShowListener(d -> {
             // Animate dialog appearance
@@ -457,22 +470,35 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     }
     
     private void showCODSuccessDialog(Integer orderId) {
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("✓ Đặt hàng thành công!")
-                .setMessage("Đơn hàng COD #" + orderId + " đã được tạo thành công.\n\nBạn sẽ nhận được thông báo khi đơn hàng được xử lý.")
-                .setPositiveButton("Xem đơn hàng", (d, which) -> {
-                    // Navigate to order details with orderId
-                    Intent intent = new Intent(ConfirmPaymentActivity.this, OrderDetailsActivity.class);
-                    intent.putExtra("orderId", orderId);
-                    startActivity(intent);
-                    finish(); // Close payment activity after navigating
-                })
-                .setNegativeButton("Đóng", (d, which) -> {
-                    finish();
-                })
-                .setIcon(android.R.drawable.checkbox_on_background)
-                .setCancelable(false)
-                .create();
+        // Create custom success dialog
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_cod_success, null);
+        builder.setView(dialogView);
+        
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);
+        
+        // Setup order ID display
+        android.widget.TextView tvOrderId = dialogView.findViewById(R.id.tvOrderId);
+        tvOrderId.setText("#" + orderId);
+        
+        // Setup buttons
+        android.widget.Button btnViewOrder = dialogView.findViewById(R.id.btnViewOrder);
+        android.widget.Button btnClose = dialogView.findViewById(R.id.btnClose);
+        
+        btnViewOrder.setOnClickListener(v -> {
+            dialog.dismiss();
+            // Navigate to order details with orderId
+            Intent intent = new Intent(ConfirmPaymentActivity.this, OrderDetailsActivity.class);
+            intent.putExtra("orderId", orderId);
+            startActivity(intent);
+            finish(); // Close payment activity after navigating
+        });
+        
+        btnClose.setOnClickListener(v -> {
+            dialog.dismiss();
+            finish();
+        });
         
         dialog.setOnShowListener(d -> {
             // Animate success dialog with bounce
@@ -493,6 +519,20 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
                             .start())
                     .setInterpolator(new OvershootInterpolator())
                     .start();
+            
+            // Animate success icon
+            View iconView = dialogView.findViewById(R.id.ivSuccessIcon);
+            if (iconView != null) {
+                iconView.setScaleX(0f);
+                iconView.setScaleY(0f);
+                iconView.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(400)
+                        .setStartDelay(200)
+                        .setInterpolator(new OvershootInterpolator(2f))
+                        .start();
+            }
         });
         
         dialog.show();
@@ -720,8 +760,9 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         }
     }
 
-    private String formatPrice(double price) {
-        return String.format("%.0f", price);
+    private String formatCurrencyVND(double value) {
+        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        return nf.format(value).replace("₫", "₫");
     }
     
     private void animateDescriptionShow(View descriptionView) {

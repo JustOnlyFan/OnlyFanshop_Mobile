@@ -15,10 +15,11 @@
         <!-- Ảnh sản phẩm -->
         <ImageView
             android:id="@+id/imgProduct"
-            android:layout_width="250dp"
-            android:layout_height="250dp"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
             android:layout_marginBottom="16dp"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
             android:background="#EEEEEE" />
 
         <!-- Tên sản phẩm -->

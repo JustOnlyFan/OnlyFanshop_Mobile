@@ -26,7 +26,8 @@
             android:id="@+id/imgPreview"
             android:layout_width="160dp"
             android:layout_height="160dp"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
             android:layout_marginBottom="8dp" />
 
         <!-- Nút chọn ảnh -->

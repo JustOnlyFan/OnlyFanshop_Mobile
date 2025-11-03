@@ -19,14 +19,15 @@
         <!-- Ảnh -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="170dp"
             android:background="#F8F8F8">
 
             <ImageView
                 android:id="@+id/imageProduct"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
                 android:contentDescription="@string/app_name"/>
         </FrameLayout>
 

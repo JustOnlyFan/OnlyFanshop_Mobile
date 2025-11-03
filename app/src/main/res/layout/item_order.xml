@@ -70,7 +70,8 @@
                 android:id="@+id/imgProduct"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:scaleType="centerCrop"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
                 android:background="#F5F5F5"
                 android:contentDescription="Product Image"
                 app:srcCompat="@drawable/ic_launcher_foreground" />

@@ -238,6 +238,13 @@ public class DashboardActivity extends AppCompatActivity {
             transaction.show(fragmentToShow);
         }
 
+        // Control bottom navigation visibility based on current fragment
+        if (fragmentToShow instanceof CartFragment) {
+            bottomNav.setVisibility(View.GONE);
+        } else {
+            bottomNav.setVisibility(View.VISIBLE);
+        }
+
         // Use commitNow() to apply transaction immediately so the fragment's lifecycle (onCreateView/onViewCreated)
         // runs right away and the CartFragment's existing getCartItems(...) call executes without delay.
         try {
@@ -261,6 +268,11 @@ public class DashboardActivity extends AppCompatActivity {
         // Apply stored language before Activity is created
         String lang = LocaleHelper.getLanguage(newBase);
         super.attachBaseContext(LocaleHelper.setLocale(newBase, lang));
+    }
+    
+    // Getter for bottom navigation (for CartFragment to hide/show)
+    public BottomNavigationView getBottomNav() {
+        return bottomNav;
     }
 
 }

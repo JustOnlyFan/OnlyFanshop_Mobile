@@ -13,8 +13,10 @@ import com.bumptech.glide.Glide;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.model.ProductDTO;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class SearchSuggestionAdapter extends RecyclerView.Adapter<SearchSuggestionAdapter.VH> {
 
@@ -47,7 +49,7 @@ public class SearchSuggestionAdapter extends RecyclerView.Adapter<SearchSuggesti
         ProductDTO p = items.get(position);
         h.title.setText(p.getProductName() != null ? p.getProductName() : "Unnamed");
         if (p.getPrice() != null) {
-            h.price.setText(String.format("$%.2f", p.getPrice()));
+            h.price.setText(formatCurrencyVND(p.getPrice()));
         } else {
             h.price.setText("");
         }
@@ -78,5 +80,10 @@ public class SearchSuggestionAdapter extends RecyclerView.Adapter<SearchSuggesti
             title = itemView.findViewById(R.id.tvTitle);
             price = itemView.findViewById(R.id.tvPrice);
         }
+    }
+    
+    private String formatCurrencyVND(double value) {
+        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        return nf.format(value).replace("₫", "₫");
     }
 }
