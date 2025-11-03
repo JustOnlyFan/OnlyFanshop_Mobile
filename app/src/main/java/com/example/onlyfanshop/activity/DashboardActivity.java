@@ -59,13 +59,11 @@ public class DashboardActivity extends AppCompatActivity {
 
         applyEdgeToEdgeInsets();
         initFirebaseTest();
-        initFragmentCache(); // <-- NEW
+        initFragmentCache();
         initNavigation(savedInstanceState);
         setupBackHandler();
 
-        AppEvents.get().cartUpdated().observe(this, ts -> {
-            updateCartBadgeNow();
-        });
+        AppEvents.get().cartUpdated().observe(this, ts -> updateCartBadgeNow());
         updateCartBadgeNow();
     }
 
@@ -78,9 +76,12 @@ public class DashboardActivity extends AppCompatActivity {
                     return;
                 }
                 if (currentSelectedId != R.id.nav_home) {
+                    int fromOrder = getNavOrder(currentSelectedId);
+                    int toOrder = getNavOrder(R.id.nav_home);
+                    boolean forward = toOrder > fromOrder; // thường là false → trượt sang trái để về Home
                     bottomNav.setSelectedItemId(R.id.nav_home);
+                    showFragmentById(R.id.nav_home, forward);
                     currentSelectedId = R.id.nav_home;
-                    showFragmentById(R.id.nav_home);
                 } else {
                     setEnabled(false);
                     DashboardActivity.super.onBackPressed();
@@ -95,7 +96,6 @@ public class DashboardActivity extends AppCompatActivity {
         categoryFragment = new CategoryFragment();
         mapFragment = new MapFragment();
         profileFragment = new ProfileFragment();
-        // cartFragment sẽ được tạo động khi cần vì còn username
         cartFragment = null;
     }
 
@@ -153,13 +153,17 @@ public class DashboardActivity extends AppCompatActivity {
         } else {
             currentSelectedId = R.id.nav_home;
         }
-        showFragmentById(currentSelectedId);
+        // Hiển thị ban đầu không cần animation hướng
+        showFragmentById(currentSelectedId, true);
 
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (currentSelectedId != id) {
+                int fromOrder = getNavOrder(currentSelectedId);
+                int toOrder = getNavOrder(id);
+                boolean forward = toOrder > fromOrder; // sang phải → forward, sang trái → backward
+                showFragmentById(id, forward);
                 currentSelectedId = id;
-                showFragmentById(id);
             }
             return true;
         });
@@ -178,31 +182,30 @@ public class DashboardActivity extends AppCompatActivity {
         return username;
     }
 
-    /**
-     * Minimal change: create a fresh CartFragment instance every time user navigates to the cart.
-     * This way onViewCreated() in CartFragment (which already calls getCartItems(...)) will run
-     * immediately when we add the new fragment.
-     *
-     * To avoid leaving the old (hidden) cart fragment around, remove it first if it was added.
-     * We use commitNow()/remove(commitNow) to make the operations synchronous so the new fragment's
-     * onViewCreated runs without delay.
-     */
-    private void showFragmentById(int id) {
-        Fragment fragmentToShow = null;
+    // Xác định thứ tự tabs trên BottomNavigation để suy ra hướng
+    private int getNavOrder(int id) {
+        if (id == R.id.nav_home) return 0;
+        if (id == R.id.nav_search) return 1;
+        if (id == R.id.nav_car) return 2;
+        if (id == R.id.nav_shop) return 3;
+        if (id == R.id.nav_profile) return 4;
+        return Integer.MAX_VALUE; // unknown
+    }
+
+    private void showFragmentById(int id, boolean forward) {
+        Fragment fragmentToShow;
 
         if (id == R.id.nav_home) {
             fragmentToShow = homeFragment;
         } else if (id == R.id.nav_search) {
             fragmentToShow = categoryFragment;
         } else if (id == R.id.nav_car) {
-            // Remove previous cart fragment if exists so we always create a fresh one
             String username = getUsernameForNav();
             if (cartFragment != null && cartFragment.isAdded()) {
                 try {
                     getSupportFragmentManager().beginTransaction().remove(cartFragment).commitNow();
                 } catch (Exception e) {
                     Log.w(TAG, "Failed to remove previous cartFragment synchronously", e);
-                    // fallback to asynchronous remove if commitNow not allowed
                     getSupportFragmentManager().beginTransaction().remove(cartFragment).commit();
                     getSupportFragmentManager().executePendingTransactions();
                 }
@@ -218,11 +221,30 @@ public class DashboardActivity extends AppCompatActivity {
             fragmentToShow = homeFragment;
         }
 
-        showFragment(fragmentToShow);
+        showFragment(fragmentToShow, forward);
     }
 
-    private void showFragment(Fragment fragmentToShow) {
+    private void showFragment(Fragment fragmentToShow, boolean forward) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+        // CHỈ sử dụng slide in/out theo hướng, không dùng fade để tránh chồng hiệu ứng
+        if (forward) {
+            // Sang phải (target nằm bên phải current)
+            transaction.setCustomAnimations(
+                    R.anim.slide_in_right,  // enter
+                    R.anim.slide_out_left,  // exit
+                    R.anim.slide_in_left,   // popEnter (khi backstack pop)
+                    R.anim.slide_out_right  // popExit
+            );
+        } else {
+            // Sang trái (target nằm bên trái current)
+            transaction.setCustomAnimations(
+                    R.anim.slide_in_left,   // enter
+                    R.anim.slide_out_right, // exit
+                    R.anim.slide_in_right,  // popEnter
+                    R.anim.slide_out_left   // popExit
+            );
+        }
 
         // Hide all fragments if they are added
         if (homeFragment.isAdded()) transaction.hide(homeFragment);
@@ -245,12 +267,9 @@ public class DashboardActivity extends AppCompatActivity {
             bottomNav.setVisibility(View.VISIBLE);
         }
 
-        // Use commitNow() to apply transaction immediately so the fragment's lifecycle (onCreateView/onViewCreated)
-        // runs right away and the CartFragment's existing getCartItems(...) call executes without delay.
         try {
             transaction.commitNow();
         } catch (IllegalStateException e) {
-            // commitNow can fail if called after onSaveInstanceState; fallback to commit + executePendingTransactions
             Log.w(TAG, "commitNow failed, falling back to commit + executePendingTransactions", e);
             transaction.commit();
             getSupportFragmentManager().executePendingTransactions();
@@ -265,14 +284,11 @@ public class DashboardActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context newBase) {
-        // Apply stored language before Activity is created
         String lang = LocaleHelper.getLanguage(newBase);
         super.attachBaseContext(LocaleHelper.setLocale(newBase, lang));
     }
-    
-    // Getter for bottom navigation (for CartFragment to hide/show)
+
     public BottomNavigationView getBottomNav() {
         return bottomNav;
     }
-
 }

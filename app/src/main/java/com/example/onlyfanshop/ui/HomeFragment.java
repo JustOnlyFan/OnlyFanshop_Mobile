@@ -12,7 +12,9 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -21,6 +23,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -55,6 +58,9 @@ import java.util.Random;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import android.animation.TimeInterpolator;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
 public class HomeFragment extends Fragment {
 
@@ -98,20 +104,44 @@ public class HomeFragment extends Fragment {
     private Runnable pendingSearch;
     private static final long SEARCH_DEBOUNCE_MS = 300L;
 
-    // Số dòng tối đa hiển thị đồng thời
     private static final int SUGGEST_MAX_ROWS = 5;
-    // Chiều cao mỗi dòng (khớp với row_search_suggestion.xml: 68dp)
     private static final int SUGGEST_ROW_DP = 68;
+
+    // Views for entrance animation
+    private View headerContainer;      // R.id.homeHeader
+    private View searchBar;            // R.id.legacySearchBar
+    private View bannerContainer;      // R.id.bannerContainer
+    private View popularHeader;        // R.id.tvPopularTitle (we will animate its parent block)
+    private View productsHeader;       // R.id.tvProductsTitle (we will animate its parent block)
+
+    private View ivAvatar;
+    private View tvUserNameView;
+    private View notifContainer;
 
     private final Runnable sliderRunnable = new Runnable() {
         @Override
         public void run() {
-            if (!isAdded() || viewPagerBanner == null || bannerAdapter == null || bannerList == null || bannerList.isEmpty()) return;
+            if (!isAdded() || viewPagerBanner == null || bannerAdapter == null || bannerList == null || bannerList.isEmpty())
+                return;
             int next = viewPagerBanner.getCurrentItem() + 1;
             viewPagerBanner.setCurrentItem(next, true); // luôn trượt phải, không giật về đầu
             sliderHandler.postDelayed(this, SLIDER_INTERVAL_MS);
         }
     };
+
+    // Chạy slide-in từ phải vào cho toàn fragment (root)
+    private void playFragmentSlideIn() {
+        if (!isAdded() || getView() == null) return;
+        Animation anim = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_in_right);
+        getView().startAnimation(anim);
+    }
+
+    // Chạy slide-out sang trái khi fragment bị ẩn
+    private void playFragmentSlideOut() {
+        if (!isAdded() || getView() == null) return;
+        Animation anim = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_out_left);
+        getView().startAnimation(anim);
+    }
 
     @Nullable
     @Override
@@ -136,7 +166,6 @@ public class HomeFragment extends Fragment {
             SharedPreferences sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
 
             if (userId == -1) {
-                // Nếu chưa đăng nhập, chuyển về Login
                 Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.login.LoginActivity.class);
                 startActivity(intent);
                 return;
@@ -153,9 +182,20 @@ public class HomeFragment extends Fragment {
             if ("Sign in".equals(tvUserName.getText().toString())) {
                 Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.login.LoginActivity.class);
                 startActivity(intent);
-                requireActivity().finish(); // Nếu muốn khi đăng nhập xong không quay lại Home cũ
+                requireActivity().finish();
             }
         });
+
+        // Cache views for entrance animation
+        headerContainer = v.findViewById(R.id.homeHeader);
+        searchBar = v.findViewById(R.id.legacySearchBar);
+        bannerContainer = v.findViewById(R.id.bannerContainer);
+        // Popular/Products header containers are RelativeLayouts around those titles
+        View popularHeaderBlock = (View) v.findViewById(R.id.tvPopularTitle).getParent();
+        View productsHeaderBlock = (View) v.findViewById(R.id.tvProductsTitle).getParent();
+        popularHeader = popularHeaderBlock;
+        productsHeader = productsHeaderBlock;
+
         // Banner
         viewPagerBanner = v.findViewById(R.id.viewPagerBanner);
         progressBarBanner = v.findViewById(R.id.progressBarBanner);
@@ -163,9 +203,9 @@ public class HomeFragment extends Fragment {
         bannerAdapter = new BannerAdapter(new ArrayList<>(), viewPagerBanner) {
             @Override
             public int getItemCount() {
-                // Trả về số lượng lớn để giả infinite
                 return bannerList == null || bannerList.isEmpty() ? 0 : LOOP_COUNT;
             }
+
             @Override
             public void onBindViewHolder(@NonNull BannerViewHolder holder, int position) {
                 if (bannerList == null || bannerList.isEmpty()) return;
@@ -175,7 +215,6 @@ public class HomeFragment extends Fragment {
         };
 
         viewPagerBanner.setAdapter(bannerAdapter);
-
         viewPagerBanner.setClipToPadding(false);
         viewPagerBanner.setClipChildren(false);
         viewPagerBanner.setOffscreenPageLimit(3);
@@ -183,7 +222,6 @@ public class HomeFragment extends Fragment {
         composite.addTransformer(new MarginPageTransformer(40));
         viewPagerBanner.setPageTransformer(composite);
 
-        // Đặt vị trí ở giữa để loop đẹp cả trái và phải
         viewPagerBanner.post(() -> {
             int mid = LOOP_COUNT / 2;
             viewPagerBanner.setCurrentItem(mid, false);
@@ -197,7 +235,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Load banner từ Realtime Database
+        // Load banner
         loadBannersFromRealtimeDb();
 
         // Popular
@@ -206,6 +244,9 @@ public class HomeFragment extends Fragment {
 
         popularView.setLayoutManager(new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false));
         popularView.setNestedScrollingEnabled(false);
+
+        // Layout animation for list
+        popularView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down));
 
         popularAdapter = new PopularAdapter(item -> {
             Intent intent = new Intent(requireContext(), ProductDetailActivity.class);
@@ -221,7 +262,6 @@ public class HomeFragment extends Fragment {
         TextView tvSeeAll = v.findViewById(R.id.tvSeeAll);
         if (tvSeeAll != null) {
             tvSeeAll.setOnClickListener(view -> {
-                // Navigate to products tab (nav_search) in bottom navigation
                 if (getActivity() != null) {
                     View bottomNavView = getActivity().findViewById(R.id.bottomNav);
                     if (bottomNavView instanceof BottomNavigationView) {
@@ -240,6 +280,11 @@ public class HomeFragment extends Fragment {
         productsView.setLayoutManager(gridLayoutManager);
         productsView.setNestedScrollingEnabled(false);
 
+        // Layout animation for list
+        productsView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down));
+        ivAvatar = v.findViewById(R.id.imageViewProfile);
+        tvUserNameView = v.findViewById(R.id.tvUserName);
+        notifContainer = v.findViewById(R.id.notifContainer);
         productAdapter = new ProductAdapter(item -> {
             Intent intent = new Intent(requireContext(), ProductDetailActivity.class);
             intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_ID, item.getProductID());
@@ -255,10 +300,8 @@ public class HomeFragment extends Fragment {
         progressSearch = v.findViewById(R.id.progressSearch);
 
         recyclerSuggest.setLayoutManager(new LinearLayoutManager(requireContext()));
-        // Cho phép cuộn bên trong khi giới hạn chiều cao
         recyclerSuggest.setNestedScrollingEnabled(true);
         recyclerSuggest.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-        // Tránh ScrollView chặn cử chỉ cuộn của RecyclerView
         recyclerSuggest.setOnTouchListener((view, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
                 view.getParent().requestDisallowInterceptTouchEvent(true);
@@ -280,11 +323,27 @@ public class HomeFragment extends Fragment {
 
         // Lấy tên user cho phần Welcome
         fetchUserName();
+
+//         Staggered entrance ngay lần đầu hiển thị
+//        playEnterAnimationSequential();
+        View root = v;
+        root.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override public boolean onPreDraw() {
+                root.getViewTreeObserver().removeOnPreDrawListener(this);
+                // Slide toàn fragment (nếu bạn vẫn muốn cảm giác vào màn)
+                playFragmentSlideIn();
+                // Sau 120ms, slide từng attribute theo 2 nửa
+                root.postDelayed(() -> playEnterSlideOppositeSidesTogether(), 120);
+                return true;
+            }
+        });
     }
+
 
     // -------- Banner từ Realtime Database --------
     private void setBannerLoading(boolean loading) {
-        if (progressBarBanner != null) progressBarBanner.setVisibility(loading ? View.VISIBLE : View.GONE);
+        if (progressBarBanner != null)
+            progressBarBanner.setVisibility(loading ? View.VISIBLE : View.GONE);
     }
 
     private void loadBannersFromRealtimeDb() {
@@ -309,7 +368,7 @@ public class HomeFragment extends Fragment {
                             banners.add(m);
                         }
                     }
-                    bannerList = banners; // Gán cho list thực
+                    bannerList = banners;
                     bannerAdapter.notifyDataSetChanged();
 
                     setBannerLoading(false);
@@ -326,8 +385,6 @@ public class HomeFragment extends Fragment {
                 });
     }
 
-
-
     private void loadFallbackBanners() {
         bannerList = new ArrayList<>();
         bannerAdapter.notifyDataSetChanged();
@@ -342,7 +399,8 @@ public class HomeFragment extends Fragment {
         sliderHandler.removeCallbacks(sliderRunnable);
     }
 
-    @Override public void onResume() {
+    @Override
+    public void onResume() {
         super.onResume();
         startAutoSlide();
         SharedPreferences prefs = requireContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
@@ -353,14 +411,21 @@ public class HomeFragment extends Fragment {
                 fetchUnreadNotificationCount(userId, tvNotifBadge);
             }
         }
+        if (isVisible() && getView() != null) {
+            // Nếu muốn slide cả fragment mỗi lần quay lại, giữ dòng dưới; nếu không, có thể bỏ:
+            playFragmentSlideIn();
+            getView().postDelayed(this::playEnterSlideOppositeSidesTogether, 120);
+        }
     }
 
-    @Override public void onPause() {
+    @Override
+    public void onPause() {
         stopAutoSlide();
         super.onPause();
     }
 
-    @Override public void onDestroyView() {
+    @Override
+    public void onDestroyView() {
         stopAutoSlide();
         if (pendingSearch != null) searchHandler.removeCallbacks(pendingSearch);
         super.onDestroyView();
@@ -375,7 +440,6 @@ public class HomeFragment extends Fragment {
 
     private void loadPopular() {
         setPopularLoading(true);
-        // Load more products to have enough for random selection (load 50 to ensure we have at least 15)
         productApi.getHomePagePost(1, 50, "ProductID", "DESC", null, null, null)
                 .enqueue(new Callback<ApiResponse<HomePageData>>() {
                     @Override
@@ -388,10 +452,12 @@ public class HomeFragment extends Fragment {
                                 products = response.body().getData().products;
                             }
                         }
-                        
-                        // Randomize and take 15 products
                         List<ProductDTO> randomProducts = getRandomProducts(products, 15);
                         popularAdapter.submitList(randomProducts);
+                        // chạy layout animation cho list
+                        if (popularView != null) {
+                            popularView.scheduleLayoutAnimation();
+                        }
                     }
 
                     @Override
@@ -402,15 +468,12 @@ public class HomeFragment extends Fragment {
                 });
     }
 
-    // Helper method to get random products
     private List<ProductDTO> getRandomProducts(List<ProductDTO> products, int count) {
         if (products == null || products.isEmpty()) {
             return new ArrayList<>();
         }
-        
         List<ProductDTO> shuffled = new ArrayList<>(products);
         Collections.shuffle(shuffled, new Random());
-        
         int size = Math.min(count, shuffled.size());
         return shuffled.subList(0, size);
     }
@@ -424,8 +487,6 @@ public class HomeFragment extends Fragment {
 
     private void loadProducts() {
         setProductsLoading(true);
-        // Load all products with a large page size (1000 should be enough for most cases)
-        // If you have pagination, you might want to implement loading more products
         productApi.getHomePagePost(1, 1000, "ProductID", "ASC", null, null, null)
                 .enqueue(new Callback<ApiResponse<HomePageData>>() {
                     @Override
@@ -439,6 +500,10 @@ public class HomeFragment extends Fragment {
                             }
                         }
                         productAdapter.submitList(products);
+                        // chạy layout animation cho list
+                        if (productsView != null) {
+                            productsView.scheduleLayoutAnimation();
+                        }
                     }
 
                     @Override
@@ -452,25 +517,25 @@ public class HomeFragment extends Fragment {
     // ---------------- Search suggestion ----------------
     private void setupSearch() {
         if (etSearch == null) return;
-
         etSearch.addTextChangedListener(new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void afterTextChanged(android.text.Editable s) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (pendingSearch != null) searchHandler.removeCallbacks(pendingSearch);
                 final String key = s.toString().trim();
-
-                // Nếu rỗng thì ẩn gợi ý
                 if (key.isEmpty()) {
                     suggestAdapter.submitList(new ArrayList<>());
                     recyclerSuggest.setVisibility(View.GONE);
                     progressSearch.setVisibility(View.GONE);
-                    // Không cần giữ chiều cao cũ khi ẩn
                     return;
                 }
-
                 pendingSearch = () -> fetchSuggestions(key);
                 searchHandler.postDelayed(pendingSearch, SEARCH_DEBOUNCE_MS);
             }
@@ -478,7 +543,8 @@ public class HomeFragment extends Fragment {
     }
 
     private void setSuggestLoading(boolean loading) {
-        if (progressSearch != null) progressSearch.setVisibility(loading ? View.VISIBLE : View.GONE);
+        if (progressSearch != null)
+            progressSearch.setVisibility(loading ? View.VISIBLE : View.GONE);
         if (loading) recyclerSuggest.setVisibility(View.GONE);
     }
 
@@ -487,7 +553,7 @@ public class HomeFragment extends Fragment {
         setSuggestLoading(true);
 
         productApi.getHomePagePost(
-                        1, 20, // có thể trả về >5, ta sẽ giới hạn chiều cao hiển thị
+                        1, 20,
                         "ProductID", "DESC",
                         keyword,
                         null,
@@ -522,12 +588,10 @@ public class HomeFragment extends Fragment {
 
     private void adjustSuggestionHeight(int count) {
         if (recyclerSuggest == null) return;
-
         if (count <= 0) {
             recyclerSuggest.setVisibility(View.GONE);
             return;
         }
-
         int rows = Math.min(SUGGEST_MAX_ROWS, count);
         int itemHeightPx = dpToPx(SUGGEST_ROW_DP);
         ViewGroup.LayoutParams lp = recyclerSuggest.getLayoutParams();
@@ -574,6 +638,7 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+
     private void fetchUnreadNotificationCount(int userId, TextView badgeView) {
         com.example.onlyfanshop.api.NotificationApi api =
                 ApiClient.getPrivateClient(requireContext()).create(com.example.onlyfanshop.api.NotificationApi.class);
@@ -605,4 +670,108 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    // ---------- Entrance animation helpers ----------
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden) {
+            // Nếu muốn, slide cả fragment rồi slide nội dung:
+            playFragmentSlideIn();
+            if (getView() != null) {
+                getView().postDelayed(this::playEnterSlideOppositeSidesTogether, 120);
+            }
+        } else {
+            playFragmentSlideOut();
+        }
+    }
+
+
+    private void prepareEnterTargets(List<View> order) {
+        int dy = dpToPx(12);
+        for (View target : order) {
+            if (target == null) continue;
+            target.setVisibility(View.VISIBLE); // đảm bảo visible để animate
+            if (target == bannerContainer) {
+                target.setAlpha(0f);
+                target.setScaleX(0.98f);
+                target.setScaleY(0.98f);
+            } else {
+                target.setAlpha(0f);
+                target.setTranslationY(dy);
+            }
+        }
+    }
+
+    // Chạy tuần tự từng view trong "order"
+
+
+    // GỌI HÀM NÀY thay cho bản sequential
+    // 3) Hàm mới: slide 2 nửa theo 2 hướng, KHÔNG fade
+    private void playEnterSlideOppositeSidesTogether() {
+        if (!isAdded() || getView() == null) return;
+
+        // Nhóm NỬA TRÊN: header + search + banner
+        List<View> topGroup = new ArrayList<>();
+        if (ivAvatar != null) topGroup.add(ivAvatar);
+        if (tvUserNameView != null) topGroup.add(tvUserNameView);
+        if (notifContainer != null) topGroup.add(notifContainer);
+        if (searchBar != null) topGroup.add(searchBar);
+        if (popularHeader != null)  topGroup.add(popularHeader);
+        if (popularView != null)   topGroup.add(popularView);
+
+        // Nhóm NỬA DƯỚI: popular + products
+        List<View> bottomGroup = new ArrayList<>();
+        if (bannerContainer != null) bottomGroup.add(bannerContainer);
+        if (productsHeader != null) bottomGroup.add(productsHeader);
+        if (productsView != null)  bottomGroup.add(productsView);
+
+        // Slide distance: toàn chiều rộng màn (off-screen)
+        int distance = getView().getWidth();
+        if (distance <= 0) {
+            distance = requireContext().getResources().getDisplayMetrics().widthPixels;
+        }
+
+        // Đặt trạng thái ẩn trước khi animate (không dùng alpha)
+        prepareSlideTargets(topGroup, bottomGroup, distance);
+
+        // Animate tất cả CÙNG LÚC, mượt
+        final android.animation.TimeInterpolator interpolator =
+                new androidx.interpolator.view.animation.FastOutSlowInInterpolator();
+        final long duration = 550L; // chậm, chuyên nghiệp
+
+        for (View v : topGroup) {
+            if (v == null) continue;
+            v.animate()
+                    .translationX(0f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .start();
+        }
+        for (View v : bottomGroup) {
+            if (v == null) continue;
+            v.animate()
+                    .translationX(0f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                    .start();
+        }
+    }
+
+    // 4) Chuẩn bị trạng thái ban đầu: nửa trên ở ngoài màn bên trái, nửa dưới ở ngoài màn bên phải
+    private void prepareSlideTargets(List<View> topGroup, List<View> bottomGroup, int distance) {
+        for (View v : topGroup) {
+            if (v == null) continue;
+            v.setVisibility(View.VISIBLE);
+            v.setTranslationX(-distance); // từ trái sang
+            // Không đổi alpha (tránh fade)
+        }
+        for (View v : bottomGroup) {
+            if (v == null) continue;
+            v.setVisibility(View.VISIBLE);
+            v.setTranslationX(distance); // từ phải sang
+        }
+    }
+
+// Hàm này bạn đã có sẵn; giữ nguyên để pre-hide tất cả targets
+// private void prepareEnterTargets(List<View> order) { ... }
 }
