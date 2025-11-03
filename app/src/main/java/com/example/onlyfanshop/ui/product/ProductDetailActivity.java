@@ -82,7 +82,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_product_detail);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        findViewById(R.id.btnBack).setOnClickListener(v -> onBackPressed());
+        findViewById(R.id.btnBack).setOnClickListener(v -> {
+            finish();
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
 
         imageProduct = findViewById(R.id.imageProduct);
         textBrand = findViewById(R.id.textBrand);
@@ -137,6 +140,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Product ID không hợp lệ", Toast.LENGTH_SHORT).show();
             finish();
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
         }
     }
 
@@ -188,6 +192,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                         Intent intent = new Intent(this, com.example.onlyfanshop.ui.login.LoginActivity.class);
                         startActivity(intent);
                         finish(); // Nếu muốn đóng màn hình hiện tại sau khi sang LoginActivity
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                     })
                     .setNegativeButton("Cancel", null);
 

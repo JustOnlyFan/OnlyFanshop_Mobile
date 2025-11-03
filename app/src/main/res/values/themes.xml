@@ -3,7 +3,18 @@
     <style name="Base.Theme.OnlyFanshop" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
          <item name="colorPrimary">@android:color/holo_blue_light</item>
+         
+         <!-- Window transitions for smoother Activity transitions -->
+         <item name="android:windowEnterAnimation">@anim/slide_in_right</item>
+         <item name="android:windowExitAnimation">@anim/slide_out_left</item>
+         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
     </style>
 
     <style name="Theme.OnlyFanshop" parent="Base.Theme.OnlyFanshop" />
+    
+    <!-- Window Animation Style -->
+    <style name="WindowAnimationTransition">
+        <item name="android:windowEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_left</item>
+    </style>
 </resources>

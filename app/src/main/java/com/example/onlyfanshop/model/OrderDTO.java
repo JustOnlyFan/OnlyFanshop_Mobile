@@ -44,5 +44,15 @@ public class OrderDTO {
 
     public Double getFirstProductPrice() { return firstProductPrice; }
     public void setFirstProductPrice(Double firstProductPrice) { this.firstProductPrice = firstProductPrice; }
+
+    // List of all products in order
+    private java.util.List<OrderItemLiteDTO> products;
+    private Integer totalProductCount;
+
+    public java.util.List<OrderItemLiteDTO> getProducts() { return products; }
+    public void setProducts(java.util.List<OrderItemLiteDTO> products) { this.products = products; }
+
+    public Integer getTotalProductCount() { return totalProductCount; }
+    public void setTotalProductCount(Integer totalProductCount) { this.totalProductCount = totalProductCount; }
 }
 

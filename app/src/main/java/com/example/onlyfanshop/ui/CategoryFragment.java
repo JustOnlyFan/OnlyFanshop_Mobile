@@ -115,6 +115,10 @@ public class CategoryFragment extends Fragment {
         categoryView.setLayoutManager(
                 new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
         );
+        // Tối ưu scroll performance
+        categoryView.setHasFixedSize(true);
+        categoryView.setItemViewCacheSize(10);
+        categoryView.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
         categoryView.setAdapter(categoryAdapter);
     }
 
@@ -126,8 +130,13 @@ public class CategoryFragment extends Fragment {
                 return;
             }
             startActivity(ProductDetailActivity.newIntent(requireContext(), pid));
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
         recyclerSearchResult.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        // Tối ưu scroll performance
+        recyclerSearchResult.setHasFixedSize(true);
+        recyclerSearchResult.setItemViewCacheSize(15);
+        recyclerSearchResult.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
         recyclerSearchResult.setAdapter(productAdapter);
     }
 

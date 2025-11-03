@@ -93,6 +93,7 @@ public class ProductListFragment extends Fragment {
                 return;
             }
             startActivity(ProductDetailActivity.newIntent(requireContext(), pid));
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             // Alternatively (no import needed):
             // startActivity(com.example.onlyfanshop.ui.product.ProductDetailActivity.newIntent(requireContext(), pid));
         });

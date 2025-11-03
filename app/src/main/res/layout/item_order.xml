@@ -131,7 +131,64 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Order Summary -->
+        <!-- Additional Products (Dropdown) -->
+        <LinearLayout
+            android:id="@+id/layoutAdditionalProducts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sản phẩm khác:"
+                android:textSize="12sp"
+                android:textColor="#666"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerAdditionalProducts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
+        </LinearLayout>
+
+        <!-- Dropdown Button -->
+        <LinearLayout
+            android:id="@+id/layoutDropdownButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvProductCount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Xem thêm 2 sản phẩm"
+                android:textSize="12sp"
+                android:textColor="#666" />
+
+            <ImageView
+                android:id="@+id/ivDropdownArrow"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_arrow_drop_down"
+                android:tint="#666"
+                android:rotation="0" />
+
+        </LinearLayout>
+
+        <!-- Order Summary (show total only) -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -142,17 +199,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+            android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/tvTotalLabel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Tổng số tiền (1 sản phẩm):"
+                android:text="Tổng số tiền"
                 android:textSize="13sp"
-                android:textColor="#666" />
+                android:textColor="#000" />
 
             <TextView
                 android:id="@+id/tvTotalPrice"
@@ -163,18 +218,5 @@
                 android:textColor="#EE4D2D"
                 android:textStyle="bold" />
         </LinearLayout>
-
-        <!-- Action Button -->
-        <Button
-            android:id="@+id/btnViewDetails"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:text="Liên hệ Shop"
-            android:textColor="#666"
-            android:backgroundTint="#E0E0E0"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="6dp"
-            android:textSize="12sp" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -72,7 +72,7 @@
                     android:id="@+id/btnNotif"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_notification"
+                    android:src="@drawable/ic_bell"
                     android:contentDescription="Thông báo" />
 
                 <TextView
@@ -118,7 +118,7 @@
                 android:layout_toStartOf="@id/imageViewFilter"
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="12dp"
-                android:hint="Search..."
+                android:hint="@string/search"
                 android:textColorHint="#B0B0B0"
                 android:textSize="15sp"
                 android:textColor="@color/black"
@@ -222,7 +222,7 @@
                 android:id="@+id/tvSeeAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="See all"
+                android:text="@string/see_all"
                 android:textSize="12sp"
                 android:textColor="#FF4081"
                 android:layout_alignParentEnd="true"

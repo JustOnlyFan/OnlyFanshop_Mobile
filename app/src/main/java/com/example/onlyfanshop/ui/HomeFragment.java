@@ -217,10 +217,17 @@ public class HomeFragment extends Fragment {
         viewPagerBanner.setAdapter(bannerAdapter);
         viewPagerBanner.setClipToPadding(false);
         viewPagerBanner.setClipChildren(false);
-        viewPagerBanner.setOffscreenPageLimit(3);
+        viewPagerBanner.setOffscreenPageLimit(1); // Giảm từ 3 xuống 1 để nhanh hơn
         CompositePageTransformer composite = new CompositePageTransformer();
         composite.addTransformer(new MarginPageTransformer(40));
         viewPagerBanner.setPageTransformer(composite);
+        // Tối ưu ViewPager2 scroll
+        viewPagerBanner.post(() -> {
+            RecyclerView rv = (RecyclerView) viewPagerBanner.getChildAt(0);
+            if (rv != null) {
+                rv.setOverScrollMode(View.OVER_SCROLL_NEVER);
+            }
+        });
 
         viewPagerBanner.post(() -> {
             int mid = LOOP_COUNT / 2;
@@ -244,14 +251,18 @@ public class HomeFragment extends Fragment {
 
         popularView.setLayoutManager(new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false));
         popularView.setNestedScrollingEnabled(false);
-
-        // Layout animation for list
+        // Tối ưu scroll performance
+        popularView.setHasFixedSize(true);
+        popularView.setItemViewCacheSize(10);
+        popularView.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
+        // Layout animation chỉ khi load lần đầu
         popularView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down));
 
         popularAdapter = new PopularAdapter(item -> {
             Intent intent = new Intent(requireContext(), ProductDetailActivity.class);
             intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_ID, item.getProductID());
             startActivity(intent);
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
         popularView.setAdapter(popularAdapter);
 
@@ -279,8 +290,11 @@ public class HomeFragment extends Fragment {
         GridLayoutManager gridLayoutManager = new GridLayoutManager(requireContext(), 2);
         productsView.setLayoutManager(gridLayoutManager);
         productsView.setNestedScrollingEnabled(false);
-
-        // Layout animation for list
+        // Tối ưu scroll performance
+        productsView.setHasFixedSize(true);
+        productsView.setItemViewCacheSize(15);
+        productsView.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
+        // Layout animation chỉ khi load lần đầu
         productsView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down));
         ivAvatar = v.findViewById(R.id.imageViewProfile);
         tvUserNameView = v.findViewById(R.id.tvUserName);
@@ -289,6 +303,7 @@ public class HomeFragment extends Fragment {
             Intent intent = new Intent(requireContext(), ProductDetailActivity.class);
             intent.putExtra(ProductDetailActivity.EXTRA_PRODUCT_ID, item.getProductID());
             startActivity(intent);
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
         productsView.setAdapter(productAdapter);
 
@@ -302,6 +317,10 @@ public class HomeFragment extends Fragment {
         recyclerSuggest.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerSuggest.setNestedScrollingEnabled(true);
         recyclerSuggest.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+        // Tối ưu scroll performance
+        recyclerSuggest.setHasFixedSize(true);
+        recyclerSuggest.setItemViewCacheSize(8);
+        recyclerSuggest.setItemAnimator(null); // Tắt animation để mượt hơn
         recyclerSuggest.setOnTouchListener((view, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
                 view.getParent().requestDisallowInterceptTouchEvent(true);
@@ -315,6 +334,7 @@ public class HomeFragment extends Fragment {
             Integer pid = item.getProductID();
             if (pid != null && pid > 0) {
                 startActivity(ProductDetailActivity.newIntent(requireContext(), pid));
+                requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }
         });
         recyclerSuggest.setAdapter(suggestAdapter);
@@ -332,8 +352,8 @@ public class HomeFragment extends Fragment {
                 root.getViewTreeObserver().removeOnPreDrawListener(this);
                 // Slide toàn fragment (nếu bạn vẫn muốn cảm giác vào màn)
                 playFragmentSlideIn();
-                // Sau 120ms, slide từng attribute theo 2 nửa
-                root.postDelayed(() -> playEnterSlideOppositeSidesTogether(), 120);
+                // Sau 60ms, slide từng attribute theo 2 nửa (giảm delay)
+                root.postDelayed(() -> playEnterSlideOppositeSidesTogether(), 60);
                 return true;
             }
         });
@@ -414,7 +434,7 @@ public class HomeFragment extends Fragment {
         if (isVisible() && getView() != null) {
             // Nếu muốn slide cả fragment mỗi lần quay lại, giữ dòng dưới; nếu không, có thể bỏ:
             playFragmentSlideIn();
-            getView().postDelayed(this::playEnterSlideOppositeSidesTogether, 120);
+            getView().postDelayed(this::playEnterSlideOppositeSidesTogether, 60);
         }
     }
 
@@ -678,7 +698,7 @@ public class HomeFragment extends Fragment {
             // Nếu muốn, slide cả fragment rồi slide nội dung:
             playFragmentSlideIn();
             if (getView() != null) {
-                getView().postDelayed(this::playEnterSlideOppositeSidesTogether, 120);
+                getView().postDelayed(this::playEnterSlideOppositeSidesTogether, 60);
             }
         } else {
             playFragmentSlideOut();
@@ -736,8 +756,8 @@ public class HomeFragment extends Fragment {
 
         // Animate tất cả CÙNG LÚC, mượt
         final android.animation.TimeInterpolator interpolator =
-                new androidx.interpolator.view.animation.FastOutSlowInInterpolator();
-        final long duration = 550L; // chậm, chuyên nghiệp
+                new androidx.interpolator.view.animation.FastOutLinearInInterpolator();
+        final long duration = 150L; // rất nhanh, mượt mà
 
         for (View v : topGroup) {
             if (v == null) continue;
