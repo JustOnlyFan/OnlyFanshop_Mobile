@@ -23,4 +23,11 @@
     <color name="nav_background">#FFFFFF</color>
     <color name="app_background">#F5F5F5</color>
     <color name="text_gray">#666666</color>
+    
+    <!-- Payment method colors -->
+    <color name="payment_cod_selected">#FFFDE7</color>
+    <color name="payment_cod_default">#F0F9F0</color>
+    <color name="payment_vnpay_selected">#E3F2FD</color>
+    <color name="payment_vnpay_default">#F9FAFB</color>
+    <color name="payment_default">#F9FAFB</color>
 </resources>

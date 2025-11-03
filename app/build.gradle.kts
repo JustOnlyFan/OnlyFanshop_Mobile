@@ -119,4 +119,9 @@ dependencies {
 
     implementation("com.google.mlkit:translate:17.0.0")
 
+    // Feather Icons - Modern icon library
+    implementation("com.github.duanhong169:drawabletoolbox:1.0.7")
+    implementation("androidx.vectordrawable:vectordrawable:1.1.0")
+    implementation("androidx.vectordrawable:vectordrawable-animated:1.1.0")
+
 }
