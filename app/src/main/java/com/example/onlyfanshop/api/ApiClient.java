@@ -29,8 +29,8 @@ public final class ApiClient {
 //    private static volatile String BASE_URL = IS_EMULATOR
 //            ? "http://10.0.2.2:8080/"
 //            : "http://192.168.100.47:8080/";
-
-    private static volatile String BASE_URL = "http://10.0.2.2:8080/";
+//
+   private static volatile String BASE_URL = "http://10.0.2.2:8080/";
 
     private ApiClient() {}
 

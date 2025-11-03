@@ -16,7 +16,8 @@
             android:id="@+id/imgProductThumb"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:scaleType="centerCrop" />
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true" />
 
         <LinearLayout
             android:layout_width="0dp"

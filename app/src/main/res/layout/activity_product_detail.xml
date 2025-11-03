@@ -47,9 +47,10 @@
                 <ImageView
                     android:id="@+id/imageProduct"
                     android:layout_width="match_parent"
-                    android:layout_height="300dp"
+                    android:layout_height="240dp"
                     android:contentDescription="product image"
-                    android:scaleType="centerCrop" />
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true" />
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Price section below image -->

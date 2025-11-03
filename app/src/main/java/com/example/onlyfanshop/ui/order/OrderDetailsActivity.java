@@ -18,6 +18,7 @@ import com.example.onlyfanshop.model.CartItemDTO;
 import com.example.onlyfanshop.model.OrderDetailsDTO;
 import com.example.onlyfanshop.model.ProductDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
+import com.example.onlyfanshop.utils.AppPreferences;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -129,7 +130,12 @@ public class OrderDetailsActivity extends AppCompatActivity {
             CartItemDTO firstItem = order.getCartDTO().getItems().get(0);
             ProductDTO product = firstItem.getProductDTO();
             
+            Log.d("OrderDetail", "CartDTO items count: " + order.getCartDTO().getItems().size());
+            Log.d("OrderDetail", "First item: " + firstItem);
+            Log.d("OrderDetail", "Product: " + product);
+            
             if (product != null) {
+                Log.d("OrderDetail", "Product imageURL: " + product.getImageURL());
                 // Product Image
                 if (product.getImageURL() != null && !product.getImageURL().isEmpty()) {
                     Glide.with(this)
@@ -137,6 +143,9 @@ public class OrderDetailsActivity extends AppCompatActivity {
                             .placeholder(android.R.drawable.ic_menu_gallery)
                             .error(android.R.drawable.ic_menu_gallery)
                             .into(binding.imgProduct);
+                    Log.d("OrderDetail", "Loaded image: " + product.getImageURL());
+                } else {
+                    Log.e("OrderDetail", "Product imageURL is null or empty");
                 }
 
                 // Product Name
@@ -179,12 +188,21 @@ public class OrderDetailsActivity extends AppCompatActivity {
             binding.tvTotalPrice.setText(formatter.format(order.getTotalPrice()));
         }
 
-        // Show/Hide buttons based on status
+        // Show/Hide buttons based on status and user role
         String status = order.getOrderStatus();
+        String userRole = AppPreferences.getUserRole(this);
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(userRole);
+        
         if ("PENDING".equalsIgnoreCase(status)) {
-            // Admin can approve pending orders
-            binding.btnApproveOrder.setVisibility(View.VISIBLE);
-            binding.btnCancelOrder.setVisibility(View.VISIBLE);
+            if (isAdmin) {
+                // Admin can approve pending orders
+                binding.btnApproveOrder.setVisibility(View.VISIBLE);
+                binding.btnCancelOrder.setVisibility(View.GONE);
+            } else {
+                // Customer can cancel pending orders
+                binding.btnApproveOrder.setVisibility(View.GONE);
+                binding.btnCancelOrder.setVisibility(View.VISIBLE);
+            }
         } else {
             binding.btnApproveOrder.setVisibility(View.GONE);
             binding.btnCancelOrder.setVisibility(View.GONE);

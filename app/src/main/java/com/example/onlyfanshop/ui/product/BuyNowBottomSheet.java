@@ -28,7 +28,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.Serializable;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -85,20 +87,22 @@ public class BuyNowBottomSheet extends BottomSheetDialogFragment {
                     .error(R.drawable.ic_launcher_foreground)
                     .into(binding.imgProductThumb);
         }
-        double totalPrice = Double.parseDouble(binding.tvProductPriceBottom.getText().toString().replace("$", ""));
+        // Parse price from formatted VND string
+        String priceText = binding.tvProductPriceBottom.getText().toString();
+        double totalPrice = parsePriceFromVND(priceText);
 
         binding.tvQuantity.setText(String.valueOf(quantity.get()));
 
         binding.btnAdd.setOnClickListener(v -> {
             quantity.incrementAndGet();
-            binding.tvProductPriceBottom.setText("$"+totalPrice*quantity.get());
+            binding.tvProductPriceBottom.setText(formatCurrencyVND(totalPrice * quantity.get()));
             binding.tvQuantity.setText(String.valueOf(quantity.get()));
         });
 
         binding.btnMinus.setOnClickListener(v -> {
             if (quantity.get() > 1) {
                 quantity.decrementAndGet();
-                binding.tvProductPriceBottom.setText("$"+totalPrice*quantity.get());
+                binding.tvProductPriceBottom.setText(formatCurrencyVND(totalPrice * quantity.get()));
                 binding.tvQuantity.setText(String.valueOf(quantity.get()));
             }
         });
@@ -178,6 +182,21 @@ public class BuyNowBottomSheet extends BottomSheetDialogFragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+    
+    private String formatCurrencyVND(double value) {
+        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        return nf.format(value).replace("₫", "₫");
+    }
+    
+    private double parsePriceFromVND(String priceText) {
+        // Remove ₫ and remove all spaces/dots/commas
+        String cleaned = priceText.replace("₫", "").replace(".", "").replace(",", "").trim();
+        try {
+            return Double.parseDouble(cleaned);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
 
 }

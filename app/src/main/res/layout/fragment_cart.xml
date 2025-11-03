@@ -20,13 +20,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:src="@drawable/ic_back"
+            android:contentDescription="Back" />
+
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:textSize="40sp"
-            android:gravity="center"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center_vertical"
             android:text="Giỏ hàng của bạn" />
     </LinearLayout>
 

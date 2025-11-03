@@ -1,8 +1,6 @@
 package com.example.onlyfanshop.adapter;
 
 import android.content.Context;
-import android.telecom.Call;
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,10 +15,11 @@ import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.databinding.ViewholderCartBinding;
 import com.example.onlyfanshop.model.CartItemDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
-import com.example.onlyfanshop.ui.product.ProductDetailActivity;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -62,10 +61,9 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
 
             CartItemDTO item = cartItems.get(position);
             holder.binding.checkBox.setChecked(item.isChecked());
-            holder.binding.feeEach.setText(item.getProductDTO().getPrice()+" VND");
             holder.binding.productName.setText(item.getProductDTO().getProductName());
             holder.binding.numberItem.setText(item.getQuantity()+"");
-            holder.binding.totalEach.setText(item.getPrice()+" VND");
+            holder.binding.totalEach.setText(formatCurrencyVND(item.getPrice()));
         if (item.getProductDTO().getImageURL() != null && !item.getProductDTO().getImageURL().isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(item.getProductDTO().getImageURL())
@@ -122,7 +120,10 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
         void onIncrease(int productId);
         void onDecrease(int productId);
     }
-
-
+    
+    private String formatCurrencyVND(double value) {
+        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        return nf.format(value).replace("₫", "₫");
+    }
 
 }
