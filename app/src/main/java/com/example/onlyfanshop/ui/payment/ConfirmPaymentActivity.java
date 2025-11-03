@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.adapter.CartAdapter;
 import com.example.onlyfanshop.api.ApiClient;
+import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.api.PaymentApi;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.api.UserApi;
@@ -93,7 +94,10 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         wards = new ArrayList<>();
         
         // Setup toolbar
-        binding.toolbar.setNavigationOnClickListener(v -> finish());
+        binding.toolbar.setNavigationOnClickListener(v -> {
+            deleteInstantCart();
+            finish();
+        });
         
         // Setup edge-to-edge insets to prevent content from going under status bar
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
@@ -110,6 +114,22 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         
         // Load provinces
         loadProvinces();
+    }
+
+    private void deleteInstantCart() {
+        Integer uerid =sharedPreferences.getInt("userId", 0);
+        CartItemApi api = ApiClient.getPrivateClient(this).create(CartItemApi.class);
+        api.deleteInstantCart(uerid).enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                Toast.makeText(ConfirmPaymentActivity.this, "Xóa giỏ hàng thất bại", Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
     private void setupUI(double totalPrice) {
@@ -629,7 +649,7 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         
         String bankCode = "NCB";
         PaymentApi api = ApiClient.getPrivateClient(this).create(PaymentApi.class);
-        api.createPayment(totalPrice, bankCode, address, recipientPhoneNumber).enqueue(new Callback<ApiResponse<PaymentDTO>>() {
+        api.createPayment(totalPrice, bankCode, address, sharedPreferences.getString("buyMethod", ""),recipientPhoneNumber).enqueue(new Callback<ApiResponse<PaymentDTO>>() {
             @Override
             public void onResponse(Call<ApiResponse<PaymentDTO>> call, Response<ApiResponse<PaymentDTO>> response) {
                 showLoading(false);

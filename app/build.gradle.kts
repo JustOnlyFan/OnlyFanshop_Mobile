@@ -70,6 +70,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-messaging:24.0.0")
 
     implementation("androidx.activity:activity:1.8.2")
 
