@@ -13,8 +13,9 @@ public interface PaymentApi {
             @Query("amount") double amount,
             @Query("bankCode") String bankCode,
             @Query("address") String address,
-            @Query("recipientPhoneNumber") String recipientPhoneNumber,
-            String phoneNumber);
+            @Query("buyMethod") String buyMethod,
+            @Query("recipientPhoneNumber") String recipientPhoneNumber
+    );
     
     @POST("payment/cod")
     Call<ApiResponse<Integer>> createCODOrder(

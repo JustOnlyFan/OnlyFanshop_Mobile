@@ -44,7 +44,7 @@ public class PaymentWebViewActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.contains("onlyfanshop.app/payment-result")) {
+                if (url.contains("localhost:3000/payment-result")) {
                     Uri uri = Uri.parse(url);
                     String status = uri.getQueryParameter("status");
                     String orderId = uri.getQueryParameter("order");// 👈 lấy orderId
