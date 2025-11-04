@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils; // added
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -36,7 +37,6 @@ import com.example.onlyfanshop.model.response.HomePageData;
 import com.example.onlyfanshop.ui.product.ProductDetailActivity;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -74,6 +74,10 @@ public class CategoryFragment extends Fragment {
     private final List<BrandDTO> brandList = new ArrayList<>();
     private final List<CategoryDTO> allCategoryList = new ArrayList<>();
 
+    // TOP views để chạy fall down
+    private View searchBarContainerView;
+    private TextView tvCategoryTitleView;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -85,6 +89,10 @@ public class CategoryFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(v, savedInstanceState);
+
+        // Lấy reference các view TOP
+        searchBarContainerView = v.findViewById(R.id.searchBarContainer);
+        tvCategoryTitleView = v.findViewById(R.id.tvCategoryTitle);
 
         categoryView = v.findViewById(R.id.categoryView);
         progressBarCategory = v.findViewById(R.id.progressBarCategory);
@@ -104,6 +112,9 @@ public class CategoryFragment extends Fragment {
         setupSearch();
         setupFilterButton();
 
+        // Chạy fall-down cho phần TOP ngay lần đầu hiển thị
+        v.post(this::playTopFallDownEnter);
+
         fetchHomePage();
     }
 
@@ -115,10 +126,9 @@ public class CategoryFragment extends Fragment {
         categoryView.setLayoutManager(
                 new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
         );
-        // Tối ưu scroll performance
         categoryView.setHasFixedSize(true);
         categoryView.setItemViewCacheSize(10);
-        categoryView.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
+        categoryView.setItemAnimator(null);
         categoryView.setAdapter(categoryAdapter);
     }
 
@@ -133,11 +143,15 @@ public class CategoryFragment extends Fragment {
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
         recyclerSearchResult.setLayoutManager(new GridLayoutManager(requireContext(), 2));
-        // Tối ưu scroll performance
         recyclerSearchResult.setHasFixedSize(true);
         recyclerSearchResult.setItemViewCacheSize(15);
-        recyclerSearchResult.setItemAnimator(null); // Tắt animation khi scroll để mượt hơn
+        recyclerSearchResult.setItemAnimator(null);
         recyclerSearchResult.setAdapter(productAdapter);
+
+        // Dùng layout_fall_down cho list sản phẩm
+        recyclerSearchResult.setLayoutAnimation(
+                AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down)
+        );
     }
 
     private void setupSearch() {
@@ -196,17 +210,15 @@ public class CategoryFragment extends Fragment {
 
                 HomePageData data = response.body().getData();
 
-                // Cập nhật danh sách brand
                 if (data.brands != null) {
                     brandList.clear();
                     brandList.addAll(data.brands);
                 }
 
-                // Category logic
                 List<CategoryDTO> categories = data.categories != null ? data.categories : new ArrayList<>();
                 allCategoryList.clear();
                 allCategoryList.addAll(categories);
-                
+
                 CategoryDTO all = new CategoryDTO();
                 all.setId(null);
                 all.setName("All");
@@ -217,7 +229,6 @@ public class CategoryFragment extends Fragment {
 
                 List<ProductDTO> products = data.products != null ? data.products : new ArrayList<>();
 
-                // Filter theo category nếu cần
                 if (selectedCategoryId != null) {
                     List<ProductDTO> filteredList = new ArrayList<>();
                     for (ProductDTO p : products) {
@@ -229,25 +240,28 @@ public class CategoryFragment extends Fragment {
                     products = filteredList;
                 }
 
-                // Sort giá đúng ý nghĩa: tăng dần (ASC) là nhỏ -> lớn, giảm dần (DESC) là lớn -> nhỏ
                 if ("Price".equals(sortBy)) {
                     Comparator<ProductDTO> cmp = Comparator.comparingDouble(
                             p -> Double.parseDouble(String.valueOf(p.getPrice()))
                     );
                     if ("ASC".equals(sortOrder)) {
-                        products.sort(cmp); // Tăng dần: nhỏ -> lớn
+                        products.sort(cmp);
                     } else {
-                        products.sort(cmp.reversed()); // Giảm dần: lớn -> nhỏ
+                        products.sort(cmp.reversed());
                     }
                 }
 
-                // Log kiểm tra
                 for (ProductDTO p : products) {
                     Log.d("SORTED_LIST", p.getProductName() + " - " + p.getPrice());
                 }
 
                 productAdapter.submitList(products);
                 textEmptySearch.setVisibility(products.isEmpty() ? View.VISIBLE : View.GONE);
+
+                // Mỗi lần load xong list, chạy layout animation
+                if (!products.isEmpty()) {
+                    playListEnterAnimation();
+                }
             }
 
             @Override
@@ -273,17 +287,14 @@ public class CategoryFragment extends Fragment {
             filterDialog = FilterBottomSheetDialog.newInstance();
         }
 
-        // Set current filter values
         String priceSort = sortBy.equals("Price") ? sortOrder : "None";
         filterDialog.setCurrentFilters(priceSort, selectedBrandId, selectedCategoryId);
         filterDialog.setBrandList(brandList);
         filterDialog.setCategoryList(allCategoryList);
 
-        // Set listener
         filterDialog.setFilterListener(new FilterBottomSheetDialog.FilterListener() {
             @Override
             public void onFilterApplied(String priceSort, Integer brandId, Integer categoryId, Float priceMin, Float priceMax) {
-                // Update sort by price
                 if ("None".equals(priceSort)) {
                     sortBy = "ProductID";
                     sortOrder = "DESC";
@@ -294,12 +305,7 @@ public class CategoryFragment extends Fragment {
 
                 selectedBrandId = brandId;
                 selectedCategoryId = categoryId;
-                
-                // Note: Price range filtering would need to be implemented on backend
-                // For now, we just store the values but don't use them in API call
-                // You can filter products client-side if needed
 
-                // Refresh products
                 fetchHomePage();
             }
 
@@ -314,6 +320,50 @@ public class CategoryFragment extends Fragment {
         });
 
         filterDialog.show(getParentFragmentManager(), "FilterBottomSheet");
+    }
+
+    // Animate phần TOP (search + title + category list) rơi từ trên xuống
+    private void playTopFallDownEnter() {
+        if (!isAdded()) return;
+        if (searchBarContainerView != null) {
+            searchBarContainerView.clearAnimation();
+            searchBarContainerView.startAnimation(
+                    AnimationUtils.loadAnimation(requireContext(), R.anim.fall_down)
+            );
+        }
+        if (tvCategoryTitleView != null) {
+            tvCategoryTitleView.clearAnimation();
+            tvCategoryTitleView.startAnimation(
+                    AnimationUtils.loadAnimation(requireContext(), R.anim.fall_down)
+            );
+        }
+        if (categoryView != null) {
+            categoryView.clearAnimation();
+            categoryView.startAnimation(
+                    AnimationUtils.loadAnimation(requireContext(), R.anim.fall_down)
+            );
+        }
+    }
+
+    // Kích hoạt layout animation cho list sản phẩm
+    public void playListEnterAnimation() {
+        if (recyclerSearchResult == null) return;
+        if (recyclerSearchResult.getLayoutAnimation() == null && isAdded()) {
+            recyclerSearchResult.setLayoutAnimation(
+                    AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down)
+            );
+        }
+        recyclerSearchResult.scheduleLayoutAnimation();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        // Khi fragment được show trở lại
+        if (!hidden) {
+            playTopFallDownEnter();
+            playListEnterAnimation();
+        }
     }
 
     private abstract static class SimpleTextWatcher implements TextWatcher {

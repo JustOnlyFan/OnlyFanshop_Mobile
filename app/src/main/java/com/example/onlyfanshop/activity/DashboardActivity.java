@@ -78,7 +78,7 @@ public class DashboardActivity extends AppCompatActivity {
                 if (currentSelectedId != R.id.nav_home) {
                     int fromOrder = getNavOrder(currentSelectedId);
                     int toOrder = getNavOrder(R.id.nav_home);
-                    boolean forward = toOrder > fromOrder; // thường là false → trượt sang trái để về Home
+                    boolean forward = toOrder > fromOrder;
                     bottomNav.setSelectedItemId(R.id.nav_home);
                     showFragmentById(R.id.nav_home, forward);
                     currentSelectedId = R.id.nav_home;
@@ -153,7 +153,6 @@ public class DashboardActivity extends AppCompatActivity {
         } else {
             currentSelectedId = R.id.nav_home;
         }
-        // Hiển thị ban đầu không cần animation hướng
         showFragmentById(currentSelectedId, true);
 
         bottomNav.setOnItemSelectedListener(item -> {
@@ -161,7 +160,7 @@ public class DashboardActivity extends AppCompatActivity {
             if (currentSelectedId != id) {
                 int fromOrder = getNavOrder(currentSelectedId);
                 int toOrder = getNavOrder(id);
-                boolean forward = toOrder > fromOrder; // sang phải → forward, sang trái → backward
+                boolean forward = toOrder > fromOrder;
                 showFragmentById(id, forward);
                 currentSelectedId = id;
             }
@@ -182,14 +181,13 @@ public class DashboardActivity extends AppCompatActivity {
         return username;
     }
 
-    // Xác định thứ tự tabs trên BottomNavigation để suy ra hướng
     private int getNavOrder(int id) {
         if (id == R.id.nav_home) return 0;
         if (id == R.id.nav_search) return 1;
         if (id == R.id.nav_car) return 2;
         if (id == R.id.nav_shop) return 3;
         if (id == R.id.nav_profile) return 4;
-        return Integer.MAX_VALUE; // unknown
+        return Integer.MAX_VALUE;
     }
 
     private void showFragmentById(int id, boolean forward) {
@@ -227,48 +225,43 @@ public class DashboardActivity extends AppCompatActivity {
     private void showFragment(Fragment fragmentToShow, boolean forward) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-        // Slide transitions với animation nhanh hơn (150ms đã tối ưu ở XML)
         if (forward) {
-            // Sang phải (target nằm bên phải current)
             transaction.setCustomAnimations(
-                    R.anim.slide_in_right,  // enter (150ms)
-                    R.anim.slide_out_left,  // exit (150ms)
-                    R.anim.slide_in_left,   // popEnter (khi backstack pop)
-                    R.anim.slide_out_right  // popExit
+                    R.anim.slide_in_right,
+                    R.anim.slide_out_left,
+                    R.anim.slide_in_left,
+                    R.anim.slide_out_right
             );
         } else {
-            // Sang trái (target nằm bên trái current)
             transaction.setCustomAnimations(
-                    R.anim.slide_in_left,   // enter (150ms)
-                    R.anim.slide_out_right, // exit (150ms)
-                    R.anim.slide_in_right,  // popEnter
-                    R.anim.slide_out_left   // popExit
+                    R.anim.slide_in_left,
+                    R.anim.slide_out_right,
+                    R.anim.slide_in_right,
+                    R.anim.slide_out_left
             );
         }
-        
-        // Sử dụng setReorderingAllowed để tối ưu performance
+
         transaction.setReorderingAllowed(true);
 
-        // Hide all fragments if they are added
         if (homeFragment.isAdded()) transaction.hide(homeFragment);
         if (categoryFragment.isAdded()) transaction.hide(categoryFragment);
         if (mapFragment.isAdded()) transaction.hide(mapFragment);
         if (cartFragment != null && cartFragment.isAdded() && cartFragment != fragmentToShow) transaction.hide(cartFragment);
         if (profileFragment.isAdded()) transaction.hide(profileFragment);
 
-        // Add if not added, else show
         if (!fragmentToShow.isAdded()) {
             transaction.add(R.id.mainFragmentContainer, fragmentToShow);
         } else {
             transaction.show(fragmentToShow);
         }
 
-        // Control bottom navigation visibility based on current fragment
         if (fragmentToShow instanceof CartFragment) {
             bottomNav.setVisibility(View.GONE);
         } else {
             bottomNav.setVisibility(View.VISIBLE);
         }
+
+        boolean isCategory = fragmentToShow instanceof CategoryFragment;
 
         try {
             transaction.commitNow();
@@ -276,6 +269,11 @@ public class DashboardActivity extends AppCompatActivity {
             Log.w(TAG, "commitNow failed, falling back to commit + executePendingTransactions", e);
             transaction.commit();
             getSupportFragmentManager().executePendingTransactions();
+        }
+
+        // Sau khi fragment đã hiển thị, kích hoạt animation cho CategoryFragment mỗi lần được show
+        if (isCategory) {
+            ((CategoryFragment) fragmentToShow).playListEnterAnimation();
         }
     }
 

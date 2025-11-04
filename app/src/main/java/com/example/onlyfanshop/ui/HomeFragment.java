@@ -755,9 +755,8 @@ public class HomeFragment extends Fragment {
         prepareSlideTargets(topGroup, bottomGroup, distance);
 
         // Animate tất cả CÙNG LÚC, mượt
-        final android.animation.TimeInterpolator interpolator =
-                new androidx.interpolator.view.animation.FastOutLinearInInterpolator();
-        final long duration = 150L; // rất nhanh, mượt mà
+        final android.animation.TimeInterpolator interpolator = new FastOutSlowInInterpolator();
+        final long duration = 360L; // rất nhanh, mượt mà
 
         for (View v : topGroup) {
             if (v == null) continue;

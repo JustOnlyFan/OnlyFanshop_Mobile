@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:interpolator="@android:interpolator/fast_out_slow_in">
+
+    <!-- Rơi từ trên xuống: -25% chiều cao parent -> 0.
+         Nếu muốn rơi từ ngoài màn hình, đổi -25%p thành -100%p -->
     <translate
-        android:fromYDelta="-10%"
+        android:fromYDelta="-25%p"
         android:toYDelta="0"
-        android:duration="120"/>
+        android:duration="300"/>
+
     <alpha
         android:fromAlpha="0"
         android:toAlpha="1"
-        android:duration="100"/>
+        android:duration="260"/>
 </set>

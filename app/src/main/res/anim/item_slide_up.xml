@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/fast_out_slow_in">
+    <!-- Bắt đầu từ dưới đáy màn hình (100% parent height) lên vị trí -->
+    <translate
+        android:fromYDelta="100%p"
+        android:toYDelta="0"
+        android:duration="380"/>
+</set>
