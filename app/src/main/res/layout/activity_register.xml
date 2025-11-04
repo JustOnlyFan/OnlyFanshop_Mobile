@@ -16,7 +16,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Create your\nAccount"
+            android:text="Tạo tài khoản "
             android:textStyle="bold"
             android:textColor="#111111"
             android:textSize="28sp"
@@ -35,7 +35,7 @@
                 android:id="@+id/edtUsername"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:hint="Username"
+                android:hint="Họ và tên"
                 android:inputType="textPersonName"
                 android:maxLines="1"
                 android:singleLine="true"
@@ -75,7 +75,7 @@
                 android:id="@+id/edtPhone"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:hint="Phone Number (Optional)"
+                android:hint="Số điện thoại "
                 android:inputType="phone"
                 android:maxLines="1"
                 android:singleLine="true"
@@ -95,7 +95,7 @@
                 android:id="@+id/edtAddress"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:hint="Address (Optional)"
+                android:hint="Địa chỉ"
                 android:inputType="text"
                 android:maxLines="1"
                 android:singleLine="true"
@@ -116,7 +116,7 @@
                 android:id="@+id/edtPassword"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:hint="Password"
+                android:hint="Mật khẩu"
                 android:inputType="textPassword"
                 android:maxLines="1"
                 android:singleLine="true"
@@ -137,7 +137,7 @@
                 android:id="@+id/edtConfirmPassword"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:hint="Confirm Password"
+                android:hint="Nhập lại mật khẩu"
                 android:inputType="textPassword"
                 android:maxLines="1"
                 android:singleLine="true"
@@ -149,7 +149,7 @@
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="Sign up"
+            android:text="Đăng kí"
             android:textAllCaps="false"
             android:layout_marginTop="20dp"
             app:cornerRadius="28dp"/>
@@ -162,12 +162,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Already have an account? "/>
+                android:text="Bạn đã có tài khoản? "/>
             <TextView
                 android:id="@+id/btnBack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Sign in"
+                android:text="Đăng nhập"
                 android:textColor="#1E88E5"/>
         </LinearLayout>
 

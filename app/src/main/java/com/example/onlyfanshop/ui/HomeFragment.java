@@ -242,8 +242,9 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Load banner
-        loadBannersFromRealtimeDb();
+        // Lazy load: Chỉ load banner và popular sau khi UI đã render
+        // Banner và Popular sẽ load sau một chút để UI hiển thị nhanh hơn
+        v.postDelayed(() -> loadBannersFromRealtimeDb(), 100);
 
         // Popular
         popularView = v.findViewById(R.id.popularView);
@@ -267,7 +268,8 @@ public class HomeFragment extends Fragment {
         popularView.setAdapter(popularAdapter);
 
         productApi = ApiClient.getPrivateClient(requireContext()).create(ProductApi.class);
-        loadPopular();
+        // Lazy load: Popular sẽ load sau khi UI đã render
+        v.postDelayed(() -> loadPopular(), 150);
 
         // See all button - navigate to products tab
         TextView tvSeeAll = v.findViewById(R.id.tvSeeAll);
@@ -307,7 +309,8 @@ public class HomeFragment extends Fragment {
         });
         productsView.setAdapter(productAdapter);
 
-        loadProducts();
+        // Lazy load: Products sẽ load sau khi UI đã render
+        v.postDelayed(() -> loadProducts(), 200);
 
         // Search suggestions
         etSearch = v.findViewById(R.id.editTextText);
@@ -448,6 +451,30 @@ public class HomeFragment extends Fragment {
     public void onDestroyView() {
         stopAutoSlide();
         if (pendingSearch != null) searchHandler.removeCallbacks(pendingSearch);
+        
+        // Giải phóng resources
+        if (viewPagerBanner != null) {
+            viewPagerBanner.setAdapter(null);
+            viewPagerBanner = null;
+        }
+        if (popularView != null) {
+            popularView.setAdapter(null);
+            popularView = null;
+        }
+        if (productsView != null) {
+            productsView.setAdapter(null);
+            productsView = null;
+        }
+        if (recyclerSuggest != null) {
+            recyclerSuggest.setAdapter(null);
+            recyclerSuggest = null;
+        }
+        
+        bannerAdapter = null;
+        popularAdapter = null;
+        productAdapter = null;
+        suggestAdapter = null;
+        
         super.onDestroyView();
     }
 

@@ -48,7 +48,7 @@
                     android:id="@+id/tvUserName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Name"
+                    android:text="Tên"
                     android:textColor="@color/black"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -80,7 +80,7 @@
                 android:background="@drawable/stroke_bg"
                 android:drawableEnd="@drawable/ic_search"
                 android:drawablePadding="8dp"
-                android:hint="Search..."
+                android:hint="Tìm kiếm..."
                 android:padding="8dp"
                 android:singleLine="true"/>
 
@@ -164,7 +164,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="User Management"
+                        android:text="Quản lí người dùng"
                         android:textColor="@color/black"
                         android:textStyle="bold"
                         android:textSize="14sp" />
@@ -192,7 +192,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Product Management"
+                        android:text="Quản lí sản phẩm"
                         android:textColor="@color/black"
                         android:textStyle="bold"
                         android:textSize="14sp" />
@@ -220,7 +220,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Brand Management"
+                        android:text="Quán lí thương hiệu"
                         android:textColor="@color/black"
                         android:textStyle="bold"
                         android:textSize="14sp" />
@@ -248,7 +248,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Category Management"
+                        android:text="Quản lí danh mục"
                         android:textColor="@color/black"
                         android:textStyle="bold"
                         android:textSize="14sp" />
@@ -275,7 +275,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Chat Management"
+                        android:text="Quản lí tin nhắn"
                         android:textColor="@color/black"
                         android:textStyle="bold"
                         android:textSize="14sp" />
@@ -303,7 +303,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Store Management"
+                        android:text="Quản lí cửa hàng"
                         android:textColor="@color/black"
                         android:textStyle="bold"
                         android:textSize="14sp" />

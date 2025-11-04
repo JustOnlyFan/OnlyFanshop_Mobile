@@ -37,6 +37,10 @@ public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
     private static final String BASE_IMAGE_HOST = "http://10.0.2.2:8080";
     // Nếu ảnh yêu cầu Bearer token → bật true
     private static final boolean IMAGES_REQUIRE_AUTH = false;
+    // Static NumberFormat để tránh tạo object mới mỗi lần
+    private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+    private static final String DEFAULT_LOCATION = "Vietnam";
+    private static final String DEFAULT_SOLD = "Sold 0";
 
     public PopularAdapter(@NonNull OnItemClick onItemClick) {
         this.onItemClick = onItemClick;
@@ -65,8 +69,8 @@ public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
         // Bind text
         h.b.textTitle.setText(p.getProductName() != null ? p.getProductName() : "");
         h.b.textPrice.setText(formatCurrencyVND(p.getPrice()));
-        h.b.textSold.setText("Sold 0");
-        h.b.textLocation.setText("Vietnam");
+        h.b.textSold.setText(DEFAULT_SOLD);
+        h.b.textLocation.setText(DEFAULT_LOCATION);
 
         // Load ảnh theo đúng XML: centerCrop, height cố định đã set ở layout
         String url = resolveImageUrl(p.getImageURL());
@@ -75,8 +79,12 @@ public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
             model = asGlideUrlWithAuth(context, url);
         }
 
+        // Tối ưu: thumbnail để load nhanh hơn, placeholder để UX tốt hơn
         Glide.with(h.b.imageProduct.getContext())
                 .load(model)
+                .thumbnail(Glide.with(h.b.imageProduct.getContext())
+                        .load(model)
+                        .override(100, 100)) // Load thumbnail nhỏ trước
                 .apply(new RequestOptions().transform(new CenterCrop()))
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .error(R.drawable.ic_launcher_foreground)
@@ -98,11 +106,12 @@ public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
         }
     }
 
-    private String formatCurrencyVND(Double value) {
+    // Tối ưu: dùng static NumberFormat để tránh tạo object mới mỗi lần
+    private static String formatCurrencyVND(Double value) {
         double v = value != null ? value : 0d;
-        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-        // Trả về dạng ₫x.xxx
-        return nf.format(v);
+        synchronized (CURRENCY_FORMATTER) {
+            return CURRENCY_FORMATTER.format(v);
+        }
     }
 
     private String resolveImageUrl(String raw) {

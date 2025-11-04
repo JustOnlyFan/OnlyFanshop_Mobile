@@ -25,7 +25,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Filter"
+                android:text="Bộ lọc"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="@color/black" />
@@ -129,7 +129,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sort by Price"
+        android:text="Theo giá"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/black"
@@ -172,7 +172,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Filter by Brand"
+        android:text="Theo nhãn hàng"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/black"
@@ -190,7 +190,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Filter by Category"
+        android:text="Theo loại quạt"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/black"

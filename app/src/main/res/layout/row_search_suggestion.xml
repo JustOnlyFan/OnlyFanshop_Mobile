@@ -25,7 +25,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Product name"
+            android:text="Tên sản phẩm"
             android:textColor="@color/black"
             android:textSize="14sp"
             android:maxLines="1"

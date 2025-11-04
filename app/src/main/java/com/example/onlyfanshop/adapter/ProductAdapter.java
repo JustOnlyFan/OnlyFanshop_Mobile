@@ -37,6 +37,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     // Bật nếu ảnh nằm sau auth và cần gắn Bearer token
     private static final boolean IMAGES_REQUIRE_AUTH = false;
 
+    // Static NumberFormat để tránh tạo object mới mỗi lần
+    private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+    private static final String DEFAULT_LOCATION = "Việt Nam";
+
     public ProductAdapter(@NonNull OnItemClick onItemClick) {
         this.onItemClick = onItemClick;
     }
@@ -60,7 +64,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         h.textTitle.setText(p.getProductName());
         h.textPrice.setText(formatCurrencyVND(p.getPrice()));
         h.textSold.setText(h.itemView.getContext().getString(R.string.sold_format, 0));
-        h.textLocation.setText("Việt Nam");
+        h.textLocation.setText(DEFAULT_LOCATION);
 
         String rawUrl = p.getImageURL();
         String url = resolveImageUrl(rawUrl);
@@ -73,10 +77,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
                 model = asGlideUrlWithAuth(h.itemView.getContext(), url);
             }
 
+            // Tối ưu: thumbnail để load nhanh hơn, placeholder để UX tốt hơn
             Glide.with(h.image.getContext())
                     .load(model)
+                    .thumbnail(Glide.with(h.image.getContext())
+                            .load(model)
+                            .override(100, 100)) // Load thumbnail nhỏ trước
                     .placeholder(R.drawable.ic_launcher_foreground)
                     .error(R.drawable.ic_launcher_foreground)
+                    .centerCrop()
                     .into(h.image);
         } else {
             h.image.setImageResource(R.drawable.ic_launcher_foreground);
@@ -101,9 +110,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         }
     }
 
-    private String formatCurrencyVND(double value) {
-        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-        return nf.format(value).replace("₫", "₫");
+    // Tối ưu: dùng static NumberFormat để tránh tạo object mới mỗi lần
+    private static String formatCurrencyVND(double value) {
+        synchronized (CURRENCY_FORMATTER) {
+            return CURRENCY_FORMATTER.format(value).replace("₫", "₫");
+        }
     }
 
     // Chuẩn hóa URL ảnh: nếu tương đối -> thêm host
@@ -112,8 +123,18 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         String u = raw.trim();
 
         // Trường hợp backend trả "localhost" hoặc "127.0.0.1" -> đổi sang 10.0.2.2 cho emulator
-        u = u.replace("http://localhost:", "http://10.0.2.2:")
-                .replace("http://127.0.0.1:", "http://10.0.2.2:");
+        // Tối ưu: dùng StringBuilder để tránh tạo nhiều String object
+        if (u.contains("localhost:") || u.contains("127.0.0.1:")) {
+            StringBuilder sb = new StringBuilder(u);
+            int idx;
+            if ((idx = sb.indexOf("localhost:")) != -1) {
+                sb.replace(idx, idx + "localhost:".length(), "10.0.2.2:");
+            }
+            if ((idx = sb.indexOf("127.0.0.1:")) != -1) {
+                sb.replace(idx, idx + "127.0.0.1:".length(), "10.0.2.2:");
+            }
+            u = sb.toString();
+        }
 
         if (u.startsWith("http://") || u.startsWith("https://")) {
             return u;

@@ -46,7 +46,7 @@ public class UserOrderFragment extends Fragment {
     private OrderApi orderApi;
     private Button currentSelectedButton;
 
-    private Button btnPending, btnPicking, btnShipping, btnDelivered;
+    private Button btnPending, btnPicking, btnShipping, btnDelivered, btnCancelled;
 
     public static UserOrderFragment newInstance(String status) {
         UserOrderFragment fragment = new UserOrderFragment();
@@ -69,17 +69,16 @@ public class UserOrderFragment extends Fragment {
         btnPicking = view.findViewById(R.id.btnPicking);
         btnShipping = view.findViewById(R.id.btnShipping);
         btnDelivered = view.findViewById(R.id.btnDelivered);
+        btnCancelled = view.findViewById(R.id.btnCancelled);
         
         // Setup edge-to-edge insets handling AFTER views are initialized
         setupWindowInsets(view);
 
-        // Hide admin-only buttons (All, Returns/Refunds, Cancelled) for regular users
+        // Hide admin-only buttons (All, Returns/Refunds). Canceled vẫn hiển thị cho user
         Button btnAll = view.findViewById(R.id.btnAll);
         Button btnReturnsRefunds = view.findViewById(R.id.btnReturnsRefunds);
-        Button btnCancelled = view.findViewById(R.id.btnCancelled);
         if (btnAll != null) btnAll.setVisibility(View.GONE);
         if (btnReturnsRefunds != null) btnReturnsRefunds.setVisibility(View.GONE);
-        if (btnCancelled != null) btnCancelled.setVisibility(View.GONE);
 
         // Setup back button
         btnBack.setOnClickListener(v -> {
@@ -124,6 +123,10 @@ public class UserOrderFragment extends Fragment {
         btnDelivered.setOnClickListener(v -> {
             selectButton(btnDelivered);
             loadOrdersByStatus("DELIVERED");
+        });
+        btnCancelled.setOnClickListener(v -> {
+            selectButton(btnCancelled);
+            loadOrdersCancelled();
         });
 
         // Load orders with initial status and select corresponding button
@@ -208,6 +211,9 @@ public class UserOrderFragment extends Fragment {
                 break;
             case "DELIVERED":
                 buttonToSelect = btnDelivered;
+                break;
+            case "CANCELLED":
+                buttonToSelect = btnCancelled;
                 break;
             default:
                 buttonToSelect = btnPending;
@@ -323,6 +329,33 @@ public class UserOrderFragment extends Fragment {
 
     private void loadOrdersCompleted() {
         Call<ApiResponse<List<OrderDTO>>> call = orderApi.getOrdersCompleted();
+        call.enqueue(new Callback<ApiResponse<List<OrderDTO>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<OrderDTO>>> call, Response<ApiResponse<List<OrderDTO>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<OrderDTO> orders = response.body().getData();
+                    if (orders == null || orders.isEmpty()) {
+                        showEmptyState(true);
+                    } else {
+                        showEmptyState(false);
+                        orderAdapter.setOrderList(orders);
+                    }
+                } else {
+                    showEmptyState(true);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<OrderDTO>>> call, Throwable t) {
+                showEmptyState(true);
+                Toast.makeText(requireContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadOrdersCancelled() {
+        // Use generic endpoint with status param for broader compatibility
+        Call<ApiResponse<List<OrderDTO>>> call = orderApi.getOrders("CANCELLED");
         call.enqueue(new Callback<ApiResponse<List<OrderDTO>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<OrderDTO>>> call, Response<ApiResponse<List<OrderDTO>>> response) {

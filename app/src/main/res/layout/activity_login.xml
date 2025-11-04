@@ -49,10 +49,10 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Login to your account"
+                    android:text="Đăng nhập tài khoản của bạn"
                     android:textStyle="bold"
                     android:textColor="#111111"
-                    android:textSize="28sp"
+                    android:textSize="27sp"
                     android:lineSpacingExtra="4dp"/>
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -101,7 +101,7 @@
                         android:id="@+id/edtPassword"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:hint="Password"
+                        android:hint="Mật khẩu"
                         android:inputType="textPassword"
                         android:textSize="16sp"
                         android:paddingStart="16dp"
@@ -126,7 +126,7 @@
                         android:id="@+id/tvForgotPassword"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Forgot the password?"
+                        android:text="Quên mật khẩu?"
                         android:textColor="#1E88E5"/>
                 </LinearLayout>
 
@@ -135,7 +135,7 @@
                     style="@style/Widget.Material3.Button"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:text="Sign in"
+                    android:text="Đăng nhập"
                     android:textAllCaps="false"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -150,7 +150,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="16dp"
-                    android:text="Continue with Google"
+                    android:text="Đăng nhập với Google"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     app:icon="@drawable/ic_google"
@@ -172,12 +172,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Don't have an account? "/>
+                    android:text="Bạn chưa có tài khoản? "/>
                 <TextView
                     android:id="@+id/tvSignUp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sign up"
+                    android:text="Đăng kí"
                     android:textColor="#1E88E5"/>
             </LinearLayout>
 
@@ -212,7 +212,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Back"
+                android:text="Trở lại"
                 android:textColor="#1E88E5"
                 android:textSize="20sp"
                 android:layout_marginStart="8dp"

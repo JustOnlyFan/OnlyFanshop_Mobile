@@ -52,7 +52,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:hint="Search location..."
+            android:hint="Tìm kiếm địa chỉ..."
             android:textSize="16sp"
             android:textColor="#333333"
             android:textColorHint="#999999"

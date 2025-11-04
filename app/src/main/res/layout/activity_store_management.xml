@@ -15,7 +15,7 @@
         android:background="@color/colorPrimary"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:navigationIcon="@drawable/ic_back"
-        app:title="Store Management"
+        app:title="Quản lí cửa hàng"
         app:titleTextColor="@color/white" />
 
     <!-- Search bar -->
@@ -33,7 +33,7 @@
             android:background="@drawable/stroke_bg"
             android:drawableEnd="@drawable/ic_search"
             android:drawablePadding="8dp"
-            android:hint="Search stores..."
+            android:hint="Tìm cửa hàng..."
             android:padding="12dp"
             android:textSize="16sp"
             android:fontFamily="sans-serif"
