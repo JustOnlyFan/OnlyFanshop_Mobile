@@ -16,7 +16,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="OTP verification"
+            android:text="Xác thực OTP"
             android:textStyle="bold"
             android:textColor="#111111"
             android:textSize="28sp"/>
@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="We sent a 6-digit code to"
+            android:text="Chúng tôi đã gửi mã OTP tới "
             android:textColor="#6A6A6A"/>
         <TextView
             android:id="@+id/tvOtpEmail"
@@ -54,7 +54,7 @@
                     android:id="@+id/edtOtp"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:hint="6-digit code"
+                    android:hint="Nhập OTP"
                     android:inputType="number"/>
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -63,7 +63,7 @@
                 style="@style/Widget.Material3.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="56dp"
-                android:text="Resend"
+                android:text="Gửi lại"
                 android:layout_marginStart="8dp"
                 app:cornerRadius="28dp" />
         </LinearLayout>
@@ -93,7 +93,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Back to Sign in"
+            android:text="Quay lại đăng nhập"
             android:textColor="#1E88E5"/>
 
     </LinearLayout>

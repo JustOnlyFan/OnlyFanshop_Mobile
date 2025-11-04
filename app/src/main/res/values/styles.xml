@@ -12,6 +12,12 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <!-- Circle ShapeAppearance for ShapeableImageView -->
+    <style name="CircleImageViewAppearance" parent="ShapeAppearance.MaterialComponents">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
     <!-- BottomSheet Theme -->
     <style name="BottomSheetTheme" parent="Theme.MaterialComponents.DayNight.Dialog">
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.MaterialComponents.MediumComponent</item>
@@ -61,5 +67,14 @@
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">#111111</item>
         <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <!-- Splash Screen Theme -->
+    <style name="SplashTheme" parent="Theme.OnlyFanshop">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 </resources>

@@ -5,15 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@android:color/white">
+    android:background="#F5F7FA">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="@android:color/white"
-        android:elevation="0dp"
+        android:elevation="2dp"
         app:title="Chỉnh sửa hồ sơ"
+        app:titleTextColor="@color/black"
         app:navigationIcon="@drawable/ic_back"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,8 +25,9 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
+        android:overScrollMode="ifContentScrolls"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnSave"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -38,7 +40,7 @@
             android:paddingTop="24dp"
             android:paddingBottom="24dp">
 
-            <!-- Avatar + nút đổi ảnh -->
+            <!-- Avatar với animation -->
             <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -46,34 +48,43 @@
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imgAvatar"
-                    android:layout_width="104dp"
-                    android:layout_height="104dp"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
                     android:contentDescription="Ảnh đại diện"
                     android:scaleType="centerCrop"
                     app:srcCompat="@drawable/profile"
-                    app:strokeColor="?attr/colorOutline"
-                    app:strokeWidth="1dp" />
+                    app:strokeColor="@color/colorPrimary"
+                    app:strokeWidth="3dp"
+                    app:shapeAppearance="@style/CircleImageViewAppearance" />
 
-
+                <!-- Icon quạt quay khi loading -->
+                <ImageView
+                    android:id="@+id/imgFanLoading"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_onlyfan"
+                    android:visibility="gone"
+                    app:tint="@color/colorPrimary" />
             </FrameLayout>
 
-            <!-- Card chứa form -->
+            <!-- Card chứa form với shadow đẹp hơn -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardForm"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:cardCornerRadius="16dp"
+                android:layout_marginTop="24dp"
+                app:cardCornerRadius="20dp"
                 app:cardUseCompatPadding="true"
-                app:cardElevation="2dp"
-                app:strokeColor="@android:color/transparent">
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="@color/white"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilUsername"
@@ -81,6 +92,13 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Username"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeWidth="2dp"
+                        app:boxStrokeWidthFocused="2dp"
+                        app:hintTextColor="@color/colorPrimary"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -88,7 +106,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textPersonName"
-                            android:imeOptions="actionNext" />
+                            android:imeOptions="actionNext"
+                            android:textSize="16sp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -96,8 +117,15 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:hint="Email"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeWidth="2dp"
+                        app:boxStrokeWidthFocused="2dp"
+                        app:hintTextColor="@color/colorPrimary"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -105,7 +133,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textEmailAddress"
-                            android:imeOptions="actionNext" />
+                            android:imeOptions="actionNext"
+                            android:textSize="16sp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -113,9 +144,15 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:hint="Số điện thoại"
-                        app:placeholderText="Nhập số điện thoại"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeWidth="2dp"
+                        app:boxStrokeWidthFocused="2dp"
+                        app:hintTextColor="@color/colorPrimary"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -123,54 +160,112 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="phone"
-                            android:imeOptions="actionNext" />
+                            android:imeOptions="actionNext"
+                            android:textSize="16sp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilAddress"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    <!-- Địa chỉ với nút cập nhật -->
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:hint="Địa chỉ"
-                        app:placeholderText="Nhập địa chỉ"
-                        app:endIconMode="clear_text">
+                        android:text="Địa chỉ"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp" />
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etAddress"
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="#F8F9FA"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="#E0E0E0">
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textPostalAddress"
-                            android:imeOptions="actionDone" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:orientation="horizontal"
+                            android:padding="16dp"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvAddressDisplay"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Chưa có địa chỉ"
+                                android:textSize="16sp"
+                                android:textColor="@color/black"
+                                android:maxLines="3"
+                                android:ellipsize="end" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnUpdateAddress"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Cập nhật"
+                                android:textColor="@color/colorPrimary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                app:icon="@android:drawable/ic_menu_edit"
+                                app:iconGravity="textStart"
+                                app:iconPadding="4dp"
+                                app:iconTint="@color/colorPrimary" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Nút lưu -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSave"
-                style="@style/Widget.MaterialComponents.Button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Lưu thay đổi"
-                app:icon="@drawable/tick"
-                app:iconGravity="textStart"
-                app:iconPadding="8dp"
-                app:cornerRadius="12dp" />
-
         </LinearLayout>
     </ScrollView>
 
-    <!-- ProgressBar chuẩn Android -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+    <!-- Nút lưu ở dưới cùng với animation -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSave"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        android:text="LƯU THAY ĐỔI"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/colorPrimary"
+        app:icon="@drawable/tick"
+        app:iconGravity="textStart"
+        app:iconPadding="8dp"
+        app:cornerRadius="28dp"
+        app:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ProgressBar với icon quạt quay -->
+    <FrameLayout
+        android:id="@+id/progressContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/imgProgressFan"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_onlyfan"
+            app:tint="@color/colorPrimary" />
+
+    </FrameLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

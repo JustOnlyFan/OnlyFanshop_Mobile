@@ -28,7 +28,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 import com.bumptech.glide.Glide;
-import com.example.onlyfanshop.MainActivity;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.CartItemApi;

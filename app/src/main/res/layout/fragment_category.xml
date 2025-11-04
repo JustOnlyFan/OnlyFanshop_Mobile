@@ -44,7 +44,7 @@
                 android:layout_toEndOf="@id/searchIcon"
                 android:layout_marginStart="12dp"
                 android:layout_centerVertical="true"
-                android:hint="Search..."
+                android:hint="Tìm kiếm..."
                 android:textColorHint="#B0B0B0"
                 android:textSize="15sp"
                 android:textColor="@color/black"
@@ -79,7 +79,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:text="Category"
+            android:text="Danh mục"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold" />

@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Please sign in to continue"
+        android:text="Vui lòng đăng nhâp đề tiếp tục"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/black"
@@ -19,5 +19,5 @@
         android:id="@+id/btnLoginNow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sign In" />
+        android:text="Đăng nhập" />
 </LinearLayout>

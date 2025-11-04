@@ -43,4 +43,7 @@ public interface OrderApi {
     @GET("/order/getOrdersCompleted")
     Call<ApiResponse<List<OrderDTO>>> getOrdersCompleted();
 
+    @GET("/order/getOrdersCancelled")
+    Call<ApiResponse<List<OrderDTO>>> getOrdersCancelled();
+
 }

@@ -18,9 +18,9 @@ import androidx.activity.result.contract.ActivityResultContracts;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.onlyfanshop.MainActivity;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.activity.AdminActivity;
+import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.UserApi;
 import com.example.onlyfanshop.model.response.ApiResponse;
@@ -90,10 +90,9 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
         tvSignUp = findViewById(R.id.tvSignUp);
 
-        // Set up back button to return to MainActivity
+        // Set up back button to return to DashboardActivity
         btnBackMain.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            // optional: clear the login activity from back stack
+            Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
             startActivity(intent);
             finish();
         });
@@ -196,7 +195,7 @@ public class LoginActivity extends AppCompatActivity {
                             startActivity(intent);
                             Toast.makeText(LoginActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
                         } else {
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
                             intent.putExtra("user", user);
                             startActivity(intent);
                             Toast.makeText(LoginActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
@@ -430,8 +429,8 @@ public class LoginActivity extends AppCompatActivity {
                             Log.d("GoogleAuth", "Admin detected, navigating to AdminActivity");
                             intent = new Intent(LoginActivity.this, AdminActivity.class);
                         } else {
-                            Log.d("GoogleAuth", "Customer detected, navigating to MainActivity");
-                            intent = new Intent(LoginActivity.this, MainActivity.class);
+                            Log.d("GoogleAuth", "Customer detected, navigating to DashboardActivity");
+                            intent = new Intent(LoginActivity.this, DashboardActivity.class);
                         }
                         intent.putExtra("user", userDTO);
                         startActivity(intent);

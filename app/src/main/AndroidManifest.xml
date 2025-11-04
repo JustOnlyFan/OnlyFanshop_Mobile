@@ -76,14 +76,20 @@
             android:name=".activity.DashboardActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".ui.SplashActivity"
+            android:exported="true"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- MainActivity không còn cần thiết vì SplashActivity là launcher -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:enabled="false" />
         <activity
             android:name=".activity.ChangePasswordActivity"
             android:exported="false" />

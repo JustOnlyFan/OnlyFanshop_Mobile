@@ -16,7 +16,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Forgot the\npassword?"
+            android:text="Quên \nmật khẩu ?"
             android:textStyle="bold"
             android:textColor="#111111"
             android:textSize="28sp"
@@ -59,7 +59,7 @@
                     android:id="@+id/edtOtp"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:hint="Enter OTP"
+                    android:hint="Nhập OTP"
                     android:inputType="number"/>
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -68,7 +68,7 @@
                 style="@style/Widget.Material3.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="56dp"
-                android:text="Send OTP"
+                android:text="Gửi OTP"
                 android:layout_marginStart="8dp"
                 app:cornerRadius="28dp" />
         </LinearLayout>
@@ -78,7 +78,7 @@
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="Verify"
+            android:text="Xác nhận"
             android:layout_marginTop="16dp"
             app:cornerRadius="28dp" />
 
@@ -87,8 +87,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Back to Sign in"
-            android:textColor="#1E88E5"/>
+            android:text="Trở lại đăng nhập"
+            android:textColor="#1E88E5" />
 
     </LinearLayout>
 </ScrollView>

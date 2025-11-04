@@ -197,14 +197,14 @@ public class ProfileFragment extends Fragment {
 
     private void showLogoutDialog() {
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Logout")
-                .setMessage("Are you sure you want to logout?")
+                .setTitle("Đăng xuất")
+                .setMessage("Bạn có chắc là muốn đăng xuất?")
                 .setPositiveButton("Logout", (dialog, which) -> {
                     SharedPreferences prefs = requireContext().getApplicationContext()
                             .getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
                     prefs.edit().remove("jwt_token").remove("userId").remove("username").remove("email").remove("role").apply();
                     ApiClient.clearAuthToken();
-                    Toast.makeText(requireContext(), "Logged out", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Đăng xuất", Toast.LENGTH_SHORT).show();
 
                     if (requireActivity() instanceof DashboardActivity) {
                         DashboardActivity dashboard = (DashboardActivity) requireActivity();

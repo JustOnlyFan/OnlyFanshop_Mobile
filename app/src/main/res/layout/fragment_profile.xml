@@ -66,7 +66,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Edit profile"
+                    android:text="Chỉnh sửa thông tin"
                     android:textColor="@color/white"
                     android:paddingHorizontal="24dp"
                     android:paddingVertical="10dp"
@@ -89,7 +89,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Orders"
+                android:text="Đơn hàng"
                 android:textSize="13sp"
                 android:textColor="#999"
                 android:textStyle="bold" />
@@ -141,37 +141,13 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Pending"
+                        android:text="Chờ xác nhận"
                         android:textSize="13sp"
                         android:textColor="@color/black"
                         android:layout_marginTop="4dp" />
                 </LinearLayout>
 
                 <!-- Chờ lấy hàng -->
-                <LinearLayout
-                    android:id="@+id/btnReadyToShip"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_shipping_box"
-                        app:tint="@color/black" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ready to ship"
-                        android:textSize="13sp"
-                        android:textColor="@color/black"
-                        android:layout_marginTop="4dp" />
-                </LinearLayout>
-
-                <!-- Chờ giao hàng -->
                 <LinearLayout
                     android:id="@+id/btnShipping"
                     android:layout_width="0dp"
@@ -189,11 +165,36 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Shipping"
+                        android:text="Đang vận chuyển "
                         android:textSize="13sp"
                         android:textColor="@color/black"
                         android:layout_marginTop="4dp" />
                 </LinearLayout>
+
+                <!-- Đã giao -->
+                <LinearLayout
+                    android:id="@+id/btnReadyToShip"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_shipping_box"
+                        app:tint="@color/black" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Đã giao"
+                        android:textSize="13sp"
+                        android:textColor="@color/black"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
@@ -202,7 +203,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Inventories"
+            android:text="Dịch vụ"
             android:textSize="13sp"
             android:textColor="#999"
             android:layout_marginTop="8dp"
@@ -246,7 +247,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Support"
+                        android:text="Hỗ trợ"
                         android:textSize="15sp"
                         android:textColor="@color/black"
                         android:layout_marginStart="12dp"/>
@@ -284,7 +285,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Chat with Admin"
+                        android:text="Tin nhắn"
                         android:textSize="15sp"
                         android:textColor="@color/black"
                         android:layout_marginStart="12dp"/>
@@ -350,7 +351,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Reset Password"
+                        android:text="Thay đổi mật khẩu"
                         android:textSize="15sp"
                         android:textColor="@color/black"
                         android:layout_marginStart="12dp"/>
@@ -387,7 +388,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Language"
+                        android:text="Ngôn ngữ"
                         android:textSize="15sp"
                         android:textColor="@color/black"
                         android:layout_marginStart="12dp"/>
@@ -419,7 +420,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Logout"
+                        android:text="Đăng xuất"
                         android:textSize="15sp"
                         android:textColor="#E53935"
                         android:layout_marginStart="12dp"/>

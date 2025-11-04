@@ -7,7 +7,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.onlyfanshop.R;
-import com.example.onlyfanshop.MainActivity;
+import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.ui.order.OrderDetailsActivity; // 👈 import activity hiển thị chi tiết đơn hàng
 
 public class PaymentResultActivity extends AppCompatActivity {
@@ -47,7 +47,7 @@ public class PaymentResultActivity extends AppCompatActivity {
             });
 
             btnGoHome.setOnClickListener(v -> {
-                Intent intent = new Intent(this, MainActivity.class);
+                Intent intent = new Intent(this, DashboardActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
@@ -58,7 +58,7 @@ public class PaymentResultActivity extends AppCompatActivity {
 
             Button btnGoHome = findViewById(R.id.btnGoHome);
             btnGoHome.setOnClickListener(v -> {
-                Intent intent = new Intent(this, MainActivity.class);
+                Intent intent = new Intent(this, DashboardActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();

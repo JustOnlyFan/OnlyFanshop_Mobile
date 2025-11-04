@@ -32,16 +32,14 @@ import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.api.PaymentApi;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.api.UserApi;
-import com.example.onlyfanshop.api.VietnamAddressApi;
-import com.example.onlyfanshop.api.VietnamAddressApiClient;
+import com.example.onlyfanshop.api.VietnamProvinceApi;
+import com.example.onlyfanshop.api.VietnamProvinceApiClient;
 import com.example.onlyfanshop.databinding.ActivityConfirmPaymentBinding;
 import com.example.onlyfanshop.ui.order.OrderDetailsActivity;
 import com.example.onlyfanshop.model.CartItemDTO;
 import com.example.onlyfanshop.model.PaymentDTO;
 import com.example.onlyfanshop.model.UserDTO;
-import com.example.onlyfanshop.model.VietnamDistrict;
-import com.example.onlyfanshop.model.VietnamProvince;
-import com.example.onlyfanshop.model.VietnamWard;
+import com.example.onlyfanshop.model.VietnamProvinceResponse;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.UserResponse;
 import com.google.android.material.tabs.TabLayout;
@@ -64,10 +62,11 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     private List<CartItemDTO> cartItems;
     List<CartItemDTO> subList = new ArrayList<>();
     private SharedPreferences sharedPreferences;
-    private VietnamAddressApi vietnamAddressApi;
-    private List<VietnamProvince> provinces;
-    private List<VietnamDistrict> districts;
-    private List<VietnamWard> wards;
+    // New VietnamLabs API client + cache
+    private VietnamProvinceApi provinceApi;
+    private java.util.Map<String, java.util.List<String>> provincesCache; // province -> wards
+    private java.util.List<String> provinceNames;
+    private java.util.List<String> currentWards; // simple names
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,11 +86,11 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         
         sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         
-        // Initialize Vietnam Address API
-        vietnamAddressApi = VietnamAddressApiClient.getInstance().create(VietnamAddressApi.class);
-        provinces = new ArrayList<>();
-        districts = new ArrayList<>();
-        wards = new ArrayList<>();
+        // Initialize VietnamLabs Province API
+        provinceApi = VietnamProvinceApiClient.getApi();
+        provincesCache = new java.util.HashMap<>();
+        provinceNames = new ArrayList<>();
+        currentWards = new ArrayList<>();
         
         // Setup toolbar
         binding.toolbar.setNavigationOnClickListener(v -> {
@@ -812,106 +811,78 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     }
     
     private void loadProvinces() {
-        vietnamAddressApi.getProvinces().enqueue(new Callback<List<VietnamProvince>>() {
+        provinceApi.getAllProvinces().enqueue(new Callback<VietnamProvinceResponse>() {
             @Override
-            public void onResponse(Call<List<VietnamProvince>> call, Response<List<VietnamProvince>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    provinces = response.body();
-                    setupProvinceDropdowns();
-                    Log.d(TAG, "Loaded " + provinces.size() + " provinces");
-                } else {
-                    Log.e(TAG, "Failed to load provinces: " + response.message());
+            public void onResponse(Call<VietnamProvinceResponse> call, Response<VietnamProvinceResponse> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    Log.e(TAG, "Failed to load provinces: " + response.code());
+                    return;
                 }
+                VietnamProvinceResponse body = response.body();
+                java.util.Map<String, java.util.List<String>> data = body.getData();
+                if (data == null || data.isEmpty()) {
+                    Log.e(TAG, "No province data returned");
+                    return;
+                }
+                provincesCache.clear();
+                provincesCache.putAll(data);
+                provinceNames.clear();
+                provinceNames.addAll(body.getProvinceNames());
+                if (provinceNames.isEmpty()) {
+                    provinceNames.addAll(data.keySet());
+                }
+                setupProvinceDropdowns();
+                Log.d(TAG, "Loaded provinces: " + provinceNames.size());
             }
-            
             @Override
-            public void onFailure(Call<List<VietnamProvince>> call, Throwable t) {
+            public void onFailure(Call<VietnamProvinceResponse> call, Throwable t) {
                 Log.e(TAG, "Error loading provinces: " + t.getMessage(), t);
             }
         });
     }
     
     private void setupProvinceDropdowns() {
-        // Get province names for dropdowns
-        ArrayList<String> provinceNames = new ArrayList<>();
-        for (VietnamProvince province : provinces) {
-            provinceNames.add(province.getName());
-        }
-        
-        // Setup adapters for all province dropdowns
-        ArrayAdapter<String> provinceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, provinceNames);
+        // Setup adapters for all province dropdowns using names from provincesCache
+        ArrayAdapter<String> provinceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, new ArrayList<>(provinceNames));
         
         // Store pickup province
         binding.spinnerStoreProvince.setAdapter(provinceAdapter);
         binding.spinnerStoreProvince.setOnItemClickListener((parent, view, position, id) -> {
             String selectedProvinceName = provinceNames.get(position);
-            VietnamProvince selectedProvince = provinces.get(position);
-            Log.d(TAG, "Selected province: " + selectedProvinceName + ", code: " + selectedProvince.getCode());
-            loadDistricts(selectedProvince.getCode(), true); // true for store pickup
+            Log.d(TAG, "Selected province (store): " + selectedProvinceName);
+            loadWardsFromCache(selectedProvinceName, true); // true for store pickup
         });
         
         // Home delivery province
         binding.spinnerHomeProvince.setAdapter(provinceAdapter);
         binding.spinnerHomeProvince.setOnItemClickListener((parent, view, position, id) -> {
             String selectedProvinceName = provinceNames.get(position);
-            VietnamProvince selectedProvince = provinces.get(position);
-            Log.d(TAG, "Selected province: " + selectedProvinceName + ", code: " + selectedProvince.getCode());
-            loadDistricts(selectedProvince.getCode(), false); // false for home delivery
+            Log.d(TAG, "Selected province (home): " + selectedProvinceName);
+            loadWardsFromCache(selectedProvinceName, false); // false for home delivery
         });
     }
     
-    private void loadDistricts(int provinceCode, boolean isStorePickup) {
-        // API v2: Load wards directly from province (no districts)
-        vietnamAddressApi.getProvinceWithWards(provinceCode).enqueue(new Callback<VietnamProvince>() {
-            @Override
-            public void onResponse(Call<VietnamProvince> call, Response<VietnamProvince> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    VietnamProvince province = response.body();
-                    // API v2: provinces return wards directly, no districts
-                    wards = province.getWards();
-                    // Load wards into district dropdowns (for backward compatibility)
-                    loadWards(isStorePickup);
-                    Log.d(TAG, "Loaded " + (wards != null ? wards.size() : 0) + " wards for province: " + provinceCode);
-                } else {
-                    Log.e(TAG, "Failed to load province data: " + response.message());
+    private void loadWardsFromCache(String provinceName, boolean isStorePickup) {
+        // Try exact, then fuzzy/case-insensitive match
+        java.util.List<String> wardsForProvince = null;
+        if (provincesCache.containsKey(provinceName)) {
+            wardsForProvince = provincesCache.get(provinceName);
+        } else {
+            String matchedKey = null;
+            for (String key : provincesCache.keySet()) {
+                if (key.equalsIgnoreCase(provinceName) || key.contains(provinceName) || provinceName.contains(key)) {
+                    matchedKey = key; break;
                 }
             }
-            
-            @Override
-            public void onFailure(Call<VietnamProvince> call, Throwable t) {
-                Log.e(TAG, "Error loading province data: " + t.getMessage(), t);
-            }
-        });
-    }
-    
-    private void loadWards(boolean isStorePickup) {
-        // API v2: Wards already loaded from province, setup dropdowns
-        ArrayList<String> wardNames = new ArrayList<>();
-        if (wards != null) {
-            for (VietnamWard ward : wards) {
-                wardNames.add(ward.getName());
-            }
+            if (matchedKey != null) wardsForProvince = provincesCache.get(matchedKey);
         }
-        
-        // Setup adapter
-        ArrayAdapter<String> wardAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, wardNames);
-        
+        currentWards.clear();
+        if (wardsForProvince != null) currentWards.addAll(wardsForProvince);
+        ArrayAdapter<String> wardAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, new ArrayList<>(currentWards));
         if (isStorePickup) {
-            // Store pickup: wards go to district dropdown
             binding.spinnerStoreDistrict.setAdapter(wardAdapter);
-            binding.spinnerStoreDistrict.setOnItemClickListener((parent, view, position, id) -> {
-                String selectedWardName = wardNames.get(position);
-                VietnamWard selectedWard = wards.get(position);
-                Log.d(TAG, "Selected ward: " + selectedWardName + ", code: " + selectedWard.getCode());
-            });
         } else {
-            // Home delivery: wards go to district dropdown (API v2 uses wards directly, no separate district/ward)
             binding.spinnerHomeDistrict.setAdapter(wardAdapter);
-            binding.spinnerHomeDistrict.setOnItemClickListener((parent, view, position, id) -> {
-                String selectedWardName = wardNames.get(position);
-                VietnamWard selectedWard = wards.get(position);
-                Log.d(TAG, "Selected ward: " + selectedWardName + ", code: " + selectedWard.getCode());
-            });
         }
     }
 }

@@ -1,10 +1,14 @@
 package com.example.onlyfanshop.ui;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -13,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.onlyfanshop.R;
+import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
@@ -29,10 +34,14 @@ import retrofit2.Response;
 
 public class EditProfileFragment extends Fragment {
 
-    private TextInputLayout tilUsername, tilEmail, tilPhone, tilAddress;
-    private TextInputEditText etUsername, etEmail, etPhone, etAddress;
-    private MaterialButton btnSave;
-    private View progressBar;
+    private TextInputLayout tilUsername, tilEmail, tilPhone;
+    private TextInputEditText etUsername, etEmail, etPhone;
+    private MaterialButton btnSave, btnUpdateAddress;
+    private android.widget.TextView tvAddressDisplay;
+    private View progressContainer;
+    private ImageView imgProgressFan;
+    private AnimatorSet fanRotationAnimator;
+    private String currentAddress = "";
 
     private ProfileApi api;
     private User baseUser;
@@ -55,6 +64,9 @@ public class EditProfileFragment extends Fragment {
         initViews(v);
         loadUser();
 
+        // Ẩn bottom navigation khi vào Edit Profile
+        hideBottomNavigation();
+
         // System back -> popBackStack trước khi DashboardActivity xử lý về Home
         requireActivity().getOnBackPressedDispatcher().addCallback(
                 getViewLifecycleOwner(),
@@ -62,11 +74,37 @@ public class EditProfileFragment extends Fragment {
                     @Override
                     public void handleOnBackPressed() {
                         if (isEnabled()) {
+                            showBottomNavigation();
                             requireActivity().getSupportFragmentManager().popBackStack();
                         }
                     }
                 }
         );
+    }
+
+    private void hideBottomNavigation() {
+        if (getActivity() instanceof DashboardActivity) {
+            DashboardActivity dashboard = (DashboardActivity) getActivity();
+            dashboard.getBottomNav().setVisibility(View.GONE);
+        }
+    }
+
+    private void showBottomNavigation() {
+        if (getActivity() instanceof DashboardActivity) {
+            DashboardActivity dashboard = (DashboardActivity) getActivity();
+            dashboard.getBottomNav().setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Hiển thị lại bottom navigation khi rời Edit Profile
+        showBottomNavigation();
+        // Dừng animation
+        if (fanRotationAnimator != null) {
+            fanRotationAnimator.cancel();
+        }
     }
 
     private void initViews(@NonNull View root) {
@@ -80,24 +118,84 @@ public class EditProfileFragment extends Fragment {
         tilUsername = root.findViewById(R.id.tilUsername);
         tilEmail    = root.findViewById(R.id.tilEmail);
         tilPhone    = root.findViewById(R.id.tilPhone);
-        tilAddress  = root.findViewById(R.id.tilAddress);
 
         etUsername = root.findViewById(R.id.etUsername);
         etEmail    = root.findViewById(R.id.etEmail);
         etPhone    = root.findViewById(R.id.etPhone);
-        etAddress  = root.findViewById(R.id.etAddress);
 
+        tvAddressDisplay = root.findViewById(R.id.tvAddressDisplay);
+        btnUpdateAddress = root.findViewById(R.id.btnUpdateAddress);
         btnSave    = root.findViewById(R.id.btnSave);
-        progressBar= root.findViewById(R.id.progressBar);
+        progressContainer = root.findViewById(R.id.progressContainer);
+        imgProgressFan = root.findViewById(R.id.imgProgressFan);
 
         if (btnSave != null) {
             btnSave.setOnClickListener(v -> submit());
         }
+
+        if (btnUpdateAddress != null) {
+            btnUpdateAddress.setOnClickListener(v -> showAddressDialog());
+        }
+
+        // Khởi tạo animation cho icon quạt
+        setupFanAnimation();
+    }
+
+    private void showAddressDialog() {
+        try {
+            AddressUpdateDialog dialog = AddressUpdateDialog.newInstance(
+                currentAddress,
+                fullAddress -> {
+                    currentAddress = fullAddress;
+                    if (tvAddressDisplay != null) {
+                        tvAddressDisplay.setText(fullAddress);
+                    }
+                }
+            );
+            
+            // Đảm bảo fragment manager tồn tại
+            if (getParentFragmentManager() != null && !isDetached() && isAdded()) {
+                dialog.show(getParentFragmentManager(), "AddressUpdateDialog");
+            } else {
+                android.util.Log.e("EditProfile", "Cannot show dialog: fragment not attached");
+                Toast.makeText(requireContext(), "Không thể hiển thị dialog", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            android.util.Log.e("EditProfile", "Error showing address dialog", e);
+            Toast.makeText(requireContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void setupFanAnimation() {
+        if (imgProgressFan == null) return;
+        
+        ObjectAnimator rotation = ObjectAnimator.ofFloat(imgProgressFan, "rotation", 0f, 360f);
+        rotation.setDuration(1500);
+        rotation.setRepeatCount(ObjectAnimator.INFINITE);
+        rotation.setInterpolator(new LinearInterpolator());
+        
+        fanRotationAnimator = new AnimatorSet();
+        fanRotationAnimator.play(rotation);
     }
 
     private void setLoading(boolean loading) {
-        if (progressBar != null) progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
-        if (btnSave != null) btnSave.setEnabled(!loading);
+        if (progressContainer != null) {
+            progressContainer.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+        if (btnSave != null) {
+            btnSave.setEnabled(!loading);
+            btnSave.setAlpha(loading ? 0.6f : 1.0f);
+        }
+        
+        if (loading) {
+            if (fanRotationAnimator != null && !fanRotationAnimator.isRunning()) {
+                fanRotationAnimator.start();
+            }
+        } else {
+            if (fanRotationAnimator != null && fanRotationAnimator.isRunning()) {
+                fanRotationAnimator.cancel();
+            }
+        }
     }
 
     private void loadUser() {
@@ -146,7 +244,12 @@ public class EditProfileFragment extends Fragment {
         if (etUsername != null) etUsername.setText(u.getUsername() == null ? "" : u.getUsername());
         if (etEmail    != null) etEmail.setText(u.getEmail() == null ? "" : u.getEmail());
         if (etPhone    != null) etPhone.setText(isMissing(u.getPhoneNumber()) ? "" : u.getPhoneNumber());
-        if (etAddress  != null) etAddress.setText(isMissing(u.getAddress()) ? "" : u.getAddress());
+        
+        String address = isMissing(u.getAddress()) ? "" : u.getAddress();
+        currentAddress = address;
+        if (tvAddressDisplay != null) {
+            tvAddressDisplay.setText(TextUtils.isEmpty(address) ? "Chưa có địa chỉ" : address);
+        }
     }
 
     private boolean validate() {
@@ -180,7 +283,7 @@ public class EditProfileFragment extends Fragment {
                 String.valueOf(etUsername.getText()).trim(),
                 String.valueOf(etEmail.getText()).trim(),
                 etPhone == null ? "" : String.valueOf(etPhone.getText()).trim(),
-                etAddress == null ? "" : String.valueOf(etAddress.getText()).trim(),
+                currentAddress,
                 baseUser.getRole(),
                 baseUser.getAuthProvider(),
                 baseUser.getToken()

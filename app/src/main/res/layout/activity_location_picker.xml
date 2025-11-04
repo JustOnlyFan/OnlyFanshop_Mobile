@@ -15,7 +15,7 @@
         android:background="@color/colorPrimary"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:navigationIcon="@drawable/ic_back"
-        app:title="Pick Location"
+        app:title="Chọn địa chỉ"
         app:titleTextColor="@color/white" />
 
     <!-- Search bar -->
@@ -34,7 +34,7 @@
             android:background="@drawable/stroke_bg"
             android:drawableEnd="@drawable/ic_search"
             android:drawablePadding="8dp"
-            android:hint="Search location..."
+            android:hint="Tìm kiếm địa chỉ..."
             android:padding="12dp"
             android:textSize="16sp"
             android:fontFamily="sans-serif"
@@ -45,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:backgroundTint="@color/colorPrimary"
-            android:text="Search"
+            android:text="Tìm kiếm"
             android:textSize="15sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
@@ -93,7 +93,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Selected Location"
+            android:text="Địa chỉ đã chọn"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -104,7 +104,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Move map to select location"
+            android:text="Di chuyển tới địa điểm đã chọn"
             android:textColor="@color/darkGrey"
             android:textSize="16sp"
             android:lineSpacingExtra="2dp"
@@ -126,7 +126,7 @@
             android:layout_height="56dp"
             android:layout_marginTop="16dp"
             android:backgroundTint="@color/colorPrimary"
-            android:text="Confirm Location"
+            android:text="Xác nhận địa chỉ"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"

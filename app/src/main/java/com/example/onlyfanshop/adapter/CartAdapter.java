@@ -26,6 +26,9 @@ import retrofit2.Response;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder> {
 
+    // Static NumberFormat để tránh tạo object mới mỗi lần
+    private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+
     private Context context;
     private List<CartItemDTO> cartItems;
     private List<CartItemDTO> subList;
@@ -65,10 +68,15 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
             holder.binding.numberItem.setText(item.getQuantity()+"");
             holder.binding.totalEach.setText(formatCurrencyVND(item.getPrice()));
         if (item.getProductDTO().getImageURL() != null && !item.getProductDTO().getImageURL().isEmpty()) {
+            // Tối ưu: thumbnail để load nhanh hơn
             Glide.with(holder.itemView.getContext())
                     .load(item.getProductDTO().getImageURL())
+                    .thumbnail(Glide.with(holder.itemView.getContext())
+                            .load(item.getProductDTO().getImageURL())
+                            .override(80, 80)) // Load thumbnail nhỏ trước
                     .placeholder(R.drawable.ic_launcher_foreground)
                     .error(R.drawable.ic_launcher_foreground)
+                    .centerCrop()
                     .into(holder.binding.pic);
         }
         if(!cartView){
@@ -121,9 +129,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
         void onDecrease(int productId);
     }
     
-    private String formatCurrencyVND(double value) {
-        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-        return nf.format(value).replace("₫", "₫");
+    // Tối ưu: dùng static NumberFormat để tránh tạo object mới mỗi lần
+    private static String formatCurrencyVND(double value) {
+        synchronized (CURRENCY_FORMATTER) {
+            return CURRENCY_FORMATTER.format(value).replace("₫", "₫");
+        }
     }
 
 }
