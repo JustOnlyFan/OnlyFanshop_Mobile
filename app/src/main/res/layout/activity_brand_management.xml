@@ -56,16 +56,42 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <ImageView
+            android:id="@+id/imgBrandLogo"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/stroke_bg"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_launcher_foreground"
+            android:contentDescription="Brand logo"
+            app:layout_constraintEnd_toStartOf="@+id/btnConfirmAdd"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/btnChooseImage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="Chọn ảnh"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toStartOf="@+id/btnConfirmAdd"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imgBrandLogo" />
+
         <EditText
             android:id="@+id/edtName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:hint="Tên thương hiệu"
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@+id/btnConfirmAdd"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/btnChooseImage" />
 
         <EditText
             android:id="@+id/edtCountry"

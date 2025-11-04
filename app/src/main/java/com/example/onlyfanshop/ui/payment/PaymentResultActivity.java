@@ -39,6 +39,8 @@ public class PaymentResultActivity extends AppCompatActivity {
                 if (finalOrderId != -1) {
                     Intent intent = new Intent(this, OrderDetailsActivity.class);
                     intent.putExtra("orderId", finalOrderId);
+                    // Đánh dấu là từ payment result (thanh toán thành công)
+                    intent.putExtra("fromPaymentSuccess", true);
                     startActivity(intent);
                     finish();
                 } else {

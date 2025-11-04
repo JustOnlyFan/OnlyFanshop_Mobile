@@ -55,6 +55,12 @@ public interface ProductApi {
             @Part MultipartBody.Part file
     );
 
+    @Multipart
+    @POST("/api/upload/brand-image")
+    Call<ApiResponse<String>> uploadBrandImageToFirebase(
+            @Part MultipartBody.Part file
+    );
+
     @POST("product")
     Call<ApiResponse<ProductDTO>> addProduct(
             @Body ProductRequest product

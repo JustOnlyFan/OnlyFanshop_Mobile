@@ -85,6 +85,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 // Chuyển sang trang chi tiết đơn hàng
                 Intent intent = new Intent(context, OrderDetailsActivity.class);
                 intent.putExtra("orderId", orderId);
+                // Không phải từ payment success → set = false
+                intent.putExtra("fromPaymentSuccess", false);
                 context.startActivity(intent);
             } else {
                 Toast.makeText(context, "Order ID not found in notification", Toast.LENGTH_SHORT).show();

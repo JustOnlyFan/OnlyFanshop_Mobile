@@ -191,10 +191,13 @@ public class BuyNowBottomSheet extends BottomSheetDialogFragment {
     }
     
     private double parsePriceFromVND(String priceText) {
-        // Remove ₫ and remove all spaces/dots/commas
-        String cleaned = priceText.replace("₫", "").replace(".", "").replace(",", "").trim();
+        // Keep digits only; remove currency symbols, separators, spaces (including NBSP)
+        if (priceText == null) return 0.0;
+        String digitsOnly = priceText
+                .replace('\u00A0', ' ') // normalize NBSP
+                .replaceAll("[^0-9]", "");
         try {
-            return Double.parseDouble(cleaned);
+            return digitsOnly.isEmpty() ? 0.0 : Double.parseDouble(digitsOnly);
         } catch (NumberFormatException e) {
             return 0.0;
         }

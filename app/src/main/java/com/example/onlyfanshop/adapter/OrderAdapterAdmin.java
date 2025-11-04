@@ -73,6 +73,8 @@ public class OrderAdapterAdmin extends RecyclerView.Adapter<OrderAdapterAdmin.Or
             Context context = v.getContext();
             Intent intent = new Intent(context, OrderDetailsActivity.class);
             intent.putExtra("orderId", order.getOrderID());
+            // Không phải từ payment success → set = false
+            intent.putExtra("fromPaymentSuccess", false);
             context.startActivity(intent);
         });
     }

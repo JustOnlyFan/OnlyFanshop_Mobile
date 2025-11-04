@@ -1,5 +1,6 @@
 package com.example.onlyfanshop.ui.order;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.StrikethroughSpan;
@@ -55,9 +56,21 @@ public class OrderDetailsActivity extends AppCompatActivity {
 
         formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
-        // Setup back button
+        // Kiểm tra nguồn gốc: từ dialog_cod_success (thanh toán thành công) hay từ order pending
+        boolean fromPaymentSuccess = getIntent().getBooleanExtra("fromPaymentSuccess", false);
+
+        // Setup back button - logic khác nhau dựa trên nguồn gốc
         binding.btnBack.setOnClickListener(v -> {
-            finish();
+            if (fromPaymentSuccess) {
+                // Nếu vào từ dialog thanh toán thành công → quay về home
+                Intent intent = new Intent(this, com.example.onlyfanshop.activity.DashboardActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            } else {
+                // Nếu vào từ order pending → chỉ finish để quay lại order pending
+                finish();
+            }
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
         });
 
