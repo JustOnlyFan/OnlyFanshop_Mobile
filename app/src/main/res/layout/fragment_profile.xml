@@ -14,14 +14,16 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Profile Header -->
+        <!-- Profile Header - Login State -->
         <LinearLayout
+            android:id="@+id/profileHeaderContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="24dp"
+            android:visibility="gone">
 
             <!-- Avatar -->
             <de.hdodenhof.circleimageview.CircleImageView
@@ -74,6 +76,15 @@
                     android:textStyle="bold"/>
             </androidx.cardview.widget.CardView>
         </LinearLayout>
+
+        <!-- Please Sign In Container - Not Logged In State -->
+        <FrameLayout
+            android:id="@+id/pleaseSignInContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone"/>
         <!-- Orders Section -->
         <!-- Thanh tiêu đề "Orders" + "See all" -->
         <LinearLayout
@@ -408,7 +419,8 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:paddingHorizontal="16dp"
-                    android:background="?attr/selectableItemBackground">
+                    android:background="?attr/selectableItemBackground"
+                    android:visibility="gone">
 
                     <ImageView
                         android:layout_width="24dp"

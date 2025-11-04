@@ -23,6 +23,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.adapter.CategoryAdapter;
@@ -47,11 +48,13 @@ import retrofit2.Response;
 public class CategoryFragment extends Fragment {
 
     private RecyclerView categoryView;
+    private RecyclerView brandStripView;
     private ProgressBar progressBarCategory;
 
     private RecyclerView recyclerSearchResult;
     private ProgressBar progressSearch;
     private TextView textEmptySearch;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     private EditText etSearchProduct;
 
@@ -73,10 +76,14 @@ public class CategoryFragment extends Fragment {
     private Integer selectedBrandId = null;
     private final List<BrandDTO> brandList = new ArrayList<>();
     private final List<CategoryDTO> allCategoryList = new ArrayList<>();
+    
+    // Flag để track xem đã được khởi tạo lần đầu chưa
+    private boolean isFirstLoad = true;
 
     // TOP views để chạy fall down
     private View searchBarContainerView;
     private TextView tvCategoryTitleView;
+    private TextView tvBrandTitleView;
 
     @Nullable
     @Override
@@ -92,20 +99,25 @@ public class CategoryFragment extends Fragment {
 
         // Lấy reference các view TOP
         searchBarContainerView = v.findViewById(R.id.searchBarContainer);
+        tvBrandTitleView = v.findViewById(R.id.tvBrandTitle);
         tvCategoryTitleView = v.findViewById(R.id.tvCategoryTitle);
 
-        categoryView = v.findViewById(R.id.categoryView);
+        brandStripView = v.findViewById(R.id.brandStripView);
         progressBarCategory = v.findViewById(R.id.progressBarCategory);
+        categoryView = v.findViewById(R.id.categoryListView);
 
         recyclerSearchResult = v.findViewById(R.id.recyclerSearchResult);
         progressSearch = v.findViewById(R.id.progressSearch);
         textEmptySearch = v.findViewById(R.id.textEmptySearch);
+        swipeRefreshLayout = v.findViewById(R.id.swipeSearchProducts);
 
         etSearchProduct = v.findViewById(R.id.etSearchProduct);
         btnFilter = v.findViewById(R.id.btnFilter);
 
-        setupCategoryRecycler();
+        setupBrandStrip();
+        setupCategoryList();
         setupProductRecycler();
+        setupSwipeRefresh();
 
         productApi = ApiClient.getPrivateClient(requireContext()).create(ProductApi.class);
 
@@ -116,18 +128,38 @@ public class CategoryFragment extends Fragment {
         v.post(this::playTopFallDownEnter);
 
         fetchHomePage();
+        
+        // Đánh dấu đã load lần đầu
+        isFirstLoad = false;
     }
 
-    private void setupCategoryRecycler() {
+    private com.example.onlyfanshop.adapter.BrandChipAdapter brandChipAdapter;
+    private void setupBrandStrip() {
+        brandChipAdapter = new com.example.onlyfanshop.adapter.BrandChipAdapter(new com.example.onlyfanshop.adapter.BrandChipAdapter.Listener() {
+            @Override public void onBrandSelected(Integer brandId) { 
+                selectedBrandId = brandId; 
+                fetchHomePage(); 
+            }
+            @Override public void onSeeAll() {
+                // Bỏ phần mở dialog - không làm gì hoặc có thể thêm thông báo
+                // Toast.makeText(requireContext(), "Tính năng đang phát triển", Toast.LENGTH_SHORT).show();
+            }
+        });
+        brandStripView.setLayoutManager(new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false));
+        brandStripView.setHasFixedSize(true);
+        brandStripView.setItemViewCacheSize(10);
+        brandStripView.setItemAnimator(null);
+        brandStripView.setAdapter(brandChipAdapter);
+    }
+
+    private void setupCategoryList() {
         categoryAdapter = new CategoryAdapter((id, name) -> {
-            selectedCategoryId = id; // null = All
+            selectedCategoryId = id;
             fetchHomePage();
         });
-        categoryView.setLayoutManager(
-                new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
-        );
-        categoryView.setHasFixedSize(true);
-        categoryView.setItemViewCacheSize(10);
+        categoryView.setLayoutManager(new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false));
+        categoryView.setHasFixedSize(false);
+        categoryView.setItemViewCacheSize(15);
         categoryView.setItemAnimator(null);
         categoryView.setAdapter(categoryAdapter);
     }
@@ -151,6 +183,23 @@ public class CategoryFragment extends Fragment {
         // Dùng layout_fall_down cho list sản phẩm
         recyclerSearchResult.setLayoutAnimation(
                 AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down)
+        );
+    }
+
+    private void setupSwipeRefresh() {
+        if (swipeRefreshLayout == null) return;
+        
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // Khi pull to refresh, fetch lại data
+            fetchHomePage();
+        });
+        
+        // Đảm bảo SwipeRefreshLayout không bị conflict với RecyclerView
+        swipeRefreshLayout.setColorSchemeResources(
+                R.color.colorPrimary,
+                android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light
         );
     }
 
@@ -202,6 +251,11 @@ public class CategoryFragment extends Fragment {
                                    @NonNull Response<ApiResponse<HomePageData>> response) {
                 setCategoryLoading(false);
                 setProductLoading(false);
+                
+                // Dừng SwipeRefreshLayout loading nếu đang refresh
+                if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
 
                 if (!response.isSuccessful() || response.body() == null || response.body().getData() == null) {
                     showEmptyProducts();
@@ -219,13 +273,14 @@ public class CategoryFragment extends Fragment {
                 allCategoryList.clear();
                 allCategoryList.addAll(categories);
 
-                CategoryDTO all = new CategoryDTO();
-                all.setId(null);
-                all.setName("All");
-                List<CategoryDTO> display = new ArrayList<>();
-                display.add(all);
-                display.addAll(categories);
-                categoryAdapter.submitList(display);
+                // Update brand strip UI with brands
+                if (brandChipAdapter != null) brandChipAdapter.submitList(brandList);
+
+                // Update category list UI
+                if (categoryAdapter != null) {
+                    categoryAdapter.submitList(allCategoryList);
+                    categoryAdapter.setSelectedId(selectedCategoryId);
+                }
 
                 List<ProductDTO> products = data.products != null ? data.products : new ArrayList<>();
 
@@ -268,6 +323,12 @@ public class CategoryFragment extends Fragment {
             public void onFailure(@NonNull Call<ApiResponse<HomePageData>> call, @NonNull Throwable t) {
                 setCategoryLoading(false);
                 setProductLoading(false);
+                
+                // Dừng SwipeRefreshLayout loading nếu đang refresh
+                if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+                
                 showEmptyProducts();
             }
         });
@@ -331,6 +392,18 @@ public class CategoryFragment extends Fragment {
                     AnimationUtils.loadAnimation(requireContext(), R.anim.fall_down)
             );
         }
+        if (tvBrandTitleView != null) {
+            tvBrandTitleView.clearAnimation();
+            tvBrandTitleView.startAnimation(
+                    AnimationUtils.loadAnimation(requireContext(), R.anim.fall_down)
+            );
+        }
+        if (brandStripView != null) {
+            brandStripView.clearAnimation();
+            brandStripView.startAnimation(
+                    AnimationUtils.loadAnimation(requireContext(), R.anim.fall_down)
+            );
+        }
         if (tvCategoryTitleView != null) {
             tvCategoryTitleView.clearAnimation();
             tvCategoryTitleView.startAnimation(
@@ -357,13 +430,45 @@ public class CategoryFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        // Không reset filter trong onResume - chỉ reset khi fragment được show lại
+    }
+
+    @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
-        // Khi fragment được show trở lại
+        // Khi fragment được show trở lại (ra khỏi product và vào lại)
         if (!hidden) {
+            // Reset filter mỗi khi vào lại product (trừ lần đầu tiên)
+            if (!isFirstLoad) {
+                resetFilters();
+            }
             playTopFallDownEnter();
             playListEnterAnimation();
         }
+    }
+
+    private void resetFilters() {
+        // Reset tất cả filter về mặc định
+        selectedBrandId = null;
+        selectedCategoryId = null;
+        sortBy = "ProductID";
+        sortOrder = "DESC";
+        keyword = null;
+        
+        // Clear search text
+        if (etSearchProduct != null) {
+            etSearchProduct.setText("");
+        }
+        
+        // Reset brand và category selection trong UI
+        if (categoryAdapter != null) {
+            categoryAdapter.setSelectedId(null);
+        }
+        
+        // Fetch lại data với filter đã reset
+        fetchHomePage();
     }
 
     private abstract static class SimpleTextWatcher implements TextWatcher {

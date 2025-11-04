@@ -12,11 +12,17 @@ public class BrandDTO implements Serializable {
     @SerializedName("name")
     private String name;
 
+    @SerializedName(value = "imageURL", alternate = {"logoUrl", "logo"})
+    private String imageURL;
+
     public Integer getBrandID() { return brandID; }
     public void setBrandID(Integer brandID) { this.brandID = brandID; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getImageURL() { return imageURL; }
+    public void setImageURL(String imageURL) { this.imageURL = imageURL; }
 }
 
 

@@ -53,7 +53,8 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        lp.setMargins(padH, padV, padH, padV);
+        // Margin sẽ được set trong onBindViewHolder để item đầu tiên có marginStart = 16dp
+        lp.setMargins(0, padV, padH, padV);
         tv.setLayoutParams(lp);
 
         tv.setPadding(padH, padV, padH, padV);
@@ -71,6 +72,22 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         boolean isSelected = (item.getId() == null && selectedId == null)
                 || (item.getId() != null && item.getId().equals(selectedId));
         holder.bind(item, isSelected);
+        
+        // Set marginStart: item đầu tiên = 16dp để thẳng với title, các item khác = 12dp
+        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) holder.itemView.getLayoutParams();
+        if (params != null) {
+            final int padH = (int) (holder.itemView.getContext().getResources().getDisplayMetrics().density * 12);
+            final int padV = (int) (holder.itemView.getContext().getResources().getDisplayMetrics().density * 8);
+            int marginStart = position == 0 ? 16 : padH; // 16dp cho item đầu, 12dp cho các item khác
+            params.setMargins(
+                (int) (marginStart * holder.itemView.getContext().getResources().getDisplayMetrics().density),
+                padV,
+                padH,
+                padV
+            );
+            holder.itemView.setLayoutParams(params);
+        }
+        
         holder.itemView.setOnClickListener(v -> {
             selectedId = item.getId();
             notifyDataSetChanged();

@@ -180,6 +180,8 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             } else {
                 binding.tvCODDescription.setVisibility(View.GONE);
             }
+            // Validate after payment method change
+            validateAndUpdateButton();
         });
         
         binding.radioBtnVnPay.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -194,7 +196,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             } else {
                 binding.tvVNPayDescription.setVisibility(View.GONE);
             }
+            // Validate after payment method change
+            validateAndUpdateButton();
         });
+        
+        // Setup validation listeners
+        setupValidationListeners();
         
         // Setup "Enter new address" click listener
         binding.tvEnterNewAddress.setOnClickListener(v -> {
@@ -326,9 +333,15 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
                     if (user.getPhoneNumber() != null) {
                         editor.putString("phoneNumber", user.getPhoneNumber());
                     }
+                    // Lưu address từ API để sử dụng sau
+                    if (user.getAddress() != null && !user.getAddress().trim().isEmpty()) {
+                        editor.putString("address", user.getAddress());
+                    }
                     editor.apply();
                     
                     displayUserInfo(user);
+                    // Load lại default address sau khi có thông tin user
+                    loadDefaultAddress();
                 } else {
                     Log.w(TAG, "getUser failed: code=" + response.code());
                     loadUserInfoFromPreferences();
@@ -357,18 +370,20 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
     }
 
     private void displayUserInfo(Object userObj) {
-        String username = null, email = null, phoneNumber = null;
+        String username = null, email = null, phoneNumber = null, address = null;
         
         if (userObj instanceof com.example.onlyfanshop.model.User) {
             com.example.onlyfanshop.model.User user = (com.example.onlyfanshop.model.User) userObj;
             username = user.getUsername();
             email = user.getEmail();
             phoneNumber = user.getPhoneNumber();
+            address = user.getAddress();
         } else if (userObj instanceof UserDTO) {
             UserDTO user = (UserDTO) userObj;
             username = user.getUsername();
             email = user.getEmail();
             phoneNumber = user.getPhoneNumber();
+            // UserDTO có thể không có address field
         }
         
         if (username != null && !username.isEmpty()) {
@@ -390,42 +405,145 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         } else {
             binding.layoutPhone.setVisibility(View.GONE);
         }
+        
+        // Update default address nếu có từ user model
+        if (address != null && !address.trim().isEmpty()) {
+            sharedPreferences.edit().putString("address", address).apply();
+            loadDefaultAddress();
+        }
     }
 
 
-    private void processPayment(double totalPrice) {
-        // Validate delivery type - check which tab is selected
+    private void setupValidationListeners() {
+        // Validate recipient name
+        binding.edtRecipientName.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                validateAndUpdateButton();
+            }
+        });
+        
+        // Validate recipient phone
+        binding.edtRecipientPhone.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                validateAndUpdateButton();
+            }
+        });
+        
+        // Validate delivery address
+        binding.tabDeliveryType.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                validateAndUpdateButton();
+            }
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+        
+        // Payment method validation đã được setup ở trên với text change listener
+        
+        // Validate address fields for home delivery
+        if (binding.edtHomeStreet != null) {
+            binding.edtHomeStreet.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override
+                public void afterTextChanged(android.text.Editable s) {
+                    validateAndUpdateButton();
+                }
+            });
+        }
+        
+        // Initial validation
+        validateAndUpdateButton();
+    }
+    
+    private void validateAndUpdateButton() {
+        boolean isValid = validateAllFields(false);
+        binding.checkoutBtn.setEnabled(isValid);
+        if (!isValid) {
+            binding.checkoutBtn.setAlpha(0.6f);
+        } else {
+            binding.checkoutBtn.setAlpha(1.0f);
+        }
+    }
+    
+    private boolean validateAllFields(boolean showError) {
+        // Validate recipient name
+        String recipientName = binding.edtRecipientName.getText().toString().trim();
+        if (recipientName.isEmpty()) {
+            if (showError) showError("Vui lòng nhập họ và tên");
+            return false;
+        }
+        
+        // Validate recipient phone
+        String recipientPhone = binding.edtRecipientPhone.getText().toString().trim();
+        if (recipientPhone.isEmpty()) {
+            if (showError) showError("Vui lòng nhập số điện thoại");
+            return false;
+        }
+        
+        // Validate delivery type
         int selectedTab = binding.tabDeliveryType.getSelectedTabPosition();
+        if (selectedTab == -1) {
+            if (showError) showError("Vui lòng chọn phương thức nhận hàng");
+            return false;
+        }
+        
+        // Validate address
         boolean isPickupStore = (selectedTab == 0);
         boolean isHomeDelivery = (selectedTab == 1);
-        
-        if (selectedTab == -1) {
-            showError("Vui lòng chọn phương thức nhận hàng");
-            return;
+        String deliveryAddress = buildDeliveryAddress(isPickupStore, isHomeDelivery);
+        if (deliveryAddress == null || deliveryAddress.trim().isEmpty()) {
+            if (showError) showError("Vui lòng nhập đầy đủ thông tin địa chỉ");
+            return false;
         }
         
         // Validate payment method
         boolean isCOD = binding.radioBtnCOD.isChecked();
         boolean isVNPay = binding.radioBtnVnPay.isChecked();
-        
         if (!isCOD && !isVNPay) {
-            showError("Vui lòng chọn phương thức thanh toán");
+            if (showError) showError("Vui lòng chọn phương thức thanh toán");
+            return false;
+        }
+        
+        return true;
+    }
+
+    private void processPayment(double totalPrice) {
+        // Validate tất cả các trường bắt buộc
+        if (!validateAllFields(true)) {
             return;
         }
         
         binding.tvError.setVisibility(View.GONE);
         
-        // Build address string based on delivery type
+        // Get delivery address (đã được validate trong validateAllFields)
+        int selectedTab = binding.tabDeliveryType.getSelectedTabPosition();
+        boolean isPickupStore = (selectedTab == 0);
+        boolean isHomeDelivery = (selectedTab == 1);
         String deliveryAddress = buildDeliveryAddress(isPickupStore, isHomeDelivery);
         
-        if (deliveryAddress == null) {
-            showError("Vui lòng nhập đầy đủ thông tin địa chỉ");
-            return;
-        }
+        // Validate payment method
+        boolean isCOD = binding.radioBtnCOD.isChecked();
+        boolean isVNPay = binding.radioBtnVnPay.isChecked();
         
         if (isCOD) {
             showCODConfirmationDialog(totalPrice, deliveryAddress);
-        } else {
+        } else if (isVNPay) {
             handleVNPayPayment(totalPrice, deliveryAddress);
         }
     }
@@ -488,14 +606,20 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         btnViewOrder.setOnClickListener(v -> {
             dialog.dismiss();
             // Navigate to order details with orderId
+            // Đánh dấu là từ dialog thanh toán thành công
             Intent intent = new Intent(ConfirmPaymentActivity.this, OrderDetailsActivity.class);
             intent.putExtra("orderId", orderId);
+            intent.putExtra("fromPaymentSuccess", true);
             startActivity(intent);
             finish(); // Close payment activity after navigating
         });
         
         btnClose.setOnClickListener(v -> {
             dialog.dismiss();
+            // Chuyển về DashboardActivity (home) thay vì chỉ finish
+            Intent intent = new Intent(ConfirmPaymentActivity.this, com.example.onlyfanshop.activity.DashboardActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             finish();
         });
         
@@ -851,7 +975,27 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             String selectedProvinceName = provinceNames.get(position);
             Log.d(TAG, "Selected province (store): " + selectedProvinceName);
             loadWardsFromCache(selectedProvinceName, true); // true for store pickup
+            validateAndUpdateButton();
         });
+        
+        // Store pickup district/ward
+        binding.spinnerStoreDistrict.setOnItemClickListener((parent, view, position, id) -> {
+            validateAndUpdateButton();
+        });
+        
+        // Store name (editable)
+        if (binding.spinnerStore != null) {
+            binding.spinnerStore.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override
+                public void afterTextChanged(android.text.Editable s) {
+                    validateAndUpdateButton();
+                }
+            });
+        }
         
         // Home delivery province
         binding.spinnerHomeProvince.setAdapter(provinceAdapter);
@@ -859,6 +1003,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
             String selectedProvinceName = provinceNames.get(position);
             Log.d(TAG, "Selected province (home): " + selectedProvinceName);
             loadWardsFromCache(selectedProvinceName, false); // false for home delivery
+            validateAndUpdateButton();
+        });
+        
+        // Home delivery district/ward
+        binding.spinnerHomeDistrict.setOnItemClickListener((parent, view, position, id) -> {
+            validateAndUpdateButton();
         });
     }
     

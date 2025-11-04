@@ -17,17 +17,21 @@ public class BrandManagementDTO implements Serializable {
     @SerializedName("description")
     private String description;
 
+    @SerializedName(value = "imageURL", alternate = {"logoUrl", "logo"})
+    private String imageURL;
+
     @SerializedName("active")
     private boolean isActive;
 
     public BrandManagementDTO() {
     }
 
-    public BrandManagementDTO(Integer brandID, String name, String country, String description, boolean isActive) {
+    public BrandManagementDTO(Integer brandID, String name, String country, String description, String imageURL, boolean isActive) {
         this.brandID = brandID;
         this.name = name;
         this.country = country;
         this.description = description;
+        this.imageURL = imageURL;
         this.isActive = isActive;
     }
 
@@ -69,5 +73,13 @@ public class BrandManagementDTO implements Serializable {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
     }
 }
