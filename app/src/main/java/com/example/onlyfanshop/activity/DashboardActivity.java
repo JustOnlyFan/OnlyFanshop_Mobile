@@ -158,6 +158,25 @@ public class DashboardActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (currentSelectedId != id) {
+                // Kiểm tra nếu click cart mà chưa login thì redirect đến profile
+                if (id == R.id.nav_car) {
+                    String token = com.example.onlyfanshop.api.ApiClient.getToken(this);
+                    if (token == null || token.trim().isEmpty()) {
+                        // Chưa login - redirect đến profile
+                        // Cập nhật currentSelectedId trước để tránh loop
+                        currentSelectedId = R.id.nav_profile;
+                        int fromOrder = getNavOrder(R.id.nav_car);
+                        int toOrder = getNavOrder(R.id.nav_profile);
+                        boolean forward = toOrder > fromOrder;
+                        showFragmentById(R.id.nav_profile, forward);
+                        // Đảm bảo bottom nav highlight đúng
+                        bottomNav.post(() -> bottomNav.setSelectedItemId(R.id.nav_profile));
+                        return false; // Không chấp nhận selection của cart
+                    }
+                }
+                
+                // Không cần logic reset filter ở đây - sẽ được xử lý trong CategoryFragment.onHiddenChanged
+                
                 int fromOrder = getNavOrder(currentSelectedId);
                 int toOrder = getNavOrder(id);
                 boolean forward = toOrder > fromOrder;
@@ -198,19 +217,27 @@ public class DashboardActivity extends AppCompatActivity {
         } else if (id == R.id.nav_search) {
             fragmentToShow = categoryFragment;
         } else if (id == R.id.nav_car) {
-            String username = getUsernameForNav();
-            if (cartFragment != null && cartFragment.isAdded()) {
-                try {
-                    getSupportFragmentManager().beginTransaction().remove(cartFragment).commitNow();
-                } catch (Exception e) {
-                    Log.w(TAG, "Failed to remove previous cartFragment synchronously", e);
-                    getSupportFragmentManager().beginTransaction().remove(cartFragment).commit();
-                    getSupportFragmentManager().executePendingTransactions();
+            // Kiểm tra token trước khi mở cart
+            String token = com.example.onlyfanshop.api.ApiClient.getToken(this);
+            if (token == null || token.trim().isEmpty()) {
+                // Chưa login - không xử lý ở đây, đã được xử lý trong onItemSelectedListener
+                // Fallback: hiển thị profile
+                fragmentToShow = profileFragment;
+            } else {
+                String username = getUsernameForNav();
+                if (cartFragment != null && cartFragment.isAdded()) {
+                    try {
+                        getSupportFragmentManager().beginTransaction().remove(cartFragment).commitNow();
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed to remove previous cartFragment synchronously", e);
+                        getSupportFragmentManager().beginTransaction().remove(cartFragment).commit();
+                        getSupportFragmentManager().executePendingTransactions();
+                    }
+                    cartFragment = null;
                 }
-                cartFragment = null;
+                cartFragment = CartFragment.newInstance(username);
+                fragmentToShow = cartFragment;
             }
-            cartFragment = CartFragment.newInstance(username);
-            fragmentToShow = cartFragment;
         } else if (id == R.id.nav_shop) {
             fragmentToShow = mapFragment;
         } else if (id == R.id.nav_profile) {

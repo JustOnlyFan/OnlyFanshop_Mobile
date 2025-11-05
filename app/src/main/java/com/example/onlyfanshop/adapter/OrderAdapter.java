@@ -158,6 +158,8 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             Context context = v.getContext();
             Intent intent = new Intent(context, OrderDetailsActivity.class);
             intent.putExtra("orderId", order.getOrderID());
+            // Không thêm flag "fromPaymentSuccess" hoặc set = false để biết là từ order pending
+            intent.putExtra("fromPaymentSuccess", false);
             context.startActivity(intent);
             if (context instanceof android.app.Activity) {
                 ((android.app.Activity) context).overridePendingTransition(

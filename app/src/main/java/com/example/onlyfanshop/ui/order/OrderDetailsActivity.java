@@ -59,17 +59,22 @@ public class OrderDetailsActivity extends AppCompatActivity {
 
         formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
-        // Setup back button
+        // Kiểm tra nguồn gốc: từ dialog_cod_success (thanh toán thành công) hay từ order pending
+        boolean fromPaymentSuccess = getIntent().getBooleanExtra("fromPaymentSuccess", false);
+
+        // Setup back button - logic khác nhau dựa trên nguồn gốc
         binding.btnBack.setOnClickListener(v -> {
-            if(back!=true){
-                finish();
-                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-            } else{
-                Intent intent = new Intent(this, DashboardActivity.class);
+            if (fromPaymentSuccess) {
+                // Nếu vào từ dialog thanh toán thành công → quay về home
+                Intent intent = new Intent(this, com.example.onlyfanshop.activity.DashboardActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
+            } else {
+                // Nếu vào từ order pending → chỉ finish để quay lại order pending
+                finish();
             }
-
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
         });
 
         // Setup cancel button click listener

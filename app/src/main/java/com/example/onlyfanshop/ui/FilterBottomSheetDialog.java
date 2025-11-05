@@ -22,6 +22,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.slider.RangeSlider;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -104,7 +107,7 @@ public class FilterBottomSheetDialog extends BottomSheetDialogFragment {
         spinnerFilterCategory = view.findViewById(R.id.spinnerFilterCategory);
         btnApplyFilter = view.findViewById(R.id.btnApplyFilter);
         btnResetFilter = view.findViewById(R.id.btnResetFilter);
-        ImageView btnCloseFilter = view.findViewById(R.id.btnCloseFilter);
+        View btnCloseFilter = view.findViewById(R.id.btnCloseFilter);
 
         // Setup price range slider
         setupPriceRangeSlider();
@@ -147,6 +150,58 @@ public class FilterBottomSheetDialog extends BottomSheetDialogFragment {
             }
             dismiss();
         });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Dialog d = getDialog();
+        if (d instanceof BottomSheetDialog) {
+            BottomSheetDialog bsd = (BottomSheetDialog) d;
+            View bottomSheet = bsd.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                // Force remove all top padding/margin immediately
+                bottomSheet.setPadding(
+                        bottomSheet.getPaddingLeft(),
+                        0,
+                        bottomSheet.getPaddingRight(),
+                        bottomSheet.getPaddingBottom()
+                );
+                android.view.ViewGroup.MarginLayoutParams params = 
+                    (android.view.ViewGroup.MarginLayoutParams) bottomSheet.getLayoutParams();
+                if (params != null) {
+                    params.topMargin = 0;
+                    bottomSheet.setLayoutParams(params);
+                }
+                // Set behavior to skip collapsed state
+                com.google.android.material.bottomsheet.BottomSheetBehavior<?> behavior = 
+                    com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+                if (behavior != null) {
+                    behavior.setSkipCollapsed(true);
+                    behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                }
+                // Consume all insets to prevent any top padding
+                ViewCompat.setOnApplyWindowInsetsListener(bottomSheet, (v, insets) -> {
+                    return WindowInsetsCompat.CONSUMED;
+                });
+            }
+            View content = getView();
+            if (content != null) {
+                // Ensure content has no top padding
+                if (content instanceof android.view.ViewGroup) {
+                    android.view.ViewGroup vg = (android.view.ViewGroup) content;
+                    vg.setPadding(
+                            vg.getPaddingLeft(),
+                            0,
+                            vg.getPaddingRight(),
+                            vg.getPaddingBottom()
+                    );
+                }
+                ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+                    return WindowInsetsCompat.CONSUMED;
+                });
+            }
+        }
     }
 
     private void setupPriceRangeSlider() {

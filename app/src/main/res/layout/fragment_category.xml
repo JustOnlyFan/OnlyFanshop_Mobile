@@ -1,27 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/searchRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="24dp"
+    android:orientation="vertical"
+    android:background="@color/white"
     android:fitsSystemWindows="true"
-    android:background="@color/white">
+    android:paddingVertical="16dp">
 
-    <!-- Thanh tìm kiếm và filter -->
+    <!-- Thanh tìm kiếm -->
     <LinearLayout
         android:id="@+id/searchBarContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@color/white">
 
-        <!-- Search bar -->
         <RelativeLayout
             android:layout_width="0dp"
             android:layout_height="48dp"
@@ -33,9 +32,9 @@
                 android:id="@+id/searchIcon"
                 android:layout_width="22dp"
                 android:layout_height="22dp"
-                android:src="@drawable/ic_search"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="16dp" />
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_search" />
 
             <EditText
                 android:id="@+id/etSearchProduct"
@@ -53,7 +52,6 @@
                 android:paddingEnd="16dp" />
         </RelativeLayout>
 
-        <!-- Filter icon button -->
         <ImageView
             android:id="@+id/btnFilter"
             android:layout_width="48dp"
@@ -64,22 +62,22 @@
             android:contentDescription="Filter"
             android:clickable="true"
             android:focusable="true" />
-
     </LinearLayout>
 
-    <!-- PHẦN CATEGORY BỔ SUNG NGAY DƯỚI THANH SEARCH -->
+    <!-- Thương hiệu -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginTop="66dp">
+        android:layout_marginTop="16dp"
+        android:paddingHorizontal="16dp">
 
         <TextView
-            android:id="@+id/tvCategoryTitle"
+            android:id="@+id/tvBrandTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:text="Danh mục"
+            android:layout_marginBottom="12dp"
+            android:text="Thương hiệu"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -89,31 +87,59 @@
             android:layout_height="wrap_content">
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/categoryView"
+                android:id="@+id/brandStripView"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="49dp"
                 android:clipToPadding="false"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp" />
+                android:paddingEnd="16dp"
+                android:paddingVertical="4dp" />
 
             <ProgressBar
                 android:id="@+id/progressBarCategory"
                 style="?android:attr/progressBarStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="@id/categoryView"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 
-    <!-- Phần còn lại giữ nguyên như cũ... -->
+    <!-- Danh mục -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="16dp"
+        android:paddingHorizontal="16dp">
+
+        <TextView
+            android:id="@+id/tvCategoryTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="Danh mục"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/categoryListView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingEnd="2dp"
+            android:paddingVertical="2dp" />
+    </LinearLayout>
+
+    <!-- Kết quả tìm kiếm -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeSearchProducts"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="140dp">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerSearchResult"
@@ -138,4 +164,4 @@
         android:textColor="#666"
         android:layout_gravity="center"
         android:visibility="gone"/>
-</FrameLayout>
+</LinearLayout>

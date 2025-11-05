@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 import android.widget.TextView;
 import android.widget.ScrollView;
@@ -66,46 +67,90 @@ public class ProfileFragment extends Fragment {
     private TranslatorOptions currentTranslatorOptions;
 
     private LinearLayout btnPendingConfirm, btnReadyToShip, btnShipping;
+    private LinearLayout profileHeaderContainer;
+    private FrameLayout pleaseSignInContainer;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        String token = ApiClient.getToken(requireContext());
-        if (token == null || token.trim().isEmpty()) {
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.mainFragmentContainer, new PleaseSignInFragment(), "PLEASE_SIGN_IN")
-                    .commit();
-            return new View(requireContext());
-        }
-
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         initViews(view);
         setupClickListeners();
         loadOrderStatusCount();
         // Áp dụng padding đáy động theo system insets + chiều cao BottomNavigationView
         applySystemInsetsPadding(view);
+        
+        String token = ApiClient.getToken(requireContext());
+        if (token == null || token.trim().isEmpty()) {
+            // Chưa login - hiển thị PleaseSignInFragment
+            showPleaseSignIn(view);
+        } else {
+            // Đã login - hiển thị profile header
+            showProfileHeader(view);
+            setupClickListeners();
+            
+            // Áp dụng padding đáy động theo system insets + chiều cao BottomNavigationView
+            applySystemInsetsPadding(view);
 
-        // 1. DISPLAY IMMEDIATELY FROM SHARED PREFERENCES TO AVOID DELAY
-        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
-        String username = prefs.getString("username", "Guest");
-        String email = prefs.getString("email", "");
-        tvProfileName.setText(username);
-        tvProfileEmail.setText(email);
+            // 1. DISPLAY IMMEDIATELY FROM SHARED PREFERENCES TO AVOID DELAY
+            SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+            String username = prefs.getString("username", "Guest");
+            String email = prefs.getString("email", "");
+            tvProfileName.setText(username);
+            tvProfileEmail.setText(email);
 
-        // 2. CALL API TO UPDATE LATEST INFORMATION
-        fetchUser();
+            // 2. CALL API TO UPDATE LATEST INFORMATION
+            fetchUser();
+        }
 
         return view;
+    }
+
+    private void showPleaseSignIn(View view) {
+        profileHeaderContainer.setVisibility(View.GONE);
+        pleaseSignInContainer.setVisibility(View.VISIBLE);
+        
+        // Ẩn các phần cần login
+        View btnLogout = view.findViewById(R.id.btnLogout);
+        if (btnLogout != null) btnLogout.setVisibility(View.GONE);
+        
+        // Load PleaseSignInFragment vào container
+        if (getChildFragmentManager().findFragmentByTag("PLEASE_SIGN_IN") == null) {
+            getChildFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.pleaseSignInContainer, new PleaseSignInFragment(), "PLEASE_SIGN_IN")
+                    .commit();
+        }
+    }
+
+    private void showProfileHeader(View view) {
+        profileHeaderContainer.setVisibility(View.VISIBLE);
+        pleaseSignInContainer.setVisibility(View.GONE);
+        
+        // Hiển thị nút logout
+        View btnLogout = view.findViewById(R.id.btnLogout);
+        if (btnLogout != null) btnLogout.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        fetchUser();
+        String token = ApiClient.getToken(requireContext());
+        if (token != null && !token.trim().isEmpty()) {
+            // Chỉ fetch user nếu đã login
+            fetchUser();
+        } else {
+            // Nếu chưa login, kiểm tra lại và cập nhật UI
+            if (getView() != null) {
+                showPleaseSignIn(getView());
+            }
+        }
     }
 
     private void initViews(View view) {
+        profileHeaderContainer = view.findViewById(R.id.profileHeaderContainer);
+        pleaseSignInContainer = view.findViewById(R.id.pleaseSignInContainer);
+        
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
         btnSupport = view.findViewById(R.id.btnSupport);
         btnChatWithAdmin = view.findViewById(R.id.btnChatWithAdmin);
