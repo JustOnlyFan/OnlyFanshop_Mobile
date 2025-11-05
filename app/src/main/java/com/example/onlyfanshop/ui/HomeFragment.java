@@ -59,9 +59,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import android.animation.TimeInterpolator;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
-
 public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";

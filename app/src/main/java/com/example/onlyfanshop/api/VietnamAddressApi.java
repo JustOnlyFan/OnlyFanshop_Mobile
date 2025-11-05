@@ -1,8 +1,6 @@
 package com.example.onlyfanshop.api;
 
 import com.example.onlyfanshop.model.VietnamProvince;
-import com.example.onlyfanshop.model.VietnamDistrict;
-import com.example.onlyfanshop.model.VietnamWard;
 
 import java.util.List;
 

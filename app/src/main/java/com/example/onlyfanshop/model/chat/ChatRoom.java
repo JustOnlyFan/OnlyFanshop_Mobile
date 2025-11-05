@@ -1,6 +1,5 @@
 package com.example.onlyfanshop.model.chat;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 public class ChatRoom {

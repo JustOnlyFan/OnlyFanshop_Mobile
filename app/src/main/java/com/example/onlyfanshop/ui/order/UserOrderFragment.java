@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.onlyfanshop.R;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.onlyfanshop.adapter.OrderAdapter;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.OrderApi;

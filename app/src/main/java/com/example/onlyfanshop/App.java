@@ -1,8 +1,6 @@
 package com.example.onlyfanshop;
 
 import android.app.Application;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.example.onlyfanshop.service.FirebaseAuthManager;
 import com.example.onlyfanshop.utils.LocaleUtil;
