@@ -47,6 +47,8 @@ import retrofit2.Response;
 
 public class CategoryFragment extends Fragment {
 
+    private static final int ALL_CATEGORY_ID = -1; // NEW: ID đặc biệt cho "Tất cả"
+
     private RecyclerView categoryView;
     private RecyclerView brandStripView;
     private ProgressBar progressBarCategory;
@@ -167,7 +169,14 @@ public class CategoryFragment extends Fragment {
 
     private void setupCategoryList() {
         categoryAdapter = new CategoryAdapter((id, name) -> {
-            selectedCategoryId = id;
+            // Nếu chọn "Tất cả" (ALL_CATEGORY_ID), bỏ lọc theo danh mục
+            if (id != null && id == ALL_CATEGORY_ID) {
+                selectedCategoryId = null;
+            } else {
+                selectedCategoryId = id;
+            }
+            // Cập nhật item được chọn trong adapter
+            categoryAdapter.setSelectedId(id != null ? id : ALL_CATEGORY_ID);
             fetchHomePage();
         });
         categoryView.setLayoutManager(new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false));
@@ -275,13 +284,31 @@ public class CategoryFragment extends Fragment {
 
                 List<CategoryDTO> categories = data.categories != null ? data.categories : new ArrayList<>();
                 allCategoryList.clear();
+
+                // NEW: chèn mục "Tất cả" ở đầu danh sách
+                CategoryDTO all = new CategoryDTO();
+                // Nếu model dùng tên setter khác, hãy đổi 2 dòng dưới cho phù hợp
+                try {
+                    all.getClass().getMethod("setId", Integer.class).invoke(all, ALL_CATEGORY_ID);
+                } catch (Exception ignore) {
+                    // fallback nếu setter là setCategoryID(int)
+                    try { all.getClass().getMethod("setCategoryID", Integer.class).invoke(all, ALL_CATEGORY_ID); } catch (Exception ignored) {}
+                }
+                try {
+                    all.getClass().getMethod("setName", String.class).invoke(all, "Tất cả");
+                } catch (Exception ignore) {
+                    // fallback nếu setter là setCategoryName(String)
+                    try { all.getClass().getMethod("setCategoryName", String.class).invoke(all, "Tất cả"); } catch (Exception ignored) {}
+                }
+                allCategoryList.add(all);
                 allCategoryList.addAll(categories);
 
                 if (brandChipAdapter != null) brandChipAdapter.submitList(brandList);
 
                 if (categoryAdapter != null) {
                     categoryAdapter.submitList(allCategoryList);
-                    categoryAdapter.setSelectedId(selectedCategoryId);
+                    // Nếu chưa chọn danh mục nào thì "Tất cả" được chọn
+                    categoryAdapter.setSelectedId(selectedCategoryId == null ? ALL_CATEGORY_ID : selectedCategoryId);
                 }
 
                 List<ProductDTO> products = data.products != null ? data.products : new ArrayList<>();
@@ -362,7 +389,8 @@ public class CategoryFragment extends Fragment {
                     sortOrder = priceSort;
                 }
                 selectedBrandId = brandId;
-                selectedCategoryId = categoryId;
+                // Nếu người dùng chọn mục "Tất cả" trong dialog (id == ALL_CATEGORY_ID) thì bỏ lọc theo danh mục
+                selectedCategoryId = (categoryId != null && categoryId == ALL_CATEGORY_ID) ? null : categoryId;
                 fetchHomePage();
             }
 
@@ -442,7 +470,7 @@ public class CategoryFragment extends Fragment {
 
     private void resetFilters() {
         selectedBrandId = null;
-        selectedCategoryId = null;
+        selectedCategoryId = null; // chọn lại "Tất cả"
         sortBy = "ProductID";
         sortOrder = "DESC";
         keyword = null;
@@ -450,7 +478,7 @@ public class CategoryFragment extends Fragment {
             etSearchProduct.setText("");
         }
         if (categoryAdapter != null) {
-            categoryAdapter.setSelectedId(null);
+            categoryAdapter.setSelectedId(ALL_CATEGORY_ID); // highlight "Tất cả"
         }
         fetchHomePage();
     }
