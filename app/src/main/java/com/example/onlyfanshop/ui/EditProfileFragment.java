@@ -2,13 +2,21 @@ package com.example.onlyfanshop.ui;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -19,14 +27,18 @@ import androidx.fragment.app.Fragment;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.api.ApiClient;
+import com.example.onlyfanshop.api.OrderApi;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
 import com.example.onlyfanshop.model.Request.UpdateUserRequest;
+import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.UserResponse;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,7 +54,8 @@ public class EditProfileFragment extends Fragment {
     private ImageView imgProgressFan;
     private AnimatorSet fanRotationAnimator;
     private String currentAddress = "";
-
+    private TextView tvBadgePending, tvBadgeShipping, tvBadgeDelivered;
+    private LinearLayout btnPendingConfirm, btnShipping, btnReadyToShip;
     private ProfileApi api;
     private User baseUser;
 
@@ -116,18 +129,20 @@ public class EditProfileFragment extends Fragment {
         }
 
         tilUsername = root.findViewById(R.id.tilUsername);
-        tilEmail    = root.findViewById(R.id.tilEmail);
-        tilPhone    = root.findViewById(R.id.tilPhone);
+        tilEmail = root.findViewById(R.id.tilEmail);
+        tilPhone = root.findViewById(R.id.tilPhone);
 
         etUsername = root.findViewById(R.id.etUsername);
-        etEmail    = root.findViewById(R.id.etEmail);
-        etPhone    = root.findViewById(R.id.etPhone);
+        etEmail = root.findViewById(R.id.etEmail);
+        etPhone = root.findViewById(R.id.etPhone);
 
         tvAddressDisplay = root.findViewById(R.id.tvAddressDisplay);
         btnUpdateAddress = root.findViewById(R.id.btnUpdateAddress);
-        btnSave    = root.findViewById(R.id.btnSave);
+        btnSave = root.findViewById(R.id.btnSave);
         progressContainer = root.findViewById(R.id.progressContainer);
         imgProgressFan = root.findViewById(R.id.imgProgressFan);
+
+
 
         if (btnSave != null) {
             btnSave.setOnClickListener(v -> submit());
@@ -137,22 +152,22 @@ public class EditProfileFragment extends Fragment {
             btnUpdateAddress.setOnClickListener(v -> showAddressDialog());
         }
 
-        // Khởi tạo animation cho icon quạt
         setupFanAnimation();
     }
+
 
     private void showAddressDialog() {
         try {
             AddressUpdateDialog dialog = AddressUpdateDialog.newInstance(
-                currentAddress,
-                fullAddress -> {
-                    currentAddress = fullAddress;
-                    if (tvAddressDisplay != null) {
-                        tvAddressDisplay.setText(fullAddress);
+                    currentAddress,
+                    fullAddress -> {
+                        currentAddress = fullAddress;
+                        if (tvAddressDisplay != null) {
+                            tvAddressDisplay.setText(fullAddress);
+                        }
                     }
-                }
             );
-            
+
             // Đảm bảo fragment manager tồn tại
             if (getParentFragmentManager() != null && !isDetached() && isAdded()) {
                 dialog.show(getParentFragmentManager(), "AddressUpdateDialog");
@@ -168,12 +183,12 @@ public class EditProfileFragment extends Fragment {
 
     private void setupFanAnimation() {
         if (imgProgressFan == null) return;
-        
+
         ObjectAnimator rotation = ObjectAnimator.ofFloat(imgProgressFan, "rotation", 0f, 360f);
         rotation.setDuration(1500);
         rotation.setRepeatCount(ObjectAnimator.INFINITE);
         rotation.setInterpolator(new LinearInterpolator());
-        
+
         fanRotationAnimator = new AnimatorSet();
         fanRotationAnimator.play(rotation);
     }
@@ -186,7 +201,7 @@ public class EditProfileFragment extends Fragment {
             btnSave.setEnabled(!loading);
             btnSave.setAlpha(loading ? 0.6f : 1.0f);
         }
-        
+
         if (loading) {
             if (fanRotationAnimator != null && !fanRotationAnimator.isRunning()) {
                 fanRotationAnimator.start();
@@ -242,9 +257,10 @@ public class EditProfileFragment extends Fragment {
 
     private void prefill(User u) {
         if (etUsername != null) etUsername.setText(u.getUsername() == null ? "" : u.getUsername());
-        if (etEmail    != null) etEmail.setText(u.getEmail() == null ? "" : u.getEmail());
-        if (etPhone    != null) etPhone.setText(isMissing(u.getPhoneNumber()) ? "" : u.getPhoneNumber());
-        
+        if (etEmail != null) etEmail.setText(u.getEmail() == null ? "" : u.getEmail());
+        if (etPhone != null)
+            etPhone.setText(isMissing(u.getPhoneNumber()) ? "" : u.getPhoneNumber());
+
         String address = isMissing(u.getAddress()) ? "" : u.getAddress();
         currentAddress = address;
         if (tvAddressDisplay != null) {
@@ -299,6 +315,15 @@ public class EditProfileFragment extends Fragment {
                     if (r.getStatusCode() == 200) {
                         Toast.makeText(requireContext(), "Cập nhật hồ sơ thành công", Toast.LENGTH_SHORT).show();
                         // Pop về Profile
+                        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+
+                        sharedPreferences.edit().putString("username", r.getData().getUsername()).apply();
+                        sharedPreferences.edit().putString("email", r.getData().getEmail()).apply();
+                        sharedPreferences.edit().putString("role", r.getData().getRole()).apply();
+                        sharedPreferences.edit().putString("authProvider", r.getData().getAuthProvider()).apply();
+                        sharedPreferences.edit().putInt("userId", r.getData().getUserID()).apply();
+                        sharedPreferences.edit().putString("address", r.getData().getAddress()).apply();
+                        sharedPreferences.edit().putString("phone", r.getData().getPhoneNumber()).apply();
                         requireActivity().getSupportFragmentManager().popBackStack();
                     } else {
                         Toast.makeText(requireContext(), r.getMessage(), Toast.LENGTH_SHORT).show();
@@ -318,4 +343,5 @@ public class EditProfileFragment extends Fragment {
             }
         });
     }
+
 }

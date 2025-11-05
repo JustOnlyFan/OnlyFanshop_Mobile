@@ -1,5 +1,6 @@
 package com.example.onlyfanshop.ui.order;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.StrikethroughSpan;
@@ -15,6 +16,8 @@ import com.example.onlyfanshop.R;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
 import android.content.SharedPreferences;
+
+import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.OrderApi;
 import com.example.onlyfanshop.databinding.ActivityOrderDetailsBinding;
@@ -47,6 +50,7 @@ public class OrderDetailsActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         orderId = getIntent().getIntExtra("orderId", -1);
+        boolean back = getIntent().getBooleanExtra("payment", false);
         if (orderId == -1) {
             Toast.makeText(this, "Order ID not found", Toast.LENGTH_SHORT).show();
             finish();
@@ -57,8 +61,15 @@ public class OrderDetailsActivity extends AppCompatActivity {
 
         // Setup back button
         binding.btnBack.setOnClickListener(v -> {
-            finish();
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            if(back!=true){
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            } else{
+                Intent intent = new Intent(this, DashboardActivity.class);
+                startActivity(intent);
+                finish();
+            }
+
         });
 
         // Setup cancel button click listener

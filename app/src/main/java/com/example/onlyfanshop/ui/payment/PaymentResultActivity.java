@@ -39,6 +39,7 @@ public class PaymentResultActivity extends AppCompatActivity {
                 if (finalOrderId != -1) {
                     Intent intent = new Intent(this, OrderDetailsActivity.class);
                     intent.putExtra("orderId", finalOrderId);
+                    intent.putExtra("payment", true);
                     startActivity(intent);
                     finish();
                 } else {

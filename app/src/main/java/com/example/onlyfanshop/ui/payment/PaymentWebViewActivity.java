@@ -44,6 +44,16 @@ public class PaymentWebViewActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.contains("vnp_ResponseCode=24")) {
+                    Toast.makeText(PaymentWebViewActivity.this, "Bạn đã hủy thanh toán", Toast.LENGTH_SHORT).show();
+
+                    // Có thể mở PaymentResultActivity báo “hủy” luôn nếu bạn muốn
+                    Intent intent = new Intent(PaymentWebViewActivity.this, PaymentResultActivity.class);
+                    intent.putExtra(PaymentResultActivity.EXTRA_RESULT, "cancel");
+                    startActivity(intent);
+                    finish();
+                    return true;
+                }
                 if (url.contains("localhost:3000/payment-result")) {
                     Uri uri = Uri.parse(url);
                     String status = uri.getQueryParameter("status");
