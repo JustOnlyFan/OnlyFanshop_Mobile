@@ -1,7 +1,6 @@
 package com.example.onlyfanshop.model;
 
 import com.google.gson.annotations.SerializedName;
-import java.time.LocalDateTime; // nếu lỗi có thể thay bằng String
 
 public class NotificationDTO {
 

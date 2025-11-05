@@ -1,10 +1,5 @@
 package com.example.onlyfanshop.model.chat;
 
-import android.os.Build;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import com.google.gson.annotations.SerializedName;
 
 public class ChatMessage {

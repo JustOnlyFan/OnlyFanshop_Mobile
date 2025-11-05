@@ -322,7 +322,7 @@ public class RealtimeChatService {
             // Get messages from API
             chatApi.getMessagesForRoom(roomId).enqueue(new retrofit2.Callback<com.example.onlyfanshop.model.response.ApiResponse<List<ChatMessage>>>() {
                 @Override
-                public void onResponse(retrofit2.Call<com.example.onlyfanshop.model.response.ApiResponse<List<ChatMessage>>> call, 
+                public void onResponse(retrofit2.Call<com.example.onlyfanshop.model.response.ApiResponse<List<ChatMessage>>> call,
                                      retrofit2.Response<com.example.onlyfanshop.model.response.ApiResponse<List<ChatMessage>>> response) {
                     try {
                         inFlight.set(false); // Reset flag
@@ -403,7 +403,7 @@ public class RealtimeChatService {
         try {
             chatApi.getChatRooms().enqueue(new retrofit2.Callback<com.example.onlyfanshop.model.response.ApiResponse<List<ChatRoom>>>() {
                 @Override
-                public void onResponse(retrofit2.Call<com.example.onlyfanshop.model.response.ApiResponse<List<ChatRoom>>> call, 
+                public void onResponse(retrofit2.Call<com.example.onlyfanshop.model.response.ApiResponse<List<ChatRoom>>> call,
                                      retrofit2.Response<com.example.onlyfanshop.model.response.ApiResponse<List<ChatRoom>>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().getStatusCode() == 200) {
                         List<ChatRoom> rooms = response.body().getData();

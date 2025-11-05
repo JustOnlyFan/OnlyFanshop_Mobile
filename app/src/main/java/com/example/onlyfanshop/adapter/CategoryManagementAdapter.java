@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.onlyfanshop.databinding.ViewholderCategoryManagementBinding;
-import com.example.onlyfanshop.model.CategoryDTO;
 import com.example.onlyfanshop.model.CategoryManagementDTO;
 
 import java.util.List;
