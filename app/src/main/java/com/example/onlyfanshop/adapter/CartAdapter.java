@@ -10,19 +10,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.onlyfanshop.R;
-import com.example.onlyfanshop.api.ApiClient;
-import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.databinding.ViewholderCartBinding;
 import com.example.onlyfanshop.model.CartItemDTO;
-import com.example.onlyfanshop.model.response.ApiResponse;
 
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder> {
 

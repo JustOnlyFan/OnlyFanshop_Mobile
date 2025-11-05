@@ -8,17 +8,12 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -31,7 +26,6 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.api.PaymentApi;
 import com.example.onlyfanshop.api.ProfileApi;
-import com.example.onlyfanshop.api.UserApi;
 import com.example.onlyfanshop.api.VietnamProvinceApi;
 import com.example.onlyfanshop.api.VietnamProvinceApiClient;
 import com.example.onlyfanshop.databinding.ActivityConfirmPaymentBinding;
@@ -43,11 +37,9 @@ import com.example.onlyfanshop.model.VietnamProvinceResponse;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.UserResponse;
 import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.textfield.TextInputLayout;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 

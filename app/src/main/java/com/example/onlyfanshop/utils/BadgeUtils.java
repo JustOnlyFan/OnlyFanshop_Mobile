@@ -1,16 +1,13 @@
 package com.example.onlyfanshop.utils;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.CartItemApi;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.CartDTO;
-import com.example.onlyfanshop.ui.product.ProductDetailActivity;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 

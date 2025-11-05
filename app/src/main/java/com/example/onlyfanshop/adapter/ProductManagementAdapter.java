@@ -3,8 +3,6 @@ package com.example.onlyfanshop.adapter;
 import static com.example.onlyfanshop.adapter.ProductAdapter.asGlideUrlWithAuth;
 import static com.example.onlyfanshop.adapter.ProductAdapter.resolveImageUrl;
 
-import android.content.Intent;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.model.ProductDTO;
-import com.example.onlyfanshop.ui.product.UpdateProductActivity;
 
 import java.util.List;
 

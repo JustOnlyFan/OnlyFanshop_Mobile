@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.onlyfanshop.R;
-import com.example.onlyfanshop.model.User;
 import com.example.onlyfanshop.model.UserDTO;
 
 import java.util.List;
