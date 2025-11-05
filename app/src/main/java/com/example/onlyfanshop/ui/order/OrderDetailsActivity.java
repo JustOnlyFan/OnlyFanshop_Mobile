@@ -16,6 +16,8 @@ import com.example.onlyfanshop.R;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
 import android.content.SharedPreferences;
+
+import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.OrderApi;
 import com.example.onlyfanshop.databinding.ActivityOrderDetailsBinding;
@@ -48,6 +50,7 @@ public class OrderDetailsActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         orderId = getIntent().getIntExtra("orderId", -1);
+        boolean back = getIntent().getBooleanExtra("payment", false);
         if (orderId == -1) {
             Toast.makeText(this, "Order ID not found", Toast.LENGTH_SHORT).show();
             finish();

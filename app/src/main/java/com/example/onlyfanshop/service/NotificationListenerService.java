@@ -18,10 +18,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-/**
- * Service này sẽ lắng nghe thông báo realtime từ Firebase Realtime Database
- * và hiển thị Notification cho người dùng theo userId.
- */
 public class NotificationListenerService extends Service {
 
     private static final String TAG = "NotificationService";
@@ -41,40 +37,56 @@ public class NotificationListenerService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
+
+        // ✅ Đảm bảo Firebase được khởi tạo
         if (FirebaseApp.getApps(this).isEmpty()) {
             FirebaseApp.initializeApp(this);
             Log.d(TAG, "FirebaseApp initialized manually in service");
         }
 
-        // ✅ Kết nối Firebase
+        // ✅ Kết nối tới node notifications/{userId}
         ref = FirebaseDatabase.getInstance()
                 .getReference("notifications")
                 .child(String.valueOf(userId));
         Log.d(TAG, "Firebase reference path: notifications/" + userId);
 
-        // ✅ Lắng nghe thay đổi realtime
+        // ✅ Lắng nghe các thông báo mới
         listener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 Log.d(TAG, "onChildAdded() triggered. Snapshot key: " + snapshot.getKey());
+
                 String message = snapshot.child("message").getValue(String.class);
+                Boolean isRead = snapshot.child("isRead").getValue(Boolean.class);
+                Long notificationId = snapshot.child("notificationID").getValue(Long.class);
 
-                if (message != null) {
-                    Log.d(TAG, "New notification received: " + message);
-
-                    // 👉 Intent mở NotificationListActivity
-                    Intent intent = new Intent(getApplicationContext(), NotificationListActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-                    NotificationHelper.showOrderNotification(
-                            getApplicationContext(),
-                            "Thông báo mới",
-                            message,
-                            intent
-                    );
+                // 👉 Bỏ qua nếu null hoặc đã đọc
+                if (message == null || (isRead != null && isRead)) {
+                    Log.d(TAG, "Bỏ qua thông báo cũ hoặc không hợp lệ");
+                    return;
                 }
-            }
 
+                Log.d(TAG, "New notification received: " + message);
+
+                // 👉 Intent mở NotificationListActivity
+                Intent openIntent = new Intent(getApplicationContext(), NotificationListActivity.class);
+                openIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                // ✅ Hiển thị notification
+                NotificationHelper.showOrderNotification(
+                        getApplicationContext(),
+                        "Thông báo mới",
+                        message,
+                        openIntent
+                );
+
+                // ✅ Cập nhật isRead = true
+                snapshot.getRef().child("isRead").setValue(true)
+                        .addOnSuccessListener(aVoid ->
+                                Log.d(TAG, "Đã cập nhật isRead=true cho notification: " + snapshot.getKey()))
+                        .addOnFailureListener(e ->
+                                Log.e(TAG, "Lỗi khi cập nhật isRead: ", e));
+            }
 
             @Override public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
             @Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
@@ -85,9 +97,7 @@ public class NotificationListenerService extends Service {
         };
 
         ref.addChildEventListener(listener);
-
-        // Service sẽ tiếp tục chạy cho đến khi bị dừng thủ công
-        return START_STICKY;
+        return START_STICKY; // Giữ service chạy nền
     }
 
     @Override

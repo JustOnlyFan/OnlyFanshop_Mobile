@@ -172,6 +172,7 @@ public class LoginActivity extends AppCompatActivity {
                         sharedPreferences.edit().putString("authProvider", user.getAuthProvider()).apply();
                         sharedPreferences.edit().putInt("userId", user.getUserID()).apply();
                         sharedPreferences.edit().putString("address", user.getAddress()).apply();
+                        sharedPreferences.edit().putString("phone", user.getPhoneNumber()).apply();
                         Intent serviceIntent = new Intent(LoginActivity.this, NotificationListenerService.class);
                         startService(serviceIntent);
 
@@ -198,6 +199,7 @@ public class LoginActivity extends AppCompatActivity {
                             Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
                             intent.putExtra("user", user);
                             startActivity(intent);
+                            finish();
                             Toast.makeText(LoginActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
                         }
                     } else {
@@ -410,6 +412,7 @@ public class LoginActivity extends AppCompatActivity {
                             prefs.edit().putString("authProvider", userDTO.getAuthProvider()).apply();
                             prefs.edit().putInt("userId", userDTO.getUserID()).apply();
                             prefs.edit().putString("address", userDTO.getAddress()).apply();
+                            prefs.edit().putString("phone", userDTO.getPhoneNumber()).apply();
                             Intent serviceIntent = new Intent(LoginActivity.this, NotificationListenerService.class);
                             startService(serviceIntent);
                             Log.d("GoogleAuth", "Saved user data from Google login");
@@ -428,9 +431,11 @@ public class LoginActivity extends AppCompatActivity {
                         if (userDTO.getRole().equals("ADMIN")) {
                             Log.d("GoogleAuth", "Admin detected, navigating to AdminActivity");
                             intent = new Intent(LoginActivity.this, AdminActivity.class);
+                            finish();
                         } else {
                             Log.d("GoogleAuth", "Customer detected, navigating to DashboardActivity");
                             intent = new Intent(LoginActivity.this, DashboardActivity.class);
+                            finish();
                         }
                         intent.putExtra("user", userDTO);
                         startActivity(intent);

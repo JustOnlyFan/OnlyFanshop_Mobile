@@ -26,8 +26,10 @@ import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.activity.ChangePasswordActivity;
 import com.example.onlyfanshop.activity.DashboardActivity;
 import com.example.onlyfanshop.api.ApiClient;
+import com.example.onlyfanshop.api.OrderApi;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.User;
+import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.response.UserResponse;
 import com.example.onlyfanshop.service.NotificationListenerService;
 import com.example.onlyfanshop.ui.order.OrderHistoryActivity;
@@ -47,6 +49,8 @@ import com.google.mlkit.nl.translate.TranslatorOptions;
 import com.google.mlkit.common.model.RemoteModelManager; // Dùng để xóa mô hình
 import com.google.mlkit.nl.translate.TranslateRemoteModel; // Dùng để xác định mô hình xóa
 
+import java.util.Map;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -55,7 +59,7 @@ public class ProfileFragment extends Fragment {
 
     private CardView btnEditProfile;
     private View btnSupport, btnResetPassword, btnLogout, btnChatWithAdmin, btnLanguage;
-    private TextView tvProfileName, tvProfileEmail, tvSeeAllOrders;
+    private TextView tvProfileName, tvProfileEmail, tvSeeAllOrders, tvBadgePending, tvBadgeShipping, tvBadgeDelivered;
     private User currentUser;
     private String currentSourceLangCode;
     private String currentTargetLangCode;
@@ -71,6 +75,10 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         initViews(view);
+        setupClickListeners();
+        loadOrderStatusCount();
+        // Áp dụng padding đáy động theo system insets + chiều cao BottomNavigationView
+        applySystemInsetsPadding(view);
         
         String token = ApiClient.getToken(requireContext());
         if (token == null || token.trim().isEmpty()) {
@@ -158,6 +166,9 @@ public class ProfileFragment extends Fragment {
         btnPendingConfirm = view.findViewById(R.id.btnPendingConfirm);
         btnReadyToShip = view.findViewById(R.id.btnReadyToShip);
         btnShipping = view.findViewById(R.id.btnShipping);
+        tvBadgePending = view.findViewById(R.id.badgePending);
+        tvBadgeShipping = view.findViewById(R.id.badgeShipping);
+        tvBadgeDelivered = view.findViewById(R.id.badgeDelivered);
     }
 
     private void setupClickListeners() {
@@ -456,5 +467,36 @@ public class ProfileFragment extends Fragment {
 
         // Request to apply insets immediately
         ViewCompat.requestApplyInsets(root);
+    }
+    private void loadOrderStatusCount() {
+        Log.d("EditProfileFragment", "loadOrderStatusCount");
+        OrderApi apiOrder = ApiClient.getPrivateClient(requireContext()).create(OrderApi.class);
+
+        apiOrder.getBadgeCount().enqueue(new Callback<ApiResponse<Map<String, Long>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Map<String, Long>>> call, Response<ApiResponse<Map<String, Long>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    Map<String, Long> counts = response.body().getData();
+
+                    setBadge(tvBadgePending, counts.get("pending"));
+                    setBadge(tvBadgeShipping, counts.get("shipping"));
+                    setBadge(tvBadgeDelivered, counts.get("delivered"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Map<String, Long>>> call, Throwable t) {
+                Toast.makeText(requireContext(), "Không thể tải trạng thái đơn hàng", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setBadge(TextView badge, Long count) {
+        if (count != null && count > 0) {
+            badge.setText(String.valueOf(count));
+            badge.setVisibility(View.VISIBLE);
+        } else {
+            badge.setVisibility(View.GONE);
+        }
     }
 }

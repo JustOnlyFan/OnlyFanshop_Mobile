@@ -143,11 +143,31 @@
                     android:gravity="center"
                     android:orientation="vertical">
 
-                    <ImageView
+
+                    <FrameLayout
                         android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_pending1"
-                        app:tint="@color/black" />
+                        android:layout_height="40dp">
+
+                        <ImageView
+                            android:id="@+id/icPending"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/ic_pending1"
+                            app:tint="@color/black" />
+
+                        <!-- Badge -->
+                        <TextView
+                            android:id="@+id/badgePending"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="end|top"
+                            android:gravity="center"
+                            android:text="0"
+                            android:textSize="11sp"
+                            android:textColor="@android:color/white"
+                            android:background="@drawable/bg_badge_red"
+                            android:visibility="gone" />
+                    </FrameLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -167,11 +187,30 @@
                     android:gravity="center"
                     android:orientation="vertical">
 
-                    <ImageView
+                    <FrameLayout
                         android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_truck"
-                        app:tint="@color/black" />
+                        android:layout_height="40dp">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_truck"
+                            app:tint="@color/black" />
+
+                        <!-- Badge -->
+                        <TextView
+                            android:id="@+id/badgeShipping"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="end|top"
+                            android:gravity="center"
+                            android:text="0"
+                            android:textSize="11sp"
+                            android:textColor="@android:color/white"
+                            android:background="@drawable/bg_badge_red"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -190,12 +229,30 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:orientation="vertical">
-
-                    <ImageView
+                    <FrameLayout
                         android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_shipping_box"
-                        app:tint="@color/black" />
+                        android:layout_height="40dp">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_shipping_box"
+                            app:tint="@color/black" />
+
+                        <!-- Badge -->
+                        <TextView
+                            android:id="@+id/badgeDelivered"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="end|top"
+                            android:gravity="center"
+                            android:text="0"
+                            android:textSize="11sp"
+                            android:textColor="@android:color/white"
+                            android:background="@drawable/bg_badge_red"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
 
                     <TextView
                         android:layout_width="wrap_content"

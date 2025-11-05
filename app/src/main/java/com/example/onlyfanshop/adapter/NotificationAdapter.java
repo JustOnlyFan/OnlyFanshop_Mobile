@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,6 +60,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         setNotificationIcon(holder.ivNotificationIcon, holder.ivBadgeIcon, n.getMessage());
 
         holder.itemView.setOnClickListener(v -> {
+            Log.d("NotificationAdapter", "Notification clicked: " + n.getMessage());
+            // Xử lý khi người dùng nhấn vào thông báo")
             Integer orderId = extractOrderIdFromMessage(n.getMessage());
             if (orderId != null) {
                 // Gọi API đánh dấu đã đọc
@@ -111,6 +114,11 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             tvCreatedAt = itemView.findViewById(R.id.tvCreatedAt);
             ivNotificationIcon = itemView.findViewById(R.id.ivNotificationIcon);
             ivBadgeIcon = itemView.findViewById(R.id.ivBadgeIcon);
+            LinearLayout bottomSheet = itemView.findViewById(R.id.bottomSheet);
+            if (bottomSheet != null) {
+                bottomSheet.setVisibility(View.GONE); // tuyệt đối không để INVISIBLE
+            }
+
         }
     }
 
