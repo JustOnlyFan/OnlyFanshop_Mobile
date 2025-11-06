@@ -1,6 +1,7 @@
 package com.example.onlyfanshop.ui.order;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -185,7 +186,7 @@ public class UserOrderFragment extends Fragment {
         switch (statusFromProfile) {
             case "PENDING":
                 return "PENDING";
-            case "READY_TO_SHIP":
+            case "PICKING":
                 return "PICKING"; // Ready to ship = Picking in backend
             case "SHIPPING":
                 return "SHIPPING";

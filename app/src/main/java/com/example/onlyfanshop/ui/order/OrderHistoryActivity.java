@@ -2,6 +2,7 @@ package com.example.onlyfanshop.ui.order;
 
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -47,7 +48,7 @@ public class OrderHistoryActivity extends AppCompatActivity {
     private void loadOrders() {
         OrderApi api = ApiClient.getPrivateClient(this).create(OrderApi.class);
         String status = getIntent().getStringExtra("status");
-
+        Log.d("OrderHistoryActivity", "loadOrders: " + status);
         RecyclerView recyclerView = findViewById(R.id.rvOrders);
         LinearLayout layoutEmpty = findViewById(R.id.layoutEmpty);
 

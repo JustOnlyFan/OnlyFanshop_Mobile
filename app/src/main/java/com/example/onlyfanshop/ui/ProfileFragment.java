@@ -200,8 +200,8 @@ public class ProfileFragment extends Fragment {
             }
         });
         btnPendingConfirm.setOnClickListener(v -> openOrderHistory("PENDING"));
-        btnReadyToShip.setOnClickListener(v -> openOrderHistory("APPROVED"));
-        btnShipping.setOnClickListener(v -> openOrderHistory("SHIPPED"));
+        btnReadyToShip.setOnClickListener(v -> openOrderHistory("PICKING"));
+        btnShipping.setOnClickListener(v -> openOrderHistory("SHIPPING"));
 
     }
 
@@ -418,6 +418,7 @@ public class ProfileFragment extends Fragment {
     }
     private void openOrderHistory(String status) {
         // Navigate to UserOrderFragment with status filter
+        Log.d("ProfileFragment", "openOrderHistory: " + status);
         UserOrderFragment fragment = UserOrderFragment.newInstance(status);
         requireActivity().getSupportFragmentManager()
                 .beginTransaction()
@@ -480,7 +481,7 @@ public class ProfileFragment extends Fragment {
 
                     setBadge(tvBadgePending, counts.get("pending"));
                     setBadge(tvBadgeShipping, counts.get("shipping"));
-                    setBadge(tvBadgeDelivered, counts.get("delivered"));
+                    setBadge(tvBadgeDelivered, counts.get("picking"));
                 }
             }
 

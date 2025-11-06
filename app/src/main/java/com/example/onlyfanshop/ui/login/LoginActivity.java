@@ -146,15 +146,6 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(this, "Vui lòng nhập username và password", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (!Validation.isValidPassword(password)) {
-            etPassword.setBackgroundResource(R.drawable.edittext_error);
-            layoutPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
-            Toast.makeText(this, "Mật khẩu không hợp lệ!", Toast.LENGTH_SHORT).show();
-            return;
-        }else {
-            layoutPassword.setError(null);
-            layoutPassword.setErrorEnabled(false); // 🔹 khôi phục lại icon con mắt
-        }
 
         LoginRequest request = new LoginRequest(username, password);
 
