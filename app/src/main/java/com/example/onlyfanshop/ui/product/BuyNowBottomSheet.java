@@ -116,7 +116,7 @@ public class BuyNowBottomSheet extends BottomSheetDialogFragment {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         String username = sharedPreferences.getString("username", "");
         String token = sharedPreferences.getString("jwt_token", "");
-        sharedPreferences.edit().putString("buyMethod", "Instant").apply();
+        //sharedPreferences.edit().putString("buyMethod", "Instant").apply();
 
 
         if (username == null || username.trim().isEmpty() || token == null || token.trim().isEmpty()) {
@@ -126,6 +126,7 @@ public class BuyNowBottomSheet extends BottomSheetDialogFragment {
                     .setMessage("You need to sign in to continue.")
                     .setPositiveButton("Sign In", (dialog, which) -> {
                         Intent intent = new Intent(requireContext(), com.example.onlyfanshop.ui.login.LoginActivity.class);
+
                         startActivity(intent);
                     })
                     .setNegativeButton("Cancel", null);
@@ -167,6 +168,7 @@ public class BuyNowBottomSheet extends BottomSheetDialogFragment {
                     Intent intent = new Intent(requireContext(), ConfirmPaymentActivity.class);
                     intent.putExtra("totalPrice", totalPrice);
                     intent.putExtra("cartItems", (Serializable) cartItems);
+                    intent.putExtra("buyMethod", "Instant");
                     startActivity(intent);
                 }
             }
