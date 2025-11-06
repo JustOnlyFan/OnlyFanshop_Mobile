@@ -65,7 +65,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
         }
         if (!Validation.isValidPassword(newPassword)) {
             edtNewPassword.setBackgroundResource(R.drawable.edittext_error);
-            edtNewPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
+            layoutPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
             Toast.makeText(this, "Mật khẩu không hợp lệ!", Toast.LENGTH_SHORT).show();
             return;
         }else {

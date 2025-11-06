@@ -85,7 +85,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         }
         if (!Validation.isValidPassword(oldPass)) {
             edtOldPassword.setBackgroundResource(R.drawable.edittext_error);
-            edtOldPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
+            layoutOldPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
             Toast.makeText(this, "Mật khẩu không hợp lệ!", Toast.LENGTH_SHORT).show();
             return false;
         }else {
@@ -95,7 +95,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
         if (!Validation.isValidPassword(newPass)) {
             edtNewPassword.setBackgroundResource(R.drawable.edittext_error);
-            edtNewPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
+            layoutNewPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
             Toast.makeText(this, "Mật khẩu không hợp lệ!", Toast.LENGTH_SHORT).show();
             return false;
         }else {

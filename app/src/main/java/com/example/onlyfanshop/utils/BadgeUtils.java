@@ -39,7 +39,7 @@ public class BadgeUtils {
                             com.example.onlyfanshop.utils.NotificationHelper.showCartNotification(
                                     context,
                                     "Cart",
-                                    "You have " + totalQuantity + " products in your cart!"
+                                    "Bạn đang có " + totalQuantity + "sản phẩm trong giỏ hàng!"
                             );
                             lastCartQuantity = totalQuantity; // Cập nhật giá trị cũ
                             Log.d("BadgeUtils", "Updating badge with number: " + totalQuantity);
