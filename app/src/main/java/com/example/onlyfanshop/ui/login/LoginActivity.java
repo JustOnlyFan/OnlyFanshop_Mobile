@@ -27,6 +27,8 @@ import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.model.Request.LoginRequest;
 import com.example.onlyfanshop.model.UserDTO;
 import com.example.onlyfanshop.service.NotificationListenerService;
+import com.example.onlyfanshop.utils.Validation;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -68,7 +70,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final int RC_GOOGLE_SIGN_IN = 9001;
     private ActivityResultLauncher<Intent> googleSignInLauncher;
     private AuthCredential pendingLinkCredential;
-
+    private TextInputLayout layoutPassword ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
         logoFan = findViewById(R.id.logoFan);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
         tvSignUp = findViewById(R.id.tvSignUp);
-
+        layoutPassword = findViewById(R.id.layoutPassword);
         // Set up back button to return to DashboardActivity
         btnBackMain.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
@@ -143,6 +145,15 @@ public class LoginActivity extends AppCompatActivity {
         if (username.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập username và password", Toast.LENGTH_SHORT).show();
             return;
+        }
+        if (!Validation.isValidPassword(password)) {
+            etPassword.setBackgroundResource(R.drawable.edittext_error);
+            layoutPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
+            Toast.makeText(this, "Mật khẩu không hợp lệ!", Toast.LENGTH_SHORT).show();
+            return;
+        }else {
+            layoutPassword.setError(null);
+            layoutPassword.setErrorEnabled(false); // 🔹 khôi phục lại icon con mắt
         }
 
         LoginRequest request = new LoginRequest(username, password);

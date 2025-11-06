@@ -13,6 +13,8 @@ import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.UserApi;
 import com.example.onlyfanshop.model.response.ApiResponse;
+import com.example.onlyfanshop.utils.Validation;
+import com.google.android.material.textfield.TextInputLayout;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -22,7 +24,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
     private UserApi userApi;
     private EditText edtNewPassword, edtConfirmPassword;
     private Button btnResetPassword;
-
+    private TextInputLayout layoutPassword ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +35,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
         edtNewPassword = findViewById(R.id.edtNewPassword);
         edtConfirmPassword = findViewById(R.id.edtConfirmPassword);
         btnResetPassword = findViewById(R.id.btnResetPassword);
+        layoutPassword = findViewById(R.id.layoutPassword);
         btnResetPassword.setOnClickListener(v -> {
             String password = edtNewPassword.getText().toString().trim();
             String confirmPassword = edtConfirmPassword.getText().toString().trim();
@@ -46,7 +49,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
 
     private void resetPassword(String email, String newPassword, String confirmPassword) {
         if (newPassword.isEmpty()) {
-            edtConfirmPassword.setBackgroundResource(R.drawable.edittext_error);
+            edtNewPassword.setBackgroundResource(R.drawable.edittext_error);
             edtNewPassword.setError("Vui lòng nhập mật khẩu mới");
             return;
         }
@@ -60,6 +63,16 @@ public class ResetPasswordActivity extends AppCompatActivity {
             edtConfirmPassword.setError("Mật khẩu không khớp");
             return;
         }
+        if (!Validation.isValidPassword(newPassword)) {
+            edtNewPassword.setBackgroundResource(R.drawable.edittext_error);
+            edtNewPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
+            Toast.makeText(this, "Mật khẩu không hợp lệ!", Toast.LENGTH_SHORT).show();
+            return;
+        }else {
+            layoutPassword.setError(null);
+            layoutPassword.setErrorEnabled(false); // 🔹 khôi phục lại icon con mắt
+        }
+
         Call<ApiResponse<Void>> call = userApi.resetPassword(email, newPassword);
         call.enqueue(new Callback<ApiResponse<Void>>() {
                          @Override

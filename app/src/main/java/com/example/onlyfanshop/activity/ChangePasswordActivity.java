@@ -14,8 +14,10 @@ import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.ProfileApi;
 import com.example.onlyfanshop.model.Request.ChangePasswordRequest;
 import com.example.onlyfanshop.model.response.ApiResponse;
+import com.example.onlyfanshop.utils.Validation;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -26,7 +28,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
     private TextInputEditText edtOldPassword, edtNewPassword, edtConfirmPassword;
     private MaterialButton btnResetPassword;
     private ProgressBar progressBar;
-
+    private TextInputLayout layoutOldPassword, layoutNewPassword ;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +44,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
         edtConfirmPassword = findViewById(R.id.edtConfirmPassword);
         btnResetPassword = findViewById(R.id.btnResetPassword);
         progressBar = findViewById(R.id.progressBar);
+        layoutOldPassword = findViewById(R.id.layoutOldPassword);
+        layoutNewPassword = findViewById(R.id.layoutNewPassword);
     }
 
     private void setupActions() {
@@ -78,6 +82,25 @@ public class ChangePasswordActivity extends AppCompatActivity {
             edtConfirmPassword.setError("Xác nhận mật khẩu không khớp");
             edtConfirmPassword.requestFocus();
             return false;
+        }
+        if (!Validation.isValidPassword(oldPass)) {
+            edtOldPassword.setBackgroundResource(R.drawable.edittext_error);
+            edtOldPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
+            Toast.makeText(this, "Mật khẩu không hợp lệ!", Toast.LENGTH_SHORT).show();
+            return false;
+        }else {
+            layoutOldPassword.setError(null);
+            layoutOldPassword.setErrorEnabled(false); // 🔹 khôi phục lại icon con mắt
+        }
+
+        if (!Validation.isValidPassword(newPass)) {
+            edtNewPassword.setBackgroundResource(R.drawable.edittext_error);
+            edtNewPassword.setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ, số và ký tự đặc biệt");
+            Toast.makeText(this, "Mật khẩu không hợp lệ!", Toast.LENGTH_SHORT).show();
+            return false;
+        }else {
+            layoutNewPassword.setError(null);
+            layoutNewPassword.setErrorEnabled(false); // 🔹 khôi phục lại icon con mắt
         }
 
         if (oldPass.equals(newPass)) {
