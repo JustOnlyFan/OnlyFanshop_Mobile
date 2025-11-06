@@ -75,6 +75,9 @@ public class ChatRoomActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        // ✅ Ensure Firebase authentication before loading messages
+        com.example.onlyfanshop.service.FirebaseAuthManager.ensureSignedIn(this);
+        
         // Start loading messages and listening when activity becomes visible
         new Thread(() -> {
             try {
@@ -118,13 +121,45 @@ public class ChatRoomActivity extends AppCompatActivity {
 
     private void writeParticipantAndThen(String uid, Runnable onReady) {
         try {
-            DatabaseReference participantsRef = FirebaseDatabase.getInstance()
+            // ✅ Explicitly set database URL to ensure correct connection
+            FirebaseDatabase database = FirebaseDatabase.getInstance("https://onlyfan-f9406-default-rtdb.asia-southeast1.firebasedatabase.app");
+            DatabaseReference participantsRef = database
                     .getReference("Conversations")
                     .child(roomId)
                     .child("participants");
-            participantsRef.child(uid).setValue(true)
+            
+            // ✅ Fix: Lưu customer ID (số) thay vì Firebase UID để backend có thể filter đúng
+            // Backend filter chỉ chấp nhận customer ID (số) hoặc ID ngắn hơn 20 chars
+            // Firebase UID thường dài hơn 20 chars nên bị loại bỏ
+            String participantId = currentUserId != null ? currentUserId : uid;
+            
+            // Nếu currentUserId là null, thử extract từ roomId
+            if (participantId == null || participantId.equals(uid)) {
+                // Room ID format: chatRoom_username_userId
+                // Extract userId từ roomId
+                if (roomId != null && roomId.startsWith("chatRoom_")) {
+                    String[] parts = roomId.split("_");
+                    if (parts.length >= 3) {
+                        participantId = parts[2]; // parts[2] là userId
+                        Log.d(TAG, "Extracted participant ID from roomId: " + participantId);
+                    }
+                }
+            }
+            
+            // Fallback: nếu vẫn không có, dùng uid (Firebase UID)
+            if (participantId == null) {
+                participantId = uid;
+                Log.w(TAG, "Using Firebase UID as participant ID: " + participantId);
+            }
+            
+            // Make variables effectively final for lambda usage
+            final String finalParticipantId = participantId;
+            final String finalUid = uid;
+            final String finalRoomId = roomId;
+
+            participantsRef.child(finalParticipantId).setValue(true)
                     .addOnSuccessListener(r -> {
-                        Log.d(TAG, "Joined participants for room: " + roomId + " as " + uid);
+                        Log.d(TAG, "Joined participants for room: " + finalRoomId + " as " + finalParticipantId + " (Firebase UID: " + finalUid + ")");
                         onReady.run();
                     })
                     .addOnFailureListener(e -> {

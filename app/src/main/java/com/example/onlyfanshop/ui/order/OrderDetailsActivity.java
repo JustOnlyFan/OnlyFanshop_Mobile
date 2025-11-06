@@ -10,9 +10,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.onlyfanshop.R;
-import com.bumptech.glide.load.model.GlideUrl;
-import com.bumptech.glide.load.model.LazyHeaders;
-import android.content.SharedPreferences;
 
 import com.example.onlyfanshop.api.ApiClient;
 import com.example.onlyfanshop.api.OrderApi;
@@ -83,17 +80,6 @@ public class OrderDetailsActivity extends AppCompatActivity {
         loadOrderDetails(orderId);
     }
 
-    private String resolveImageUrl(String raw) {
-        if (raw == null) return null;
-        String u = raw.trim();
-        if (u.isEmpty()) return null;
-        u = u.replace("http://localhost:", "http://10.0.2.2:")
-             .replace("http://127.0.0.1:", "http://10.0.2.2:");
-        if (u.startsWith("http://") || u.startsWith("https://")) return u;
-        if (u.startsWith("/")) return "http://10.0.2.2:8080" + u;
-        return "http://10.0.2.2:8080/" + u;
-    }
-
     private void loadOrderDetails(int orderId) {
         orderApi = ApiClient.getPrivateClient(this).create(OrderApi.class);
         orderApi.getOrderDetails(orderId).enqueue(new Callback<ApiResponse<OrderDetailsDTO>>() {
@@ -125,17 +111,6 @@ public class OrderDetailsActivity extends AppCompatActivity {
             NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
             return nf.format(value);
         }
-    }
-
-    private Object buildGlideModel(String url) {
-        if (url == null) return null;
-        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
-        String token = prefs.getString("jwt_token", null);
-        if (token == null || token.isEmpty()) return url;
-        LazyHeaders headers = new LazyHeaders.Builder()
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
-        return new GlideUrl(url, headers);
     }
 
     private void showOrderDetails(OrderDetailsDTO order) {
@@ -209,10 +184,10 @@ public class OrderDetailsActivity extends AppCompatActivity {
             }
             itemsAdapter.submitList(allItems);
             for (CartItemDTO it : allItems) {
-                double p = it.getPrice() != null ? it.getPrice() : 0d;
-                double q = it.getQuantity() != null ? it.getQuantity() : 0d;
-                computedTotal += p * q;
-                Log.d("OrderDetail", "Sum item price=" + p + " qty=" + q + " -> lineTotal=" + (p*q));
+                double lineTotal = it.getPrice() != null ? it.getPrice() : 0d; // backend sends line total
+                int qty = it.getQuantity() != null ? it.getQuantity() : 0;
+                computedTotal += lineTotal;
+                Log.d("OrderDetail", "Sum item lineTotal=" + lineTotal + " qty=" + qty);
             }
             Log.d("OrderDetail", "Items count: " + allItems.size());
         }

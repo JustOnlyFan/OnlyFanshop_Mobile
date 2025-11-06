@@ -44,9 +44,10 @@ public class OrderProductAdapter extends RecyclerView.Adapter<OrderProductAdapte
         holder.tvProductName.setText(product.getProductName() != null ? product.getProductName() : "");
         holder.tvQuantity.setText("x" + (product.getQuantity() != null ? product.getQuantity() : 0));
         
-        if (product.getPrice() != null && product.getQuantity() != null) {
-            double price = product.getPrice() * product.getQuantity();
-            holder.tvPrice.setText(formatter.format(price));
+        if (product.getPrice() != null) {
+            // API price is line total already
+            double lineTotal = product.getPrice();
+            holder.tvPrice.setText(formatter.format(lineTotal));
         }
 
         if (product.getImageURL() != null && !product.getImageURL().isEmpty()) {
@@ -78,6 +79,8 @@ public class OrderProductAdapter extends RecyclerView.Adapter<OrderProductAdapte
         }
     }
 }
+
+
 
 
 

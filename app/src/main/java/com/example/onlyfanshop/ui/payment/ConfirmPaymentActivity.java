@@ -711,9 +711,12 @@ public class ConfirmPaymentActivity extends AppCompatActivity {
         String deliveryType = (selectedTab == 0) ? "IN_STORE_PICKUP" : "HOME_DELIVERY";
         Integer storeId = null;
         
-        // For now, buyMethod defaults to "ByCart" since it's not passed in intent
-        // This should be updated to pass buyMethod from CartFragment/BuyNowBottomSheet
-        String buyMethod = "ByCart";
+        // Respect buy method from previous screen: "Selected", "ByCart", or "Instant"
+        String buyMethod = getIntent().getStringExtra("buyMethod");
+        if (buyMethod == null || buyMethod.trim().isEmpty() || !"Instant".equalsIgnoreCase(buyMethod)) {
+            // Normalize any non-"Instant" flow to cart-based checkout as required by backend
+            buyMethod = "ByCart";
+        }
         
         PaymentApi api = ApiClient.getPrivateClient(this).create(PaymentApi.class);
         api.createCODOrder(totalPrice, address, buyMethod, recipientPhoneNumber, deliveryType, storeId)

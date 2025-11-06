@@ -20,21 +20,16 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Retrofit client với 2 loại:
  * - Public: không cần token
  * - Private: có chèn token qua AuthInterceptor hoặc setAuthToken(...)
- * <p>
+ *
  * Không phụ thuộc BuildConfig. Dùng setDebugLoggingEnabled(...) để bật tắt logging.
  */
 public final class ApiClient {
-
-    //    private static final boolean IS_EMULATOR = android.os.Build.FINGERPRINT.contains("generic");
-//    private static volatile String BASE_URL = IS_EMULATOR
-//            ? "http://10.0.2.2:8080/"
-//            : "http://192.168.100.47:8080/";
 //
-    private static volatile String BASE_URL = "http://10.0.2.2:8080/";
-//    private static volatile String BASE_URL = "http://10.0.2.2:8080/";
+//   private static volatile String BASE_URL = "http://10.0.2.2:8080/";
 
-    private ApiClient() {
-    }
+    private static volatile String BASE_URL = "https://unspouted-cecila-unanswerably.ngrok-free.dev/";
+
+    private ApiClient() {}
 
     private static volatile Retrofit retrofitPublic;
     private static volatile Retrofit retrofitPrivate;
@@ -155,7 +150,8 @@ public final class ApiClient {
         b.addInterceptor(chain -> {
             Request original = chain.request();
             Request.Builder builder = original.newBuilder()
-                    .header("Accept", "application/json");
+                    .header("Accept", "application/json")
+                    .header("ngrok-skip-browser-warning", "true"); // ✅ Thêm header để bypass ngrok browser warning
             // Chỉ set Content-Type cho request có body
             String method = original.method();
             if ("POST".equalsIgnoreCase(method)
