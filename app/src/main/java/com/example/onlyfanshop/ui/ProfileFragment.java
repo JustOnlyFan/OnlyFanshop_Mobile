@@ -76,7 +76,6 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         initViews(view);
         setupClickListeners();
-        loadOrderStatusCount();
         // Áp dụng padding đáy động theo system insets + chiều cao BottomNavigationView
         applySystemInsetsPadding(view);
         
@@ -96,11 +95,22 @@ public class ProfileFragment extends Fragment {
             SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
             String username = prefs.getString("username", "Guest");
             String email = prefs.getString("email", "");
+            String role = prefs.getString("role", "USER");
             tvProfileName.setText(username);
             tvProfileEmail.setText(email);
 
             // 2. CALL API TO UPDATE LATEST INFORMATION
-            fetchUser();
+            if ("ADMIN".equalsIgnoreCase(role)) {
+                // Admin role: skip endpoints that return 403 on user path; hide order badges
+                tvBadgePending.setVisibility(View.GONE);
+                tvBadgeShipping.setVisibility(View.GONE);
+                tvBadgeDelivered.setVisibility(View.GONE);
+                if (btnChatWithAdmin != null) btnChatWithAdmin.setVisibility(View.GONE);
+            } else {
+                loadOrderStatusCount();
+                fetchUser();
+                if (btnChatWithAdmin != null) btnChatWithAdmin.setVisibility(View.VISIBLE);
+            }
         }
 
         return view;
@@ -113,6 +123,7 @@ public class ProfileFragment extends Fragment {
         // Ẩn các phần cần login
         View btnLogout = view.findViewById(R.id.btnLogout);
         if (btnLogout != null) btnLogout.setVisibility(View.GONE);
+        if (btnChatWithAdmin != null) btnChatWithAdmin.setVisibility(View.GONE);
         
         // Load PleaseSignInFragment vào container
         if (getChildFragmentManager().findFragmentByTag("PLEASE_SIGN_IN") == null) {
@@ -229,6 +240,11 @@ public class ProfileFragment extends Fragment {
                     }
                 } else if (response.code() == 401) {
                     Toast.makeText(requireContext(), "Session expired. Please login again.", Toast.LENGTH_LONG).show();
+                } else if (response.code() == 403) {
+                    // Fallback for ADMIN role where /users/getUser may be forbidden
+                    SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+                    tvProfileName.setText(prefs.getString("username", "Admin"));
+                    tvProfileEmail.setText(prefs.getString("email", ""));
                 } else {
                     Toast.makeText(requireContext(), "Error: " + response.code(), Toast.LENGTH_SHORT).show();
                 }

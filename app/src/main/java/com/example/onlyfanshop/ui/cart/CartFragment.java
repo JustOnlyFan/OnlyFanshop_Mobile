@@ -152,10 +152,54 @@ public class CartFragment extends Fragment {
     }
 
     private void confirmCheckout() {
+        // Build an instant cart with ONLY the selected items, then checkout with buyMethod="Instant"
+        List<CartItemDTO> selected = new ArrayList<>();
+        for (CartItemDTO item : cartItems) {
+            if (item.isChecked()) selected.add(item);
+        }
+        if (selected.isEmpty()) return;
+
+        // Clear previous instant cart then add selected items
+        android.content.SharedPreferences sp = requireContext().getSharedPreferences("MyAppPrefs", android.content.Context.MODE_PRIVATE);
+        int userId = sp.getInt("userId", 0);
+        String username = sp.getString("username", "");
+        CartItemApi api = ApiClient.getPrivateClient(requireContext()).create(CartItemApi.class);
+
+        api.deleteInstantCart(userId).enqueue(new Callback<ApiResponse<Void>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> response) {
+                // Add each selected item to instant cart
+                final int[] pending = {selected.size()};
+                for (CartItemDTO it : selected) {
+                    com.example.onlyfanshop.model.Request.AddToCartRequest req = new com.example.onlyfanshop.model.Request.AddToCartRequest(
+                            it.getProductDTO().getProductID(),
+                            it.getQuantity(),
+                            username
+                    );
+                    api.instantBuy(req).enqueue(new Callback<ApiResponse<Void>>() {
+                        @Override public void onResponse(Call<ApiResponse<Void>> call, Response<ApiResponse<Void>> resp) {
+                            if (--pending[0] == 0) startConfirm(selected);
+                        }
+                        @Override public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                            if (--pending[0] == 0) startConfirm(selected);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Void>> call, Throwable t) {
+                // Fallback: proceed with cart method
+                startConfirm(selected);
+            }
+        });
+    }
+
+    private void startConfirm(List<CartItemDTO> selected){
         Intent intent = new Intent(requireContext(), ConfirmPaymentActivity.class);
         intent.putExtra("totalPrice", totalPrice);
-        intent.putExtra("cartItems", (Serializable) cartItems);
-        intent.putExtra("buyMethod", "ByCart");
+        intent.putExtra("cartItems", (Serializable) selected);
+        intent.putExtra("buyMethod", "Instant");
         startActivity(intent);
     }
     private void clear(String username){

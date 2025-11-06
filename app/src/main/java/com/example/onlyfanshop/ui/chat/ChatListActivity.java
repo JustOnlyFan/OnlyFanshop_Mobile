@@ -64,6 +64,8 @@ public class ChatListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        // ✅ Ensure Firebase authentication before loading chat rooms
+        com.example.onlyfanshop.service.FirebaseAuthManager.ensureSignedIn(this);
         loadChatRooms();
     }
 

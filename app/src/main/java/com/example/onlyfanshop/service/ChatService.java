@@ -17,6 +17,7 @@ import com.google.firebase.database.DatabaseError;
 
 import android.content.Context;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -82,12 +83,19 @@ public class ChatService {
     }
 
     public void getMessagesForRoom(String roomId, MessagesCallback callback) {
+        Log.d(TAG, "Getting messages for room: " + roomId);
         chatApi.getMessagesForRoom(roomId).enqueue(new Callback<ApiResponse<List<ChatMessage>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<ChatMessage>>> call, Response<ApiResponse<List<ChatMessage>>> response) {
+                Log.d(TAG, "Response code: " + response.code() + ", isSuccessful: " + response.isSuccessful());
                 if (response.isSuccessful() && response.body() != null) {
+                    Log.d(TAG, "Response statusCode: " + response.body().getStatusCode() + ", message: " + response.body().getMessage());
                     if (response.body().getStatusCode() == 200) {
                         List<ChatMessage> messages = response.body().getData();
+                        Log.d(TAG, "Received " + (messages != null ? messages.size() : 0) + " messages from API");
+                        if (messages == null) {
+                            messages = new ArrayList<>();
+                        }
                         // Set isMe flag based on current user
                         String currentUserId = AppPreferences.getUserId(context);
                         Log.d(TAG, "Current User ID: " + currentUserId);
@@ -98,10 +106,20 @@ public class ChatService {
                         }
                         callback.onSuccess(messages);
                     } else {
+                        Log.e(TAG, "API returned error: " + response.body().getMessage());
                         callback.onError(response.body().getMessage());
                     }
                 } else {
-                    callback.onError("Failed to get messages");
+                    String errorMsg = "Failed to get messages. Response code: " + response.code();
+                    if (response.errorBody() != null) {
+                        try {
+                            errorMsg += ", Error body: " + response.errorBody().string();
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error reading error body", e);
+                        }
+                    }
+                    Log.e(TAG, errorMsg);
+                    callback.onError(errorMsg);
                 }
             }
 
@@ -212,10 +230,12 @@ public class ChatService {
     public void listenForNewMessages(String roomId, OnNewMessageListener listener) {
         // ✅ Initialize Firebase immediately for real-time updates
         try {
-            DatabaseReference messagesRef = FirebaseDatabase.getInstance()
-                    .getReference("ChatRooms")
-                    .child(roomId)
-                    .child("messages");
+            // ✅ Fix: Sử dụng đúng path Messages/{roomId} thay vì ChatRooms/{roomId}/messages
+            // ✅ Explicitly set database URL to ensure correct connection
+            FirebaseDatabase database = FirebaseDatabase.getInstance("https://onlyfan-f9406-default-rtdb.asia-southeast1.firebasedatabase.app");
+            DatabaseReference messagesRef = database
+                    .getReference("Messages")
+                    .child(roomId);
     
             // ✅ Use ValueEventListener for real-time updates
             messagesRef.addValueEventListener(new ValueEventListener() {
@@ -295,10 +315,12 @@ public class ChatService {
         // ✅ Initialize Firebase in background thread to prevent ANR
         new Thread(() -> {
             try {
-                DatabaseReference messagesRef = FirebaseDatabase.getInstance()
-                        .getReference("ChatRooms")
-                        .child(roomId)
-                        .child("messages");
+                // ✅ Fix: Sử dụng đúng path Messages/{roomId} thay vì ChatRooms/{roomId}/messages
+                // ✅ Explicitly set database URL to ensure correct connection
+                FirebaseDatabase database = FirebaseDatabase.getInstance("https://onlyfan-f9406-default-rtdb.asia-southeast1.firebasedatabase.app");
+                DatabaseReference messagesRef = database
+                        .getReference("Messages")
+                        .child(roomId);
         
                 messagesRef.addChildEventListener(new com.google.firebase.database.ChildEventListener() {
                     @Override

@@ -48,11 +48,13 @@ public class OrderItemsAdapter extends RecyclerView.Adapter<OrderItemsAdapter.VH
 
         h.tvProductName.setText(p != null ? p.getProductName() : "");
         int qty = it.getQuantity() != null ? it.getQuantity() : 0;
-        double unit = it.getPrice() != null ? it.getPrice() : 0d;
-        double line = unit * qty;
+        // API provides price as line total; derive unit price for display
+        double line = it.getPrice() != null ? it.getPrice() : 0d;
+        double unit = qty > 0 ? (line / qty) : line;
         h.tvQuantity.setText("x" + qty);
+        // Keep only one price visible (requested to remove red one)
         h.tvUnitPrice.setText(formatCurrency(unit));
-        h.tvLineTotal.setText(formatCurrency(line));
+        h.tvLineTotal.setVisibility(View.GONE);
 
         String url = p != null ? resolveImageUrl(p.getImageURL()) : null;
         Object model = buildGlideModel(ctx, url);
@@ -108,6 +110,8 @@ public class OrderItemsAdapter extends RecyclerView.Adapter<OrderItemsAdapter.VH
         return NumberFormat.getCurrencyInstance(new Locale("vi","VN")).format(v);
     }
 }
+
+
 
 
 
