@@ -42,14 +42,12 @@ import com.example.onlyfanshop.map.shop.ShopUiMapper;
 import com.example.onlyfanshop.model.Attraction;
 import com.example.onlyfanshop.map.shop.AttractionCarouselController;
 import com.example.onlyfanshop.map.shop.DatabaseShopDataSource;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import android.location.Location;
+
 import androidx.core.app.ActivityCompat;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
-import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;

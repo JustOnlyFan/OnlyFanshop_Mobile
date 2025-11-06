@@ -2,8 +2,6 @@ package com.example.onlyfanshop.model;
 
 import com.example.onlyfanshop.model.response.CartDTO;
 
-import java.util.List;
-
 public class OrderDetailsDTO {
     private Integer orderID;
     private String paymentMethod;

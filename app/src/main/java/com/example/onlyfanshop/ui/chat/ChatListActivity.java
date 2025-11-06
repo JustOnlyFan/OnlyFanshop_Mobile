@@ -24,7 +24,6 @@ import com.example.onlyfanshop.api.ChatApi;
 import com.example.onlyfanshop.model.chat.ChatRoom;
 import com.example.onlyfanshop.service.ChatService;
 import com.example.onlyfanshop.service.RealtimeChatService;
-import com.example.onlyfanshop.utils.AppPreferences;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -12,10 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.model.chat.ChatRoom;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class ChatRoomAdapter extends RecyclerView.Adapter<ChatRoomAdapter.ChatRoomViewHolder> {
 

@@ -9,8 +9,6 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 
-import java.io.File;
-
 public class FileUtils {
 
     public static String getPath(Context context, Uri uri) throws Exception {

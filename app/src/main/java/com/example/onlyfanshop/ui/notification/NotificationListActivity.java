@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,7 +20,6 @@ import com.example.onlyfanshop.api.NotificationApi;
 import com.example.onlyfanshop.model.NotificationDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
 import com.example.onlyfanshop.ui.login.LoginActivity;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;

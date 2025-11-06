@@ -1,7 +1,5 @@
 package com.example.onlyfanshop.api;
 
-import android.app.Notification;
-
 import com.example.onlyfanshop.model.NotificationDTO;
 import com.example.onlyfanshop.model.response.ApiResponse;
 

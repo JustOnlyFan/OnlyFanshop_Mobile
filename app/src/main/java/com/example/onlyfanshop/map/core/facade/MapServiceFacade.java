@@ -1,7 +1,5 @@
 package com.example.onlyfanshop.map.core.facade;
 
-import static com.example.onlyfanshop.map.config.MapConfig.GeocodingPrimary.CHAINED;
-
 import com.example.onlyfanshop.map.config.MapConfig;
 import com.example.onlyfanshop.map.core.interfaces.AutocompleteProvider;
 import com.example.onlyfanshop.map.core.interfaces.GeocodingProvider;
