@@ -56,7 +56,8 @@
                 android:text="Liên lạc"
                 android:textColor="@color/grey"
                 android:textSize="14sp"
-                android:fontFamily="sans-serif" />
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-black" />
 
             <TextView
                 android:id="@+id/tvStoreHours"
@@ -66,7 +67,8 @@
                 android:text="Giờ"
                 android:textColor="@color/grey"
                 android:textSize="14sp"
-                android:fontFamily="sans-serif" />
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-black" />
         </LinearLayout>
 
         <LinearLayout

@@ -61,16 +61,20 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewholder
             holder.binding.numberItem.setText(item.getQuantity()+"");
             holder.binding.totalEach.setText(formatCurrencyVND(item.getPrice()));
         if (item.getProductDTO().getImageURL() != null && !item.getProductDTO().getImageURL().isEmpty()) {
-            // Tối ưu: thumbnail để load nhanh hơn
+            // Tối ưu: thumbnail để load nhanh hơn, disk cache để load lại nhanh
             Glide.with(holder.itemView.getContext())
                     .load(item.getProductDTO().getImageURL())
                     .thumbnail(Glide.with(holder.itemView.getContext())
                             .load(item.getProductDTO().getImageURL())
                             .override(80, 80)) // Load thumbnail nhỏ trước
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.AUTOMATIC)
                     .placeholder(R.drawable.ic_launcher_foreground)
                     .error(R.drawable.ic_launcher_foreground)
                     .centerCrop()
                     .into(holder.binding.pic);
+        } else {
+            Glide.with(holder.itemView.getContext()).clear(holder.binding.pic);
+            holder.binding.pic.setImageResource(R.drawable.ic_launcher_foreground);
         }
         if(!cartView){
             holder.binding.addQuantity.setVisibility(View.GONE);

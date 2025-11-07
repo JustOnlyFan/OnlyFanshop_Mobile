@@ -6,9 +6,12 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
@@ -18,17 +21,15 @@ import com.example.onlyfanshop.databinding.ViewholderPopularBinding;
 import com.example.onlyfanshop.model.ProductDTO;
 
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
+public class PopularAdapter extends ListAdapter<ProductDTO, PopularAdapter.VH> {
 
     public interface OnItemClick {
         void onClick(@NonNull ProductDTO item);
     }
 
-    private final List<ProductDTO> items = new ArrayList<>();
     private final OnItemClick onItemClick;
     private Context context;
 
@@ -41,14 +42,46 @@ public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
     private static final String DEFAULT_LOCATION = "Vietnam";
     private static final String DEFAULT_SOLD = "Sold 0";
 
+    // Glide RequestOptions được cache
+    private static final RequestOptions GLIDE_OPTIONS = new RequestOptions()
+            .transform(new CenterCrop())
+            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+            .skipMemoryCache(false);
+
+    // DiffUtil callback để so sánh items hiệu quả
+    private static final DiffUtil.ItemCallback<ProductDTO> DIFF_CALLBACK = new DiffUtil.ItemCallback<ProductDTO>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull ProductDTO oldItem, @NonNull ProductDTO newItem) {
+            return oldItem.getProductID() != null && 
+                   newItem.getProductID() != null && 
+                   oldItem.getProductID().equals(newItem.getProductID());
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull ProductDTO oldItem, @NonNull ProductDTO newItem) {
+            return oldItem.getProductName() != null && 
+                   oldItem.getProductName().equals(newItem.getProductName()) &&
+                   oldItem.getPrice() != null && 
+                   oldItem.getPrice().equals(newItem.getPrice()) &&
+                   (oldItem.getImageURL() != null ? oldItem.getImageURL().equals(newItem.getImageURL()) : newItem.getImageURL() == null);
+        }
+    };
+
     public PopularAdapter(@NonNull OnItemClick onItemClick) {
+        super(DIFF_CALLBACK);
         this.onItemClick = onItemClick;
+        setHasStableIds(true);
     }
 
+    @Override
+    public long getItemId(int position) {
+        ProductDTO item = getItem(position);
+        return item != null && item.getProductID() != null ? item.getProductID().longValue() : position;
+    }
+
+    // Giữ lại method này cho backward compatibility
     public void submitList(List<ProductDTO> data) {
-        items.clear();
-        if (data != null) items.addAll(data);
-        notifyDataSetChanged();
+        super.submitList(data);
     }
 
     @NonNull
@@ -63,7 +96,8 @@ public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
-        ProductDTO p = items.get(position);
+        ProductDTO p = getItem(position);
+        if (p == null) return;
 
         // Bind text
         h.b.textTitle.setText(p.getProductName() != null ? p.getProductName() : "");
@@ -79,22 +113,21 @@ public class PopularAdapter extends RecyclerView.Adapter<PopularAdapter.VH> {
         }
 
         // Tối ưu: thumbnail để load nhanh hơn, placeholder để UX tốt hơn
-        Glide.with(h.b.imageProduct.getContext())
-                .load(model)
-                .thumbnail(Glide.with(h.b.imageProduct.getContext())
-                        .load(model)
-                        .override(100, 100)) // Load thumbnail nhỏ trước
-                .apply(new RequestOptions().transform(new CenterCrop()))
-                .placeholder(R.drawable.ic_launcher_foreground)
-                .error(R.drawable.ic_launcher_foreground)
-                .into(h.b.imageProduct);
+        if (url != null && !url.isEmpty()) {
+            Glide.with(h.b.imageProduct.getContext())
+                    .load(model)
+                    .thumbnail(Glide.with(h.b.imageProduct.getContext())
+                            .load(model)
+                            .override(100, 100)) // Load thumbnail nhỏ trước
+                    .apply(GLIDE_OPTIONS.placeholder(R.drawable.ic_launcher_foreground)
+                            .error(R.drawable.ic_launcher_foreground))
+                    .into(h.b.imageProduct);
+        } else {
+            Glide.with(h.b.imageProduct.getContext()).clear(h.b.imageProduct);
+            h.b.imageProduct.setImageResource(R.drawable.ic_launcher_foreground);
+        }
 
         h.itemView.setOnClickListener(v -> onItemClick.onClick(p));
-    }
-
-    @Override
-    public int getItemCount() {
-        return items.size();
     }
 
     static class VH extends RecyclerView.ViewHolder {

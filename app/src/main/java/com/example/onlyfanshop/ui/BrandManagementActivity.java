@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.onlyfanshop.R;
@@ -67,12 +68,17 @@ public class BrandManagementActivity extends AppCompatActivity {
             }
         });
         getBrands();
+        
+        // Setup Toolbar
+        Toolbar toolbar = binding.toolbar;
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationOnClickListener(v -> finish());
+        
         binding.addBrand.setOnClickListener(v->{
             binding.addBrandLayout.setVisibility(View.VISIBLE);
         });
         binding.btnConfirmAdd.setOnClickListener(v->confirmAdd());
         binding.btnChooseImage.setOnClickListener(v -> chooseImage());
-        binding.back.setOnClickListener(v->finish());
 
     }
 

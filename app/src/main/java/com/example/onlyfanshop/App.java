@@ -16,11 +16,11 @@ public class App extends Application {
 	public void onCreate() {
 		super.onCreate();
 		
-		// Tác vụ nhẹ: set locale ngay (cần thiết cho UI)
+		// Tối ưu: set locale ngay (cần thiết cho UI)
 		LocaleUtil.setAppLocaleVi(this);
 		
-		// Tác vụ nặng: di chuyển sang background thread
-		backgroundExecutor = Executors.newSingleThreadExecutor();
+		// Tối ưu: dùng thread pool thay vì single thread để xử lý nhiều tasks song song
+		backgroundExecutor = Executors.newFixedThreadPool(2);
 		backgroundExecutor.execute(() -> {
 			// Firebase initialization có thể tốn thời gian - chạy trên background
 			FirebaseAuthManager.ensureSignedIn(this);
@@ -33,6 +33,22 @@ public class App extends Application {
 		// Giải phóng executor khi app terminate
 		if (backgroundExecutor != null) {
 			backgroundExecutor.shutdown();
+		}
+	}
+
+	@Override
+	public void onLowMemory() {
+		super.onLowMemory();
+		// Clear Glide cache khi memory thấp
+		com.bumptech.glide.Glide.get(this).clearMemory();
+	}
+
+	@Override
+	public void onTrimMemory(int level) {
+		super.onTrimMemory(level);
+		// Trim Glide cache dựa trên memory pressure
+		if (level >= TRIM_MEMORY_MODERATE) {
+			com.bumptech.glide.Glide.get(this).clearMemory();
 		}
 	}
 }

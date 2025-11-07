@@ -1,6 +1,10 @@
 package com.example.onlyfanshop.adapter;
 
+import android.graphics.Typeface;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
 import com.example.onlyfanshop.R;
 import com.example.onlyfanshop.model.StoreLocation;
 
@@ -94,21 +97,53 @@ public class StoreLocationAdapter extends RecyclerView.Adapter<StoreLocationAdap
         public void bind(StoreLocation store, OnStoreActionListener listener) {
             tvStoreName.setText(store.getName());
             tvStoreAddress.setText(store.getAddress() != null ? store.getAddress() : "No address");
-            tvStorePhone.setText(!TextUtils.isEmpty(store.getPhone()) ? "📞 " + store.getPhone() : "No phone");
-            tvStoreHours.setText(!TextUtils.isEmpty(store.getOpeningHours()) ? "🕒 " + store.getOpeningHours() : "Hours not set");
+            
+            // Set phone number with extra bold style
+            if (!TextUtils.isEmpty(store.getPhone())) {
+                String phoneText = "📞 " + store.getPhone();
+                SpannableString phoneSpannable = new SpannableString(phoneText);
+                // Make the phone number part extra bold (skip emoji and space)
+                int phoneStart = phoneText.indexOf(" ") + 1; // After emoji and space
+                if (phoneStart > 0 && phoneStart < phoneText.length()) {
+                    phoneSpannable.setSpan(new StyleSpan(Typeface.BOLD), phoneStart, phoneText.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+                tvStorePhone.setText(phoneSpannable);
+                // Set extra bold typeface for the entire TextView
+                tvStorePhone.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+            } else {
+                tvStorePhone.setText("No phone");
+            }
+            
+            // Set opening hours with extra bold style
+            if (!TextUtils.isEmpty(store.getOpeningHours())) {
+                String hoursText = "🕒 " + store.getOpeningHours();
+                SpannableString hoursSpannable = new SpannableString(hoursText);
+                // Make the opening hours part extra bold (skip emoji and space)
+                int hoursStart = hoursText.indexOf(" ") + 1; // After emoji and space
+                if (hoursStart > 0 && hoursStart < hoursText.length()) {
+                    hoursSpannable.setSpan(new StyleSpan(Typeface.BOLD), hoursStart, hoursText.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+                tvStoreHours.setText(hoursSpannable);
+                // Set extra bold typeface for the entire TextView
+                tvStoreHours.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+            } else {
+                tvStoreHours.setText("Hours not set");
+            }
 
-            RequestOptions imgOptions = new RequestOptions()
-                    .centerCrop()
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_foreground)
-                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC);
-
+            // Static RequestOptions để tránh tạo mới mỗi lần bind
             if (!TextUtils.isEmpty(store.getImageUrl())) {
                 Glide.with(ivStoreImage.getContext())
                         .load(store.getImageUrl())
-                        .apply(imgOptions)
+                        .centerCrop()
+                        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                        .placeholder(R.drawable.ic_launcher_foreground)
+                        .error(R.drawable.ic_launcher_foreground)
+                        .thumbnail(Glide.with(ivStoreImage.getContext())
+                                .load(store.getImageUrl())
+                                .override(100, 100))
                         .into(ivStoreImage);
             } else {
+                Glide.with(ivStoreImage.getContext()).clear(ivStoreImage);
                 ivStoreImage.setImageResource(R.drawable.ic_launcher_foreground);
             }
 

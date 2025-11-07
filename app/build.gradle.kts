@@ -44,8 +44,8 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     implementation("com.github.bumptech.glide:glide:5.0.5")
-    implementation(libs.firebase.messaging)
     annotationProcessor("com.github.bumptech.glide:compiler:5.0.5")
+    implementation(libs.firebase.messaging)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -54,8 +54,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation("com.github.bumptech.glide:glide:5.0.5")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     
     // Firebase dependencies
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
@@ -75,11 +73,9 @@ dependencies {
     implementation("androidx.activity:activity:1.8.2")
 
     implementation("androidx.multidex:multidex:2.0.1")
-    implementation("com.github.bumptech.glide:glide:5.0.5")
     implementation("com.google.code.gson:gson:2.13.2")
     implementation("com.github.ismaeldivita:chip-navigation-bar:1.3.4")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:5.0.5")
 
     // Nếu bạn đang dùng version catalog cho viewpager2
     // Hãy chắc chắn trong libs.versions.toml đã khai báo. Nếu chưa, thay bằng:

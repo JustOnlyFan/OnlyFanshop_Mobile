@@ -60,11 +60,16 @@ public class BannerAdapter extends RecyclerView.Adapter<BannerAdapter.BannerView
             imageView = itemView.findViewById(R.id.imageSlider);
         }
         public void bind(BannerModel item) {
+            // Tối ưu banner loading với cache và thumbnail
             Glide.with(itemView.getContext())
                     .load(item.getUrl())
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.AUTOMATIC)
                     .placeholder(R.drawable.ic_launcher_foreground)
                     .error(R.drawable.ic_launcher_foreground)
                     .centerCrop()
+                    .thumbnail(Glide.with(itemView.getContext())
+                            .load(item.getUrl())
+                            .override(200, 200))
                     .into(imageView);
         }
     }
