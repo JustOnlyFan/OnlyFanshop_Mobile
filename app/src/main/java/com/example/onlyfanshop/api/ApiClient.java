@@ -25,9 +25,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public final class ApiClient {
 //
-//   private static volatile String BASE_URL = "http://10.0.2.2:8080/";
+   private static volatile String BASE_URL = "http://10.0.2.2:8080/";
 
-    private static volatile String BASE_URL = "https://unspouted-cecila-unanswerably.ngrok-free.dev/";
+//    private static volatile String BASE_URL = "https://unspouted-cecila-unanswerably.ngrok-free.dev/";
 
     private ApiClient() {}
 
