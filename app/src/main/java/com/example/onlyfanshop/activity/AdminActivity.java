@@ -44,8 +44,6 @@ public class AdminActivity extends AppCompatActivity {
 
             if (id == R.id.nav_manager) {
                 selectedFragment = new ManagerFragment();
-            } else if (id == R.id.nav_store) {
-                selectedFragment = new StoreFragment();
             } else if (id == R.id.nav_order) {
                 selectedFragment = new OrderFragment();
             } else if (id == R.id.nav_profile) {
@@ -84,9 +82,8 @@ public class AdminActivity extends AppCompatActivity {
     
     private int getFragmentPosition(int itemId) {
         if (itemId == R.id.nav_manager) return 0;
-        if (itemId == R.id.nav_store) return 1;
-        if (itemId == R.id.nav_order) return 2;
-        if (itemId == R.id.nav_profile) return 3;
+        if (itemId == R.id.nav_order) return 1;
+        if (itemId == R.id.nav_profile) return 2;
         return 0;
 
     }
