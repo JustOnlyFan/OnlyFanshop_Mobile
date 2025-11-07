@@ -10,16 +10,33 @@
     app:cardElevation="1dp"
     app:cardBackgroundColor="@color/white">
 
-    <ImageView
-        android:id="@+id/imgLogo"
+    <!-- Chồng ImageView và TextView để ô cuối hiển thị chữ "Xem tất cả" -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_launcher_foreground"
-        android:contentDescription="logo"
-        android:background="@drawable/stroke_bg"
-        android:padding="5dp"/>
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/imgLogo"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_launcher_foreground"
+            android:contentDescription="logo"
+            android:background="@drawable/stroke_bg"
+            android:padding="5dp" />
+
+        <TextView
+            android:id="@+id/tvSeeAll"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center"
+            android:text="Xem tất cả"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:background="@drawable/stroke_bg"
+            android:padding="5dp"
+            android:visibility="gone" />
+    </FrameLayout>
 
 </androidx.cardview.widget.CardView>
-
-

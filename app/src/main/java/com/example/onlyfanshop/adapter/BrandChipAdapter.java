@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,27 +43,26 @@ public class BrandChipAdapter extends RecyclerView.Adapter<BrandChipAdapter.VH> 
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
-        // Set marginStart: item đầu tiên = 16dp để thẳng với title, các item khác = 4dp
+        // Set marginStart
         ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) h.itemView.getLayoutParams();
         if (params != null) {
-            int marginStart = position == 0 ? 16 : 4; // 16dp cho item đầu, 4dp cho các item khác
-            int marginEnd = 4; // Giữ marginEnd = 4dp
+            int marginStart = position == 0 ? 16 : 4; // dp
+            int marginEnd = 4; // dp
+            float density = h.itemView.getContext().getResources().getDisplayMetrics().density;
             params.setMargins(
-                (int) (marginStart * h.itemView.getContext().getResources().getDisplayMetrics().density),
-                params.topMargin,
-                (int) (marginEnd * h.itemView.getContext().getResources().getDisplayMetrics().density),
-                params.bottomMargin
+                    (int) (marginStart * density),
+                    params.topMargin,
+                    (int) (marginEnd * density),
+                    params.bottomMargin
             );
             h.itemView.setLayoutParams(params);
         }
-        
-        // Set width đều nhau cho 4 button (mỗi button = recycler width / 4)
+
+        // Width chia đều 4 ô
         h.itemView.post(() -> {
             RecyclerView rv = recyclerView != null ? recyclerView : findRecyclerView(h.itemView);
             if (rv != null && rv.getWidth() > 0) {
                 int recyclerWidth = rv.getWidth();
-                // Item đầu: 16dp marginStart, các item khác: 4dp marginStart, tất cả: 4dp marginEnd, paddingEnd: 16dp
-                // Total: 16 (item đầu) + 12 (3 items * 4dp) + 16 (4 items * 4dp marginEnd) + 16 (paddingEnd) = 60dp
                 float density = h.itemView.getContext().getResources().getDisplayMetrics().density;
                 int totalMargin = (int) (16 * density) + (int) (3 * 4 * density) + (int) (4 * 4 * density) + (int) (16 * density);
                 int itemWidth = (recyclerWidth - totalMargin) / 4;
@@ -74,19 +74,20 @@ public class BrandChipAdapter extends RecyclerView.Adapter<BrandChipAdapter.VH> 
             }
         });
 
-        int maxDisplay = 3; // Chỉ hiển thị 3 brand đầu
-        if (position < maxDisplay && position < brands.size()) {
+        int maxDisplay = 3;
+        boolean isBrandItem = position < maxDisplay && position < brands.size();
+
+        if (isBrandItem) {
             BrandDTO b = brands.get(position);
-            
-            // Load logo - đảm bảo luôn hiển thị logo
+
+            // Hiện logo, ẩn "Xem tất cả"
             h.logo.setVisibility(View.VISIBLE);
+            h.seeAll.setVisibility(View.GONE);
+
             String imageUrl = b.getImageURL();
-            
-            // Debug: log để kiểm tra imageURL
             android.util.Log.d("BrandChip", "Brand: " + b.getName() + ", ImageURL: " + imageUrl);
-            
+
             if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-                // Có imageURL - load từ URL
                 Glide.with(h.logo.getContext())
                         .load(imageUrl.trim())
                         .placeholder(R.drawable.ic_launcher_foreground)
@@ -94,29 +95,28 @@ public class BrandChipAdapter extends RecyclerView.Adapter<BrandChipAdapter.VH> 
                         .fitCenter()
                         .into(h.logo);
             } else {
-                // Không có imageURL - hiển thị placeholder
                 h.logo.setImageResource(R.drawable.ic_launcher_foreground);
-                h.logo.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+                h.logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
             }
+
             h.itemView.setOnClickListener(v -> {
                 if (listener != null) listener.onBrandSelected(b.getBrandID());
             });
         } else {
-            // See all item (ô cuối cùng) - hiển thị icon mũi tên hoặc grid
-            h.logo.setVisibility(View.VISIBLE);
-            // Có thể dùng icon đặc biệt cho "Xem hết" - tạm thời dùng placeholder
-            h.logo.setImageResource(R.drawable.ic_launcher_foreground);
-            h.logo.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
-            h.itemView.setOnClickListener(v -> { 
-                if (listener != null) listener.onSeeAll(); 
+            // Ô "Xem tất cả"
+            h.logo.setVisibility(View.GONE);
+            h.seeAll.setVisibility(View.VISIBLE);
+            h.seeAll.setText("Xem tất cả");
+
+            h.itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onSeeAll();
             });
         }
     }
 
     @Override
     public int getItemCount() {
-        // Tối đa 3 brand + 1 ô "Xem tất cả" = 4 ô
-        return Math.min(brands.size(), 3) + 1;
+        return Math.min(brands.size(), 3) + 1; // 3 brand + 1 "Xem tất cả"
     }
 
     private RecyclerView findRecyclerView(View view) {
@@ -132,11 +132,11 @@ public class BrandChipAdapter extends RecyclerView.Adapter<BrandChipAdapter.VH> 
 
     static class VH extends RecyclerView.ViewHolder {
         ImageView logo;
+        TextView seeAll;
         VH(@NonNull View itemView) {
             super(itemView);
             logo = itemView.findViewById(R.id.imgLogo);
+            seeAll = itemView.findViewById(R.id.tvSeeAll);
         }
     }
 }
-
-
