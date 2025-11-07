@@ -6,10 +6,6 @@
         android:title="Quản lí" />
 
     <item
-        android:id="@+id/nav_store"
-        android:icon="@drawable/ic_search"
-        android:title="Cửa hàng" />
-    <item
         android:id="@+id/nav_order"
         android:icon="@drawable/ic_empty_list"
         android:title="Đơn hàng" />

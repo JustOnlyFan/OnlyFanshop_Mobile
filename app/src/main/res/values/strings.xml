@@ -16,7 +16,7 @@
     <string name="cart">Giỏ hàng</string>
     <string name="product">Quạt</string>
     <string name="home">Trang chủ</string>
-    <string name="admin_uid">admin_uid</string>
+    <string name="admin_uid" translatable="false">admin_uid</string>
     <string name="sold_format">Sold %1$d</string>
     <string name="search">Tìm kiếm</string>
     <string name="see_all">Xem hết</string>

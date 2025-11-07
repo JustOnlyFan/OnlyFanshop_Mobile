@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+    id("com.google.firebase.appdistribution")
 }
 
 android {
@@ -38,6 +39,22 @@ android {
         viewBinding = true
     }
 
+}
+
+// Firebase App Distribution configuration
+firebaseAppDistribution {
+    appId = "1:328191492825:android:e70c33e77d82eaee2374c8" // From google-services.json
+    // Optional: Configure release notes
+    // releaseNotes = "New version with bug fixes and improvements"
+    
+    // Optional: Specify testers (comma-separated emails)
+    // testers = "tester1@example.com,tester2@example.com"
+    
+    // Optional: Specify tester groups
+    // groups = "qa-team,beta-testers"
+    
+    // Optional: Configure for different build types
+    // For release builds, you can set specific configurations
 }
 
 dependencies {

@@ -31,3 +31,4 @@ public class DiffUtilCallback extends DiffUtil.ItemCallback<ProductDTO> {
                (oldItem.getImageURL() != null ? oldItem.getImageURL().equals(newItem.getImageURL()) : newItem.getImageURL() == null);
     }
 }
+

@@ -516,7 +516,7 @@ public class HomeFragment extends Fragment {
     private void fetchUserName() {
         String token = ApiClient.getToken(requireContext());
         if (token == null || token.trim().isEmpty()) {
-            tvUserName.setText("Sign in");
+            tvUserName.setText("Đăng nhập");
             return;
         }
         ProfileApi profileApi = ApiClient.getPrivateClient(requireContext()).create(ProfileApi.class);
