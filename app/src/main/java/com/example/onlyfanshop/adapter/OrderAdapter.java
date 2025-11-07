@@ -144,7 +144,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
                 v.postDelayed(() -> v.setClickable(true), 200);
             });
             
-            // Make dropdown clickable but don't propagate to item
+            // Make dropdown clickable - Android will prevent parent click when child has click listener
             holder.layoutDropdownButton.setClickable(true);
             holder.layoutDropdownButton.setFocusable(true);
         } else {
@@ -166,19 +166,11 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             }
         };
 
-        // Make card clickable, but if dropdown exists, only clickable outside dropdown area
-        if (holder.layoutDropdownButton != null && holder.layoutDropdownButton.getVisibility() == View.VISIBLE) {
-            // Set click on individual views instead of whole item
-            holder.imgProduct.setOnClickListener(openOrderDetailListener);
-            holder.tvProductName.setOnClickListener(openOrderDetailListener);
-            holder.tvQuantity.setOnClickListener(openOrderDetailListener);
-            holder.tvDiscountedPrice.setOnClickListener(openOrderDetailListener);
-        } else {
-            // No dropdown, make entire item clickable
-            holder.itemView.setOnClickListener(openOrderDetailListener);
-            holder.itemView.setClickable(true);
-            holder.itemView.setFocusable(true);
-        }
+        // Make entire card clickable - click anywhere on card to open order details
+        // Android's event handling will prevent parent click when child (dropdown button) has click listener
+        holder.itemView.setOnClickListener(openOrderDetailListener);
+        holder.itemView.setClickable(true);
+        holder.itemView.setFocusable(true);
 
         // View details button may not exist in minimal layout
         if (holder.btnViewDetails != null) {

@@ -97,7 +97,11 @@ public class ProductListFragment extends Fragment {
             // Alternatively (no import needed):
             // startActivity(com.example.onlyfanshop.ui.product.ProductDetailActivity.newIntent(requireContext(), pid));
         });
-        recyclerProducts.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(requireContext(), 2);
+        recyclerProducts.setLayoutManager(gridLayoutManager);
+        recyclerProducts.setHasFixedSize(true);
+        recyclerProducts.setItemViewCacheSize(30);
+        recyclerProducts.setItemAnimator(null); // Tắt animation để scroll nhanh hơn
         recyclerProducts.setAdapter(productAdapter);
     }
 

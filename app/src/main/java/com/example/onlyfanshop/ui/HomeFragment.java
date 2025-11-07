@@ -237,9 +237,12 @@ public class HomeFragment extends Fragment {
         popularView.setLayoutManager(new LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false));
         popularView.setNestedScrollingEnabled(false);
         popularView.setHasFixedSize(true);
-        popularView.setItemViewCacheSize(10);
+        // Tăng cache size để scroll mượt hơn
+        popularView.setItemViewCacheSize(20);
+        // Tắt animator để scroll nhanh hơn
         popularView.setItemAnimator(null);
-        popularView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down));
+        // Tắt layout animation để load nhanh hơn
+        // popularView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down));
 
         popularAdapter = new PopularAdapter(item -> {
             Intent intent = new Intent(requireContext(), ProductDetailActivity.class);
@@ -265,9 +268,15 @@ public class HomeFragment extends Fragment {
         productsView.setLayoutManager(gridLayoutManager);
         productsView.setNestedScrollingEnabled(false);
         productsView.setHasFixedSize(true);
-        productsView.setItemViewCacheSize(15);
+        // Tăng cache size để scroll mượt hơn với GridLayout
+        productsView.setItemViewCacheSize(30);
+        // Tắt animator để scroll nhanh hơn
         productsView.setItemAnimator(null);
-        productsView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down));
+        // Tắt layout animation để load nhanh hơn
+        // productsView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down));
+        // Tăng drawing cache để render nhanh hơn
+        productsView.setDrawingCacheEnabled(true);
+        productsView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
 
         ivAvatar = v.findViewById(R.id.imageViewProfile);
         tvUserNameView = v.findViewById(R.id.tvUserName);
@@ -441,9 +450,10 @@ public class HomeFragment extends Fragment {
                         }
                         List<ProductDTO> randomProducts = getRandomProducts(products, 15);
                         popularAdapter.submitList(randomProducts);
-                        if (popularView != null) {
-                            popularView.scheduleLayoutAnimation();
-                        }
+                        // Tắt layout animation để load nhanh hơn
+                        // if (popularView != null) {
+                        //     popularView.scheduleLayoutAnimation();
+                        // }
                     }
 
                     @Override
@@ -473,7 +483,9 @@ public class HomeFragment extends Fragment {
 
     private void loadProducts() {
         setProductsLoading(true);
-        productApi.getHomePagePost(1, 1000, "ProductID", "ASC", null, null, null)
+        // Giảm từ 1000 xuống 50 products để tăng performance
+        // User có thể scroll để xem thêm nếu cần (pagination)
+        productApi.getHomePagePost(1, 50, "ProductID", "ASC", null, null, null)
                 .enqueue(new Callback<ApiResponse<HomePageData>>() {
                     @Override
                     public void onResponse(@NonNull Call<ApiResponse<HomePageData>> call,
@@ -486,9 +498,10 @@ public class HomeFragment extends Fragment {
                             }
                         }
                         productAdapter.submitList(products);
-                        if (productsView != null) {
-                            productsView.scheduleLayoutAnimation();
-                        }
+                        // Tắt layout animation cho large lists để tránh lag
+                        // if (productsView != null && products.size() <= 20) {
+                        //     productsView.scheduleLayoutAnimation();
+                        // }
                     }
 
                     @Override

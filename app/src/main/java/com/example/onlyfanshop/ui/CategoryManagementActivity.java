@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.onlyfanshop.adapter.CategoryManagementAdapter;
@@ -56,6 +57,12 @@ public class CategoryManagementActivity extends AppCompatActivity {
             }
         });
         getCategories();
+        
+        // Setup Toolbar
+        Toolbar toolbar = binding.toolbar;
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationOnClickListener(v -> finish());
+        
         binding.addCategory.setOnClickListener(v -> {
             binding.addCategoryLayout.setVisibility(View.VISIBLE);
             binding.confirmAdd.setOnClickListener(v1 -> {
@@ -70,7 +77,6 @@ public class CategoryManagementActivity extends AppCompatActivity {
 
             });
         });
-        binding.back.setOnClickListener(v -> finish());
     }
     private void createCategory(CategoryManagementDTO category){
         CategoryApi api = ApiClient.getPrivateClient(this).create(CategoryApi.class);

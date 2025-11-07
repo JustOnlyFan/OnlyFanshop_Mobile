@@ -442,13 +442,20 @@ public class UserOrderFragment extends Fragment {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             
             // Set padding for root view: preserve XML padding (12dp) + add system insets
-            int bottomPadding = padding12dp + systemBars.bottom + 32; // Add 32dp extra for safety
+            // Remove extra 32dp to prevent white space at bottom
+            int bottomPadding = padding12dp + systemBars.bottom;
             v.setPadding(
                     padding12dp + systemBars.left, 
                     padding12dp + systemBars.top, 
                     padding12dp + systemBars.right, 
                     bottomPadding
             );
+            
+            // Add bottom padding to RecyclerView to ensure last item is visible
+            if (rvOrders != null) {
+                rvOrders.setPadding(0, 0, 0, systemBars.bottom);
+                rvOrders.setClipToPadding(false);
+            }
             
             return insets;
         });

@@ -4,8 +4,25 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="12dp"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:fitsSystemWindows="true">
+
+    <!-- Header Toolbar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:navigationIcon="@drawable/ic_back"
+        app:title="Quản lí sản phẩm"
+        app:titleTextColor="@color/white" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="12dp">
 
     <!-- Thanh tìm kiếm -->
     <LinearLayout
@@ -13,7 +30,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:layout_marginTop="30dp">
+        android:layout_marginTop="8dp">
 
         <EditText
             android:id="@+id/edtSearchProduct"
@@ -88,4 +105,7 @@
         android:layout_marginTop="12dp"
         android:paddingBottom="12dp"
         android:scrollbars="vertical" />
+
+    </LinearLayout>
+
 </LinearLayout>

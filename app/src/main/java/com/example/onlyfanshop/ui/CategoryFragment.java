@@ -196,15 +196,18 @@ public class CategoryFragment extends Fragment {
             startActivity(ProductDetailActivity.newIntent(requireContext(), pid));
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
-        recyclerSearchResult.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(requireContext(), 2);
+        recyclerSearchResult.setLayoutManager(gridLayoutManager);
         recyclerSearchResult.setHasFixedSize(true);
-        recyclerSearchResult.setItemViewCacheSize(15);
+        // Tăng cache size để scroll mượt hơn
+        recyclerSearchResult.setItemViewCacheSize(30);
         recyclerSearchResult.setItemAnimator(null);
         recyclerSearchResult.setAdapter(productAdapter);
 
-        recyclerSearchResult.setLayoutAnimation(
-                AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down)
-        );
+        // Tắt layout animation để load nhanh hơn
+        // recyclerSearchResult.setLayoutAnimation(
+        //         AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_fall_down)
+        // );
     }
 
     private void setupSwipeRefresh() {

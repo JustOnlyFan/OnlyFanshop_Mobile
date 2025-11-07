@@ -142,9 +142,14 @@ public final class ApiClient {
 
     private static OkHttpClient buildOkHttp(boolean withAuth, @Nullable Context context) {
         OkHttpClient.Builder b = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS);
+                // Tối ưu timeouts - tăng một chút để tránh timeout khi network chậm
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(15, TimeUnit.SECONDS)
+                .writeTimeout(15, TimeUnit.SECONDS)
+                // Tăng connection pool để handle nhiều requests song song
+                .connectionPool(new okhttp3.ConnectionPool(10, 5, TimeUnit.MINUTES))
+                // Retry khi connection fail
+                .retryOnConnectionFailure(true);
 
         // Default headers (trước)
         b.addInterceptor(chain -> {
